@@ -1,4 +1,6 @@
 use log::info;
+extern crate machine_uid;
+
 use repository::{
     ChangelogRow, ChangelogRowRepository, KeyValueStoreRepository, KeyValueType,
     RemoteSyncBufferAction, RemoteSyncBufferRepository, RemoteSyncBufferRow, RepositoryError,
@@ -79,6 +81,11 @@ impl RemoteDataSynchroniser {
             .map(|row| row.id)
             .unwrap_or(0) as u32;
         state.update_push_cursor(cursor + 1)?;
+
+        if state.get_hardware_id()?.is_empty() {
+            let hardware_id = machine_uid::get().unwrap_or_default();
+            state.set_hardware_id(hardware_id)?;
+        }
 
         state.set_site_id(self.site_id as i32)?;
         state.set_initial_remote_data_synced()?;
@@ -333,6 +340,19 @@ impl<'a> RemoteSyncState<'a> {
     pub fn update_push_cursor(&self, cursor: u32) -> Result<(), RepositoryError> {
         self.key_value_store
             .set_i32(KeyValueType::RemoteSyncPushCursor, Some(cursor as i32))
+    }
+
+    pub fn set_hardware_id(&self, hardware_id: String) -> Result<(), RepositoryError> {
+        self.key_value_store
+            .set_string(KeyValueType::SettingsSyncSiteHardwareId, Some(hardware_id))
+    }
+
+    pub fn get_hardware_id(&self) -> Result<String, RepositoryError> {
+        let value = self
+            .key_value_store
+            .get_string(KeyValueType::SettingsSyncSiteHardwareId)?;
+        let hardware_id = value.unwrap_or_default();
+        Ok(hardware_id)
     }
 }
 
