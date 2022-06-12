@@ -1,3 +1,6 @@
+[profile.dev]
+split-debuginfo = "unpacked"
+
 [workspace]
 
 members = [
