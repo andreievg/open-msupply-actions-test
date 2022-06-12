@@ -21,4 +21,4 @@ jobs:
     with:
       os: ubuntu-latest
       with-postgres: ${{ inputs.with-postgres}}
-      with-sqlite:  ${{ with-sqlite }}
+      with-sqlite:  ${{ inputs.with-sqlite }}
