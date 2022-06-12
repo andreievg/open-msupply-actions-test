@@ -2,6 +2,7 @@ name: test-front-end-manual
 
 on:
   workflow_dispatch:
+    # Input will appear when running job manually
     inputs:
       should-test-front-end:
         description: 'Test Front End'

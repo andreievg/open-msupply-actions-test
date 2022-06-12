@@ -1,0 +1,62 @@
+name: back-end-reusable
+
+on:
+  workflow_call:
+    inputs:
+      with-postgres:
+        required: true
+        type: boolean
+      with-sqlite:
+        required: true
+        type: boolean
+      os:
+        required: true
+        type: string
+jobs:
+  test-back-end-sqlite:
+    if: ${{ inputs.with-sqlite }}
+    runs-on: ${{ inputs.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-sqlite-cargo-${{ hashFiles('**/Cargo.lock') }}
+          # If cargo lock has changed, use the latest cache from other job
+          restore-keys: ${{ runner.os }}-sqlite-cargo-
+
+      - name: Test
+        working-directory: server
+        run: cargo test
+        
+  test-back-end-postgres:
+    if: ${{ inputs.with-postgres }}
+    runs-on: ${{ inputs.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-sqlite-cargo-${{ hashFiles('**/Cargo.lock') }}
+          # If cargo lock has changed, use the latest cache from other job
+          restore-keys: ${{ runner.os }}-sqlite-cargo-
+
+      - name: Test
+        working-directory: server
+        run: cargo test --features postgres
