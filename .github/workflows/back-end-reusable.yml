@@ -33,10 +33,14 @@ jobs:
           # If cargo lock has changed, use the latest cache from other job
           restore-keys: ${{ runner.os }}-sqlite-cargo-
 
+      - name: Install
+        working-directory: server
+        run: cargo build --tests
+
       - name: Test
         working-directory: server
         run: cargo test
-        
+
   test-back-end-postgres:
     if: ${{ inputs.with-postgres }}
     runs-on: ${{ inputs.os }}
@@ -56,6 +60,10 @@ jobs:
           key: ${{ runner.os }}-sqlite-cargo-${{ hashFiles('**/Cargo.lock') }}
           # If cargo lock has changed, use the latest cache from other job
           restore-keys: ${{ runner.os }}-sqlite-cargo-
+          
+      - name: Install
+        working-directory: server
+        run: cargo build --tests --features postgres
 
       - name: Test
         working-directory: server

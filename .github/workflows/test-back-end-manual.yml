@@ -15,10 +15,40 @@ on:
         default: true
         required: true
         type: boolean
+      on-window:
+        description: 'Windows'
+        default: true
+        required: true
+        type: boolean
+      on-mac:
+        description: 'Mac'
+        default: true
+        required: true
+        type: boolean
+      on-linux:
+        description: 'Windows'
+        default: true
+        required: true
+        type: boolean
 jobs:
-  test-back-end:
+  test-back-end-ubuntu:
+    if: ${{ input.on-linux }}
     uses: ./.github/workflows/back-end-reusable.yml
     with:
       os: ubuntu-latest
-      with-postgres: ${{ inputs.with-postgres}}
+      with-postgres: ${{ inputs.with-postgres }}
+      with-sqlite:  ${{ inputs.with-sqlite }}
+  test-back-end-windows:
+    if: ${{ input.on-windows }}
+    uses: ./.github/workflows/back-end-reusable.yml
+    with:
+      os: windows-latest
+      with-postgres: ${{ inputs.with-postgres }}
+      with-sqlite:  ${{ inputs.with-sqlite }}
+  test-back-end-mac:
+    if: ${{ input.on-mac }}
+    uses: ./.github/workflows/back-end-reusable.yml
+    with:
+      os: macos-latest
+      with-postgres: ${{ inputs.with-postgres }}
       with-sqlite:  ${{ inputs.with-sqlite }}
