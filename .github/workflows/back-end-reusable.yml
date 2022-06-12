@@ -28,7 +28,7 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            target/
+            server/target/
           key: ${{ runner.os }}-sqlite-cargo-${{ hashFiles('**/Cargo.lock') }}
           # If cargo lock has changed, use the latest cache from other job
           restore-keys: ${{ runner.os }}-sqlite-cargo-
@@ -56,11 +56,11 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-sqlite-cargo-${{ hashFiles('**/Cargo.lock') }}
+            server/target/
+          key: ${{ runner.os }}-postgres-cargo-${{ hashFiles('**/Cargo.lock') }}
           # If cargo lock has changed, use the latest cache from other job
-          restore-keys: ${{ runner.os }}-sqlite-cargo-
-          
+          restore-keys: ${{ runner.os }}-postgres-cargo-
+
       - name: Install
         working-directory: server
         run: cargo build --tests --features postgres
