@@ -20,5 +20,5 @@ jobs:
     uses: ./.github/workflows/back-end-reusable.yml
     with:
       os: ubuntu-latest
-       with-postgres: ${{ inputs.with-postgres}}
-       with-sqlite:  ${{ with-sqlite }}
+      with-postgres: ${{ inputs.with-postgres}}
+      with-sqlite:  ${{ with-sqlite }}
