@@ -1,0 +1,23 @@
+name: test-front-end-on-pr
+
+on:
+  workflow_dispatch:
+    inputs:
+      should-test-front-end:
+        description: 'Test Front End'
+        required: true
+        default: true
+        type: boolean
+      should-test-electron:
+        description: 'Test Electron Client'
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  test-front-end:
+    uses: ./.github/workflows/test-front-end-reusable.yml
+    with:
+      os: ubuntu-latest
+      should-test-front-end: ${{ inputs.should-test-front-end }}
+      should-test-electron:  ${{ inputs.should-test-electron }}

@@ -1,0 +1,47 @@
+name: test-front-end-reusable
+
+on:
+  workflow_call:
+    inputs:
+      should-test-front-end:
+        required: true
+        type: boolean
+      should-test-electron:
+        required: true
+        type: boolean
+      os:
+        required: true
+        type: string
+jobs:
+  test-front-end:
+    runs-on: ${{ inputs.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          # If yarn lock has changed, use the latest node_module hash
+          restore-keys: ${{ runner.os }}-yarn-
+
+      - name: Install
+        working-directory: client
+        run: yarn install
+
+      - name: Compile
+        if: inputs.should-test-front-end
+        working-directory: client
+        run: yarn compile
+      
+      - name: Test
+        if: inputs.should-test-front-end
+        working-directory: client
+        run: yarn test-full-speed
+      
+      - name: Compile Electron
+        if: inputs.should-test-electron
+        working-directory: client
+        run: yarn electron:compile

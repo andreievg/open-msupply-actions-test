@@ -1,0 +1,15 @@
+name: test-front-end-on-pr
+
+on:
+  push:
+    # When PR is merged (or any other commits directly to master or develop)
+    branches: [main, develop]
+    paths: ["client/**"]
+
+jobs:
+  test-front-end:
+    uses: ./.github/workflows/test-front-end-reusable.yml
+    with:
+      os: ubuntu-latest
+      should-test-front-end: true
+      should-test-electron: false
