@@ -21,17 +21,11 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Cache
-        uses: actions/cache@v3
+        uses: Swatinem/rust-cache@v1
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            server/target/
-          key: ${{ runner.os }}-sqlite-cargo-${{ hashFiles('**/Cargo.lock') }}
-          # If cargo lock has changed, use the latest cache from other job
-          restore-keys: ${{ runner.os }}-sqlite-cargo-
+          key: sqlite-${{ runner.os }}
+          sharedKey: sqlite
+          working-directory: server
 
       - name: Install
         working-directory: server
@@ -49,17 +43,11 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Cache
-        uses: actions/cache@v3
+        uses: Swatinem/rust-cache@v1
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            server/target/
-          key: ${{ runner.os }}-postgres-cargo-${{ hashFiles('**/Cargo.lock') }}
-          # If cargo lock has changed, use the latest cache from other job
-          restore-keys: ${{ runner.os }}-postgres-cargo-
+          key: sqlite-${{ runner.os }}
+          sharedKey: sqlite
+          working-directory: server
 
       - name: Install
         working-directory: server
