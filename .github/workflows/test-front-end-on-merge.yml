@@ -1,4 +1,4 @@
-name: test-front-end-on-pr
+name: test-front-end-on-merge
 
 on:
   push:
