@@ -27,10 +27,6 @@ jobs:
           sharedKey: sqlite
           working-directory: server
 
-      - name: Install
-        working-directory: server
-        run: cargo build --tests
-
       - name: Test
         working-directory: server
         run: cargo test
@@ -48,10 +44,6 @@ jobs:
           key: sqlite-${{ runner.os }}
           sharedKey: sqlite
           working-directory: server
-
-      - name: Install
-        working-directory: server
-        run: cargo build --tests --features postgres
 
       - name: Test
         working-directory: server
