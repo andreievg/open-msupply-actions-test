@@ -26,27 +26,27 @@ on:
         required: true
         type: boolean
       on-linux:
-        description: 'Windows'
+        description: 'Linux'
         default: true
         required: true
         type: boolean
 jobs:
   test-back-end-ubuntu:
-    if: ${{ input.on-linux }}
+    if: ${{ inputs.on-linux }}
     uses: ./.github/workflows/back-end-reusable.yml
     with:
       os: ubuntu-latest
       with-postgres: ${{ inputs.with-postgres }}
       with-sqlite:  ${{ inputs.with-sqlite }}
   test-back-end-windows:
-    if: ${{ input.on-windows }}
+    if: ${{ inputs.on-windows }}
     uses: ./.github/workflows/back-end-reusable.yml
     with:
       os: windows-latest
       with-postgres: ${{ inputs.with-postgres }}
       with-sqlite:  ${{ inputs.with-sqlite }}
   test-back-end-mac:
-    if: ${{ input.on-mac }}
+    if: ${{ inputs.on-mac }}
     uses: ./.github/workflows/back-end-reusable.yml
     with:
       os: macos-latest
