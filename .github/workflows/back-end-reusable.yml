@@ -20,25 +20,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Front End
+      - name: Front End Install
         working-directory: client
-        - run: yarn install
-        - run: yarn build
-        - run: yarn electron:build
+        run: yarn install
 
-      - name: Cache
-        uses: Swatinem/rust-cache@v1
-        with:
-          key: sqlite-${{ runner.os }}
-          sharedKey: sqlite
-          working-directory: server
+      - name: Front End Build
+        working-directory: client
+        run: yarn build
 
-      - name: Test
+      - name: Front End Build Electron
+        working-directory: client
+        run: yarn electron:build
+
+      - name: Build Server
         working-directory: server
         run: cargo build --release --package server
+
+      - name: Build Cli
+        working-directory: server
         run: cargo build --release --package cli
 
-      - name: Archive code coverage results
+      - name: Archive Binaries
         uses: actions/upload-artifact@v3
         with:
           name: binaries
