@@ -28,6 +28,10 @@ jobs:
         working-directory: client
         run: yarn build
 
+      - name: Front End Build Electron
+        working-directory: client
+        run: yarn electron:build
+
       - name: Build Server
         working-directory: server
         run: cargo build --release --package server
