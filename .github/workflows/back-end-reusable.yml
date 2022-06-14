@@ -14,6 +14,8 @@ on:
         type: string
 jobs:
   build-sqlite:
+    env: 
+      OPENSSL_DIR: C:\Program Files\OpenSSL-Win64\
     if: ${{ inputs.with-sqlite }}
     runs-on: ${{ inputs.os }}
     steps:
@@ -31,6 +33,9 @@ jobs:
       - name: Front End Build Electron
         working-directory: client
         run: yarn electron:build
+
+      - name: Get OpenSSL
+        run: choco install openssl
 
       - name: Build Server
         working-directory: server
