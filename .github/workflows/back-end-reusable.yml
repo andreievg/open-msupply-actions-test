@@ -50,8 +50,8 @@ jobs:
         with:
           name: binaries
           path: | 
-            server/target/release/remote_server
-            server/target/release/remote_server_cli
+            server/target/release/remote_server.exe
+            server/target/release/remote_server_cli.exe
             client/packages/electron/out/make/
 
   test-back-end-postgres:
