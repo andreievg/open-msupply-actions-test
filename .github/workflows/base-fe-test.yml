@@ -41,7 +41,7 @@ jobs:
         working-directory: client
         run: yarn test-full-speed
 
-  Base_Electron_Test':
+  Base_Electron_Test:
     if: inputs.should-test-electron
     runs-on: ${{ inputs.os }}
     steps:
