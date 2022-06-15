@@ -58,4 +58,6 @@ jobs:
 
       - name: Test
         working-directory: server
-        run: cargo test --features postgres
+        run: |
+          setx PQ_LIB_DIR Join-Path $env:PGROOT "lib"
+          cargo test --features postgres
