@@ -46,7 +46,7 @@ jobs:
   test-front-end:
     if: inputs.should-test-front-end
     runs-on: ${{ inputs.os }}
-     steps:
+    steps:
       - name: Checkout
         uses: actions/checkout@v3
 
