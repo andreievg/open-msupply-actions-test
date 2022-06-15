@@ -16,7 +16,7 @@ on:
         type: boolean
 
 jobs:
-  Manual_Fe_Test':
+  Manual_Fe_Test:
     uses: ./.github/workflows/base-fe-test.yml
     with:
       os: ubuntu-latest
