@@ -1,4 +1,4 @@
-name: test-front-end-manual
+name: '[manual] Test FE'
 
 on:
   workflow_dispatch:
@@ -16,8 +16,8 @@ on:
         type: boolean
 
 jobs:
-  test-front-end:
-    uses: ./.github/workflows/test-front-end-reusable.yml
+  'Manual FE Test':
+    uses: ./.github/workflows/base-fe-test.yml
     with:
       os: ubuntu-latest
       should-test-front-end: ${{ inputs.should-test-front-end }}
