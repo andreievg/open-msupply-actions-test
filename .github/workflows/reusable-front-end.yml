@@ -34,17 +34,15 @@ jobs:
         run: yarn install
 
       - name: Compile
-        if: inputs.should-test-front-end
         working-directory: client
         run: yarn compile
       
       - name: Test
-        if: inputs.should-test-front-end
         working-directory: client
         run: yarn test-full-speed
 
-  test-front-end:
-    if: inputs.should-test-front-end
+  test-electron:
+    if: inputs.should-test-electron
     runs-on: ${{ inputs.os }}
     steps:
       - name: Checkout
@@ -64,6 +62,5 @@ jobs:
         run: yarn install
 
       - name: Compile Electron
-        if: inputs.should-test-electron
         working-directory: client
         run: yarn electron:compile
