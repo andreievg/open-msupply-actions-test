@@ -1,4 +1,4 @@
-name: [base] Test FE
+name: '[base] Test FE'
 
 on:
   workflow_call:
