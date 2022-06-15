@@ -1,4 +1,4 @@
-name: test-front-end-reusable
+name: [base] Test FE
 
 on:
   workflow_call:
@@ -14,6 +14,7 @@ on:
         type: string
 jobs:
   test-front-end:
+    if: inputs.should-test-front-end
     runs-on: ${{ inputs.os }}
     steps:
       - name: Checkout
@@ -41,7 +42,27 @@ jobs:
         if: inputs.should-test-front-end
         working-directory: client
         run: yarn test-full-speed
-      
+
+  test-front-end:
+    if: inputs.should-test-front-end
+    runs-on: ${{ inputs.os }}
+     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # Cache plugin re-uses dependencies
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          # If yarn lock has changed, use the latest node_module hash
+          restore-keys: ${{ runner.os }}-yarn-
+
+      - name: Install
+        working-directory: client
+        run: yarn install
+
       - name: Compile Electron
         if: inputs.should-test-electron
         working-directory: client
