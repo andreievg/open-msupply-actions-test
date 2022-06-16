@@ -1,0 +1,73 @@
+name: back-end-reusable
+
+on:
+  workflow_call:
+    inputs:
+      with-postgres:
+        required: true
+        type: boolean
+      with-sqlite:
+        required: true
+        type: boolean
+      os:
+        required: true
+        type: string
+jobs:
+  build-sqlite:
+    env: 
+      OPENSSL_DIR: C:\Program Files\OpenSSL-Win64\
+    if: ${{ inputs.with-sqlite }}
+    runs-on: ${{ inputs.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Front End Install
+        working-directory: client
+        run: yarn install
+
+      - name: Front End Build
+        working-directory: client
+        run: yarn build
+
+      - name: Front End Build Electron
+        working-directory: client
+        run: yarn electron:build
+
+      - name: Get OpenSSL
+        run: choco install openssl
+
+      - name: Build Server
+        working-directory: server
+        run: cargo build --release --package server
+
+      - name: Build Cli
+        working-directory: server
+        run: cargo build --release --package cli
+
+      - name: Archive Binaries
+        uses: actions/upload-artifact@v3
+        with:
+          name: binaries
+          path: | 
+            server/target/release/remote_server.exe
+            server/target/release/remote_server_cli.exe
+            client/packages/electron/out/make/
+
+  BE_Test_Postgres:
+    if: ${{ inputs.with-postgres }}
+    runs-on: ${{ inputs.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Cache
+        uses: Swatinem/rust-cache@v1
+        with:
+          key: postgres-${{ runner.os }}
+          sharedKey: postgres
+          working-directory: server
+
+      - name: Test
+        working-directory: server
+        run: cargo test --features postgres

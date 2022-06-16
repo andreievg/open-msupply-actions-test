@@ -31,23 +31,23 @@ on:
         required: true
         type: boolean
 jobs:
-  ubuntu-sqlite:
+  linux:
     if: ${{ inputs.on-linux }}
-    uses: ./.github/workflows/back-end-reusable.yml
+    uses: ./.github/workflows/base-be-test.yml
     with:
       os: ubuntu-latest
       with-postgres: ${{ inputs.with-postgres }}
       with-sqlite:  ${{ inputs.with-sqlite }}
   windows:
     if: ${{ inputs.on-windows }}
-    uses: ./.github/workflows/back-end-reusable.yml
+    uses: ./.github/workflows/base-be-test.yml
     with:
       os: windows-latest
       with-postgres: ${{ inputs.with-postgres }}
       with-sqlite:  ${{ inputs.with-sqlite }}
-  test-back-end-mac:
+  mac:
     if: ${{ inputs.on-mac }}
-    uses: ./.github/workflows/back-end-reusable.yml
+    uses: ./.github/workflows/base-be-test.yml
     with:
       os: macos-latest
       with-postgres: ${{ inputs.with-postgres }}

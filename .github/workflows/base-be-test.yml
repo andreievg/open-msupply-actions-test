@@ -40,23 +40,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      # INITIALISE POSTGRES
+      # Windows
       - name: Start Postgres
         if: runner.os == 'Windows'
         run: |
           cd "$PGBIN"
-          ./pg_ctl start -o "-c max_connections=100"
+          ./pg_ctl init -D "$RUNNER_TEMP/pgdata"
+          ./pg_ctl start -D "$RUNNER_TEMP/pgdata" -o "-c max_connections=100"
+          ./createuser -U $(whoami) --createdb postgres
           ./psql -U postgres -h localhost -c 'SELECT 1'
         shell: bash
 
+      # Mac
       - name: Start Postgres
         if: runner.os == 'macOS'
         run: |
           pg_ctl init -D "$RUNNER_TEMP/pgdata"
-          pg_ctl start -D "$RUNNER_TEMP/pgdata"
-          createuser --createdb postgres
+          pg_ctl start -D "$RUNNER_TEMP/pgdata" -o "-c max_connections=100"
+          createuser -U $(whoami) --createdb postgres
           psql -U postgres -h localhost -c 'SELECT 1'
         shell: bash
 
+      # PERPARE FOR TEST
       - name: Set Windows Build Env Variables
         if: runner.os == 'Windows'
         # PG_LIB_DIR is required for DIESEL to compile

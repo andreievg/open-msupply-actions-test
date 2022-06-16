@@ -1,0 +1,50 @@
+name: name: 'na'
+
+on:
+  workflow_call:
+    inputs:
+      with-postgres:
+        required: true
+        type: boolean
+      with-sqlite:
+        required: true
+        type: boolean
+      os:
+        required: true
+        type: string
+jobs:
+  manual_s:
+    if: ${{ inputs.with-postgres }}
+    runs-on: ${{ inputs.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Cache
+        uses: Swatinem/rust-cache@v1
+        with:
+          key: postgres-${{ runner.os }}
+          sharedKey: postgres
+          working-directory: server
+
+      - name: Test
+        working-directory: server
+        run: cargo test --features postgres
+
+  BE_Test_Postgres:
+    if: ${{ inputs.with-postgres }}
+    runs-on: ${{ inputs.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Cache
+        uses: Swatinem/rust-cache@v1
+        with:
+          key: postgres-${{ runner.os }}
+          sharedKey: postgres
+          working-directory: server
+
+      - name: Test
+        working-directory: server
+        run: cargo test --features postgres
