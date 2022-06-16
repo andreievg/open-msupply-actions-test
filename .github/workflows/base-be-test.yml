@@ -1,4 +1,4 @@
-name: back-end-reusable
+name: '[base] Test BE'
 
 on:
   workflow_call:
