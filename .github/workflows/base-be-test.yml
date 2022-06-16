@@ -79,4 +79,4 @@ jobs:
 
       - name: Test
         working-directory: server
-        run: cargo test--features postgres
+        run: cargo test --features postgres
