@@ -1,0 +1,54 @@
+
+name: '[manual] Test BE2'
+
+on:
+  workflow_dispatch:
+    # Input will appear when running job manually
+    inputs:
+      with-postgres:
+        description: 'Test With Postgres'
+        required: true
+        default: true
+        type: boolean
+      with-sqlite:
+        description: 'Test With Sqlite'
+        default: true
+        required: true
+        type: boolean
+      on-windows:
+        description: 'Windows'
+        default: true
+        required: true
+        type: boolean
+      on-mac:
+        description: 'Mac'
+        default: true
+        required: true
+        type: boolean
+      on-linux:
+        description: 'Linux'
+        default: true
+        required: true
+        type: boolean
+jobs:
+  linux:
+    if: ${{ inputs.on-linux }}
+    uses: ./.github/workflows/base-be-test2.yml
+    with:
+      os: ubuntu-latest
+      with-postgres: ${{ inputs.with-postgres }}
+      with-sqlite:  ${{ inputs.with-sqlite }}
+  windows:
+    if: ${{ inputs.on-windows }}
+    uses: ./.github/workflows/base-be-test2.yml
+    with:
+      os: windows-latest
+      with-postgres: ${{ inputs.with-postgres }}
+      with-sqlite:  ${{ inputs.with-sqlite }}
+  mac:
+    if: ${{ inputs.on-mac }}
+    uses: ./.github/workflows/base-be-test2.yml
+    with:
+      os: macos-latest
+      with-postgres: ${{ inputs.with-postgres }}
+      with-sqlite:  ${{ inputs.with-sqlite }}

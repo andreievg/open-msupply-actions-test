@@ -1,0 +1,83 @@
+name: '[base] Test BE2'
+
+on:
+  workflow_call:
+    inputs:
+      with-postgres:
+        required: true
+        type: boolean
+      with-sqlite:
+        required: true
+        type: boolean
+      os:
+        required: true
+        type: string
+
+jobs:
+  BE_Test_sqlite:
+    if: ${{ inputs.with-sqlite }}
+    runs-on: ${{ inputs.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Cache
+        # Caches dependencies for rust (debug or test), does not cache increments
+        uses: Swatinem/rust-cache@v1
+        with:
+          key: sqlite-${{ runner.os }}
+          # If cargo lock has change, use latest dependencies
+          sharedKey: sqlite
+          working-directory: server
+
+      - name: Build Tests
+        working-directory: server
+        run: cargo test --profile github-workflow 
+
+  BE_Build_Test_postgres:
+    if: ${{ inputs.with-postgres }}
+    runs-on: ${{ inputs.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # INITIALISE POSTGRES
+      - name: Start Postgres Windows
+        if: runner.os == 'Windows'
+        run: |
+          cd "$PGBIN"
+          ./pg_ctl init -D "$RUNNER_TEMP/pgdata"
+          ./pg_ctl start -D "$RUNNER_TEMP/pgdata" -o "-c max_connections=1000"
+          ./createuser -U $(whoami) --createdb postgres
+          ./psql -U postgres -h localhost -c 'SELECT 1'
+        shell: bash
+
+      - name: Start Postgres Mac
+        if: runner.os == 'macOS'
+        run: |
+          pg_ctl init -D "$RUNNER_TEMP/pgdata"
+          pg_ctl start -D "$RUNNER_TEMP/pgdata" -o "-c max_connections=1000"
+          createuser -U $(whoami) --createdb postgres
+          psql -U postgres -h localhost -c 'SELECT 1'
+        shell: bash
+
+        # Prepare for build on windows  
+      - name: Set Windows Build Env Variables
+        if: runner.os == 'Windows'
+        # PG_LIB_DIR is required for DIESEL to compile
+        # And >> to GITHUB_ENV set further shells env variable
+        run: echo "PQ_LIB_DIR=$PGROOT\lib" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Cache
+        # Caches dependencies for rust (debug or test), does not cache increments
+        uses: Swatinem/rust-cache@v1
+        with:
+          key: postgres-${{ runner.os }}
+          # If cargo lock has change, use latest dependencies
+          sharedKey: postgres
+          working-directory: server
+
+      - name: Build Tests
+        working-directory: server
+        run: cargo test --profile github-workflow --features postgres
