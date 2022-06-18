@@ -1,5 +1,5 @@
 
-name: '[manual] Test BE2'
+name: '[manual] Test BE combined'
 
 on:
   workflow_dispatch:
@@ -33,21 +33,21 @@ on:
 jobs:
   linux:
     if: ${{ inputs.on-linux }}
-    uses: ./.github/workflows/base-be-test2.yml
+    uses: ./.github/workflows/base-be-test-combined.yml
     with:
       os: ubuntu-latest
       with-postgres: ${{ inputs.with-postgres }}
       with-sqlite:  ${{ inputs.with-sqlite }}
   windows:
     if: ${{ inputs.on-windows }}
-    uses: ./.github/workflows/base-be-test2.yml
+    uses: ./.github/workflows/base-be-test-combined.yml
     with:
       os: windows-latest
       with-postgres: ${{ inputs.with-postgres }}
       with-sqlite:  ${{ inputs.with-sqlite }}
   mac:
     if: ${{ inputs.on-mac }}
-    uses: ./.github/workflows/base-be-test2.yml
+    uses: ./.github/workflows/base-be-test-combined.yml
     with:
       os: macos-latest
       with-postgres: ${{ inputs.with-postgres }}

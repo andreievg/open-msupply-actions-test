@@ -1,4 +1,4 @@
-name: '[base] Test BE2'
+name: '[base] Test BE combined'
 
 on:
   workflow_call:
