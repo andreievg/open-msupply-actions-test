@@ -1,5 +1,10 @@
-[profile.dev]
-split-debuginfo = "unpacked"
+[profile.github-workflow]
+inherits = "dev"
+opt-level = "z"
+debug = false
+strip = true
+incremental = false
+codegen-units = 256
 
 [workspace]
 
