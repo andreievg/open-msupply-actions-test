@@ -108,7 +108,7 @@ jobs:
   BE_Run_Test_postgres:
     if: ${{ inputs.with-sqlite }}
     runs-on: ${{ inputs.os }}
-    needs: BE_Build_Test_sqlite
+    needs: BE_Build_Test_postgres
     steps:
     - name: Checkout
       uses: actions/checkout@v3
