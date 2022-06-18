@@ -36,9 +36,9 @@ jobs:
           sharedKey: sqlite
           working-directory: server
 
-      - name: Test
+      - name: Build Tests
         working-directory: server
-        run: cargo build --tests --message-format=json | node workflow_helpers/relocate_build_binaries binary_files
+        run: cargo build --tests --message-format=json | node ../workflow_helpers/relocate_build_binaries binary_files
 
       - name: Archive Tests
         uses: actions/upload-artifact@v3
@@ -70,9 +70,9 @@ jobs:
         run: echo "PQ_LIB_DIR=$PGROOT\lib" >> $GITHUB_ENV
         shell: bash
 
-      - name: Test
+      - name: Build Tests
         working-directory: server
-        run: cargo test --features postgres --message-format=json | node ../workflow_helpers/relocate_build_binaries ../binary_files
+        run: cargo build --features postgres --message-format=json | node ../workflow_helpers/relocate_build_binaries ../binary_files
 
       - name: Archive Tests
         uses: actions/upload-artifact@v3
