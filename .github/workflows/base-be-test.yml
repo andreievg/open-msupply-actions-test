@@ -20,7 +20,7 @@ jobs:
     runs-on: ${{ inputs.os }}
     # To avoid artifacts being mixed up when multiple workflows run, they are named in this format test_binarires_window_postgres
     env:
-      TEST_BINARIES: ${{ format('test_binaries_{0}_{1}_sqlite', inputs.os) }}
+      TEST_BINARIES: ${{ format('test_binaries_{0}_sqlite', inputs.os) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -48,7 +48,7 @@ jobs:
     if: ${{ inputs.with-postgres }}
     runs-on: ${{ inputs.os }}
     env:
-      TEST_BINARIES: ${{ format('test_binaries_{0}_{1}_postgres', inputs.os) }}
+      TEST_BINARIES: ${{ format('test_binaries_{0}_postgres', inputs.os) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
