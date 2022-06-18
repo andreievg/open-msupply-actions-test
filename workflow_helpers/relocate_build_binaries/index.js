@@ -10,19 +10,24 @@ const main = () => {
     let stdin = process.openStdin()
     stdin.on('data', (d) => (data += d))
     stdin.on('end', () => {
-        if (argv[2] !== '--test') {
-            let targetDir = argv[2]
+        try {
+            if (argv[2] !== '--test') {
+                let targetDir = argv[2]
 
-            reCreateDir(targetDir)
-            let executableList = extractFilenames(data)
+                reCreateDir(targetDir)
+                let executableList = extractFilenames(data)
 
-            let command = `mv ${executableList.join(' ')}  ${targetDir}`
-            console.log('Executing command:', command)
-            execSync(command, { stdio: 'inherit' })
-        } else {
-            // test with:
-            // cat test_input.txt | node index.js --test
-            test(data)
+                let command = `mv ${executableList.join(' ')}  ${targetDir}`
+                console.log('Executing command:', command)
+                execSync(command, { stdio: 'inherit' })
+            } else {
+                // test with:
+                // cat test_input.txt | node index.js --test
+                test(data)
+            }
+        } catch (e) {
+            console.error(e)
+            console.log(data)
         }
     })
 }
