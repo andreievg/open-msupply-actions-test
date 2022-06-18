@@ -16,7 +16,7 @@ on:
 # To avoid artifacts being mixed up when multiple workflows run, they are named in this format test_binarires_window_postgres
 # inputs.with-postgres && 'postgres' || with-sqlite && 'sqlite' || '' = if postgres then 'postgres' if sqlite then 'sqlite' otherwise ''
 env:
-    TEST_BINARIES: ${{ format('test_binaries_{}_{}', inputs.os, inputs.with-postgres && 'postgres' || with-sqlite && 'sqlite' || '' ) }}
+    TEST_BINARIES: ${{ format('test_binaries_{}_{}', inputs.os, inputs.with-postgres && 'postgres' || inputs.with-sqlite && 'sqlite' || '' ) }}
 
 # Hard drive space is the reason to seperate build test and run test steps (was failing during test when databases are created)
 jobs:
