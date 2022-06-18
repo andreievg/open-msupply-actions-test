@@ -38,7 +38,7 @@ jobs:
 
       - name: Build Tests
         working-directory: server
-        run: cargo build --tests --message-format=json | node ../workflow_helpers/relocate_build_binaries binary_files
+        run: cargo build --tests --message-format=json | node ../workflow_helpers/relocate_build_binaries ../binary_files
 
       - name: Archive Tests
         uses: actions/upload-artifact@v3
