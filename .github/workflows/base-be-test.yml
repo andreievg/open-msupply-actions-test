@@ -13,16 +13,14 @@ on:
         required: true
         type: string
 
-# To avoid artifacts being mixed up when multiple workflows run, they are named in this format test_binarires_window_postgres
-# inputs.with-postgres && 'postgres' || with-sqlite && 'sqlite' || '' = if postgres then 'postgres' if sqlite then 'sqlite' otherwise ''
-env:
-    TEST_BINARIES: ${{ format('test_binaries_{0}_{1}', inputs.os, inputs.with-postgres && 'postgres' || inputs.with-sqlite && 'sqlite' || '' ) }}
-
 # Hard drive space is the reason to seperate build test and run test steps (was failing during test when databases are created)
 jobs:
   BE_Build_Test_sqlite:
     if: ${{ inputs.with-sqlite }}
     runs-on: ${{ inputs.os }}
+    # To avoid artifacts being mixed up when multiple workflows run, they are named in this format test_binarires_window_postgres
+    env:
+      TEST_BINARIES: ${{ format('test_binaries_{0}_{1}_sqlite', inputs.os) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -49,6 +47,8 @@ jobs:
   BE_Build_Test_postgres:
     if: ${{ inputs.with-postgres }}
     runs-on: ${{ inputs.os }}
+    env:
+      TEST_BINARIES: ${{ format('test_binaries_{0}_{1}_postgres', inputs.os) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -84,6 +84,8 @@ jobs:
     if: ${{ inputs.with-sqlite }}
     runs-on: ${{ inputs.os }}
     needs: BE_Build_Test_sqlite
+    env:
+      TEST_BINARIES: ${{ format('test_binaries_{0}_{1}_sqlite', inputs.os) }}
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -109,6 +111,8 @@ jobs:
     if: ${{ inputs.with-postgres }}
     runs-on: ${{ inputs.os }}
     needs: BE_Build_Test_postgres
+    env:
+      TEST_BINARIES: ${{ format('test_binaries_{0}_{1}_postgres', inputs.os) }}
     steps:
     - name: Checkout
       uses: actions/checkout@v3
