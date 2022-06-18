@@ -12,8 +12,15 @@ on:
       os:
         required: true
         type: string
+
+# To avoid artifacts being mixed up when multiple workflows run, they are named in this format test_binarires_window_postgres
+# inputs.with-postgres && 'postgres' || with-sqlite && 'sqlite' || '' = if postgres then 'postgres' if sqlite then 'sqlite' otherwise ''
+env:
+    TEST_BINARIES: ${{ format('test_binaries_{}_{}', inputs.os, inputs.with-postgres && 'postgres' || with-sqlite && 'sqlite' || '' ) }}
+
+# Hard drive space is the reason to seperate build test and run test steps (was failing during test when databases are created)
 jobs:
-  BE_Test_sqlite:
+  BE_Build_Test_sqlite:
     if: ${{ inputs.with-sqlite }}
     runs-on: ${{ inputs.os }}
     steps:
@@ -31,42 +38,20 @@ jobs:
 
       - name: Test
         working-directory: server
-        run: cargo test
+        run: cargo build --tests --message-format=json | node workflow_helpers/relocate_build_binaries binary_files
 
-  BE_Test_postgres:
+      - name: Archive Tests
+        uses: actions/upload-artifact@v3
+        with:
+            name: ${{ env.TEST_BINARIES }}
+            path: binary_files
+
+  BE_Build_Test_postgres:
     if: ${{ inputs.with-postgres }}
     runs-on: ${{ inputs.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      # INITIALISE POSTGRES
-      - name: Start Postgres Windows
-        if: runner.os == 'Windows'
-        run: |
-          cd "$PGBIN"
-          ./pg_ctl init -D "$RUNNER_TEMP/pgdata"
-          ./pg_ctl start -D "$RUNNER_TEMP/pgdata" -o "-c max_connections=100"
-          ./createuser -U $(whoami) --createdb postgres
-          ./psql -U postgres -h localhost -c 'SELECT 1'
-        shell: bash
-
-      - name: Start Postgres Mac
-        if: runner.os == 'macOS'
-        run: |
-          pg_ctl init -D "$RUNNER_TEMP/pgdata"
-          pg_ctl start -D "$RUNNER_TEMP/pgdata" -o "-c max_connections=100"
-          createuser -U $(whoami) --createdb postgres
-          psql -U postgres -h localhost -c 'SELECT 1'
-        shell: bash
-
-      # PERPARE FOR TEST
-      - name: Set Windows Build Env Variables
-        if: runner.os == 'Windows'
-        # PG_LIB_DIR is required for DIESEL to compile
-        # And >> to GITHUB_ENV set further shells env variable
-        run: echo "PQ_LIB_DIR=$PGROOT\lib" >> $GITHUB_ENV
-        shell: bash
 
       - name: Cache
         # Caches dependencies for rust (debug or test), does not cache increments
@@ -77,6 +62,87 @@ jobs:
           sharedKey: postgres
           working-directory: server
 
+        # Prepare for build on windows  
+      - name: Set Windows Build Env Variables
+        if: runner.os == 'Windows'
+        # PG_LIB_DIR is required for DIESEL to compile
+        # And >> to GITHUB_ENV set further shells env variable
+        run: echo "PQ_LIB_DIR=$PGROOT\lib" >> $GITHUB_ENV
+        shell: bash
+
       - name: Test
         working-directory: server
-        run: cargo test --features postgres
+        run: cargo test --features postgres --message-format=json | node ../workflow_helpers/relocate_build_binaries ../binary_files
+
+      - name: Archive Tests
+        uses: actions/upload-artifact@v3
+        with:
+            name: ${{ env.TEST_BINARIES }}
+            path: binary_files
+
+  BE_Run_Test_sqlite:
+    if: ${{ inputs.with-sqlite }}
+    runs-on: ${{ inputs.os }}
+    needs: BE_Build_Test_sqlite
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Download Test Binaries
+      uses: actions/download-artifact@v3
+      with:
+          name: ${{ env.TEST_BINARIES }}
+          path: binary_files
+
+    - name: Make Binaries Executable
+      # Permissions are lost during upload/download artifact
+      if: runner.os != 'Windows'
+      run: chmod +x binary_files/*
+
+    # - name: Setup tmate session
+    #   uses: mxschmitt/action-tmate@v3
+
+    - name: Execute Test Binaries
+      run: node workflow_helpers/execute_all_in_folder binary_files
+
+ BE_Run_Test_postgres:
+    if: ${{ inputs.with-sqlite }}
+    runs-on: ${{ inputs.os }}
+    needs: BE_Build_Test_sqlite
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+      # INITIALISE POSTGRES
+      - name: Start Postgres Windows
+        if: runner.os == 'Windows'
+        run: |
+          cd "$PGBIN"
+          ./pg_ctl init -D "$RUNNER_TEMP/pgdata"
+          ./pg_ctl start -D "$RUNNER_TEMP/pgdata" -o "-c max_connections=1000"
+          ./createuser -U $(whoami) --createdb postgres
+          ./psql -U postgres -h localhost -c 'SELECT 1'
+        shell: bash
+
+      - name: Start Postgres Mac
+        if: runner.os == 'macOS'
+        run: |
+          pg_ctl init -D "$RUNNER_TEMP/pgdata"
+          pg_ctl start -D "$RUNNER_TEMP/pgdata" -o "-c max_connections=1000"
+          createuser -U $(whoami) --createdb postgres
+          psql -U postgres -h localhost -c 'SELECT 1'
+        shell: bash
+
+      - name: Download Test Binaries
+        uses: actions/download-artifact@v3
+        with:
+            name: ${{ env.TEST_BINARIES }}
+            path: binary_files
+
+      - name: Make Binaries Executable
+        # Permissions are lost during upload/download artifact
+        if: runner.os != 'Windows'
+        run: chmod +x binary_files/*
+
+      - name: Execute Test Binaries
+        run: node workflow_helpers/execute_all_in_folder binary_files
