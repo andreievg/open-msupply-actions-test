@@ -24,4 +24,4 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --features=sqlite --manifest-path server/Cargo.toml
+          args: --features=sqlite --manifest-path server/Cargo.toml --package repository --lib -- tests:repository_tests
