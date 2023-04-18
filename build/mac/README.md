@@ -3,18 +3,15 @@
 `NOTE` -> this is for demo and testing purposes only, not to be used in production
 
 ```bash
-./build/mac/build.sh
+# for Intel mac
+./build/mac/build.sh intel 
+# or for Arm mac
+./build/mac/build.sh arm
 ```
 
-Above will build and `bundle` files in `{..}_mac_sqlite` folder where `{..}` is replaced with architecture of the build
+Above will build and `bundle` files in `omSupply_mac_{ARCHITECHTURE}_{VERSION}_{HASH}`
 
-In finder, right click on `{..}_mac_sqlite/open_msupply_server.sh`, then
-* `Open With`
-* `Other`
-* Select `All Appliations` for `Enable` drop down
-* Select `terminal` from `Utilities
-
-You can zip the contents of `{..}_mac_sqlite` folder now and share with testers or for demo purposes.
+You can zip the contents of that folder now and share with testers or for demo purposes. (they would need to double click on open_msupply_server.sh, and allow it in their mac security settings)
 
 To include some data:
 
@@ -26,4 +23,4 @@ To include some data:
 * Log in with all of the users that will need access in the demo data
 * cmd + c out of terminal that was opened when `open_msupply_server.sh` was clicked
 
-You can zip the contents of `{..}_mac_sqlite` folder now and share with testers or for demo purposes.
+Now zipping `omSupply_mac_{ARCHITECHTURE}_{VERSION}_{HASH}` should save the data as well

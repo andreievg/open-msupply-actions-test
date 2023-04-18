@@ -1,4 +1,22 @@
-on: workflow_dispatch
+on: 
+  workflow_dispatch
+    inputs:
+      architechture:
+        description: 'Architechture'
+        required: true
+        default: 'intel'
+        type: choice
+        options:
+          - intel
+          - arm
+      architechture:
+        description: 'Architechture'
+        required: true
+        default: 'intel'
+        type: choice
+        options:
+          - intel
+          - arm
 
 name: Remote Server Mac Build
 
@@ -14,14 +32,14 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: server
-      - name: Initialise
-        working-directory: ./server
-        run: cargo run --bin remote_server_cli -- initialise-from-export -n 'reference1' -r
+          prefix-key: ${{ inputs.architechture }}
       - name: Build
-        run: ./build/mac/build.sh
+        run: ./build/mac/build.sh ${{ inputs.architechture }}
+      - name: Get Name
+        run: echo "artifactName=$(./build/mac/build.sh ${{ inputs.architechture }})" >> $GITHUB_ENV
       - uses: actions/upload-artifact@v3
         with:
-          name: mac_sqlite
-          path: |
-            **_mac_sqlite
-            server/omsupply-database
+          name: ${{ env.artifactName }}
+          path: ${{ env.artifactName }}
+
+`
