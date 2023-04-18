@@ -12,12 +12,11 @@ on:
       includeDemoData:
         description: 'Includ demo data'
         required: true
-        default: 'no'
+        default: 'false'
         type: choice
         options:
-          - no
-          - yes
-
+          - false
+          - true
 
 name: Remote Server Mac Build
 
@@ -37,7 +36,7 @@ jobs:
       - name: Build
         run: ./build/mac/build.sh ${{ inputs.architechture }} ${{ inputs.includeDemoData }}
       - name: Get Name
-        run: echo "artifactName=$(./build/mac/build.sh ${{ inputs.architechture }})" >> $GITHUB_ENV
+        run: echo "artifactName=$(./build/mac/get_name.sh ${{ inputs.architechture }})" >> $GITHUB_ENV
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ env.artifactName }}
