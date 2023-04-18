@@ -18,7 +18,7 @@ const setClose = (frame: HTMLIFrameElement) => () => {
   document.body.removeChild(frame);
 };
 
-const setPrint = (frame: HTMLIFrameElement) => () => {
+const print = (frame: HTMLIFrameElement) => {
   const { contentWindow } = frame;
   if (contentWindow) {
     contentWindow.onbeforeunload = setClose(frame);
@@ -36,14 +36,20 @@ const printPage = (url: string) => {
       Printer.print(html);
     } else {
       const frame = document.createElement('iframe');
-      frame.style.position = 'fixed';
-      frame.style.right = '0';
-      frame.style.bottom = '0';
-      frame.style.width = '0';
-      frame.style.height = '0';
-      frame.style.border = '0';
-      frame.onload = setPrint(frame);
-      frame.srcdoc = html;
+
+      frame.onload = () => {
+        if (frame.contentDocument)
+          frame.contentDocument.documentElement.innerHTML = html;
+
+        // Wait till images are loaded. There seem to be no callback for this and its hard to check
+        // if everything is loaded correctly for unknown html. For this reason, just wait a small
+        // amount of time.
+        // Note, while developing, even a timeout of 0ms worked but it has been raised o 30ms to
+        // have some buffer.
+        setTimeout(() => {
+          print(frame);
+        }, 30);
+      };
       document.body.appendChild(frame);
     }
   });

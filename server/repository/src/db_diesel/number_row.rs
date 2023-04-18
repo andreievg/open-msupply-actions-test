@@ -30,7 +30,8 @@ pub enum NumberRowTypeError {
 pub enum NumberRowType {
     InboundShipment,
     OutboundShipment,
-    InventoryAdjustment,
+    InventoryReduction,
+    InventoryAddition,
     RequestRequisition,
     ResponseRequisition,
     Stocktake,
@@ -42,7 +43,8 @@ impl fmt::Display for NumberRowType {
         match self {
             NumberRowType::InboundShipment => write!(f, "INBOUND_SHIPMENT"),
             NumberRowType::OutboundShipment => write!(f, "OUTBOUND_SHIPMENT"),
-            NumberRowType::InventoryAdjustment => write!(f, "INVENTORY_ADJUSTMENT"),
+            NumberRowType::InventoryReduction => write!(f, "INVENTORY_REDUCTION"),
+            NumberRowType::InventoryAddition => write!(f, "INVENTORY_ADDITION"),
             NumberRowType::RequestRequisition => write!(f, "REQUEST_REQUISITION"),
             NumberRowType::ResponseRequisition => write!(f, "RESPONSE_REQUISITION"),
             NumberRowType::Stocktake => write!(f, "STOCKTAKE"),
@@ -58,7 +60,8 @@ impl TryFrom<String> for NumberRowType {
         match s.as_str() {
             "INBOUND_SHIPMENT" => Ok(NumberRowType::InboundShipment),
             "OUTBOUND_SHIPMENT" => Ok(NumberRowType::OutboundShipment),
-            "INVENTORY_ADJUSTMENT" => Ok(NumberRowType::InventoryAdjustment),
+            "INVENTORY_ADDITION" => Ok(NumberRowType::InventoryAddition),
+            "INVENTORY_REDUCTION" => Ok(NumberRowType::InventoryReduction),
             "REQUEST_REQUISITION" => Ok(NumberRowType::RequestRequisition),
             "RESPONSE_REQUISITION" => Ok(NumberRowType::ResponseRequisition),
             "STOCKTAKE" => Ok(NumberRowType::Stocktake),
@@ -126,6 +129,7 @@ impl<'a> NumberRowRepository<'a> {
         &self,
         r#type: &NumberRowType,
         store_id: &str,
+        next_number: Option<i64>,
     ) -> Result<NextNumber, RepositoryError> {
         // 1. First we try to just grab the next number from the database, in most cases this should work and be the fast.
 
@@ -146,10 +150,9 @@ impl<'a> NumberRowRepository<'a> {
             Ok(result) => Ok(result),
             Err(NotFound) => {
                 // 2. There was no record to update, so we need to insert a new one.
-
                 let insert_query = sql_query(NUMBER_INSERT_QUERY)
                     .bind::<Text, _>(uuid())
-                    .bind::<BigInt, _>(1)
+                    .bind::<BigInt, _>(next_number.unwrap_or(1))
                     .bind::<Text, _>(store_id)
                     .bind::<Text, _>(r#type.to_string());
 
@@ -210,6 +213,23 @@ impl<'a> NumberRowRepository<'a> {
         final_query.execute(&self.connection.connection)?;
         Ok(())
     }
+
+    pub fn delete(&self, number_id: &str) -> Result<(), RepositoryError> {
+        diesel::delete(number_dsl::number)
+            .filter(number_dsl::id.eq(number_id))
+            .execute(&self.connection.connection)?;
+        Ok(())
+    }
+
+    pub fn find_many_by_store_id(
+        &self,
+        store_ids: &[String],
+    ) -> Result<Vec<NumberRow>, RepositoryError> {
+        let result = number_dsl::number
+            .filter(number_dsl::store_id.eq_any(store_ids))
+            .load(&self.connection.connection)?;
+        Ok(result)
+    }
 }
 
 #[cfg(test)]
@@ -237,11 +257,16 @@ mod number_row_mapping_test {
                         == NumberRowType::OutboundShipment
                 )
             }
-            NumberRowType::InventoryAdjustment => {
+            NumberRowType::InventoryAddition => {
                 assert!(
-                    NumberRowType::try_from(NumberRowType::InventoryAdjustment.to_string())
-                        .unwrap()
-                        == NumberRowType::InventoryAdjustment
+                    NumberRowType::try_from(NumberRowType::InventoryAddition.to_string()).unwrap()
+                        == NumberRowType::InventoryAddition
+                )
+            }
+            NumberRowType::InventoryReduction => {
+                assert!(
+                    NumberRowType::try_from(NumberRowType::InventoryReduction.to_string()).unwrap()
+                        == NumberRowType::InventoryReduction
                 )
             }
             NumberRowType::RequestRequisition => {

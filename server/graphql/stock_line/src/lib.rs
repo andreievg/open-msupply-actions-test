@@ -20,6 +20,11 @@ pub struct StockLineQueries;
 pub enum StockLineSortFieldInput {
     ExpiryDate,
     NumberOfPacks,
+    ItemCode,
+    ItemName,
+    Batch,
+    PackSize,
+    SupplierName,
 }
 #[derive(InputObject)]
 pub struct StockLineSortInput {
@@ -39,6 +44,7 @@ pub struct StockLineFilterInput {
     pub item_id: Option<EqualFilterStringInput>,
     pub location_id: Option<EqualFilterStringInput>,
     pub store_id: Option<EqualFilterStringInput>,
+    pub has_packs_in_store: Option<bool>,
 }
 
 impl From<StockLineFilterInput> for StockLineFilter {
@@ -51,6 +57,7 @@ impl From<StockLineFilterInput> for StockLineFilter {
             item_id: f.item_id.map(EqualFilter::from),
             location_id: f.location_id.map(EqualFilter::from),
             store_id: None,
+            has_packs_in_store: f.has_packs_in_store,
         }
     }
 }
@@ -62,6 +69,11 @@ impl StockLineSortInput {
         let key = match self.key {
             from::NumberOfPacks => to::NumberOfPacks,
             from::ExpiryDate => to::ExpiryDate,
+            from::ItemCode => to::ItemCode,
+            from::ItemName => to::ItemName,
+            from::Batch => to::Batch,
+            from::PackSize => to::PackSize,
+            from::SupplierName => to::SupplierName,
         };
 
         StockLineSort {
@@ -109,6 +121,7 @@ impl StockLineQueries {
                 // Currently only one sort option is supported, use the first from the list.
                 sort.and_then(|mut sort_list| sort_list.pop())
                     .map(|sort| sort.to_domain()),
+                Some(store_id),
             )
             .map_err(StandardGraphqlError::from_list_error)?;
 

@@ -11,6 +11,11 @@ import {
   InputWithLabelRowProps,
   ExpiryDateInput,
   useTranslation,
+  Box,
+  IconButton,
+  ScanIcon,
+  useBarcodeScannerContext,
+  CircularProgress,
 } from '@openmsupply-client/common';
 import { StockLineRowFragment } from '../api';
 
@@ -29,11 +34,33 @@ const StyledInputRow = ({ label, Input }: InputWithLabelRowProps) => (
   />
 );
 interface StockLineFormProps {
-  draft: StockLineRowFragment;
-  onUpdate: (patch: Partial<StockLineRowFragment>) => void;
+  draft: StockLineRowFragment & { barcode?: string };
+  onUpdate: (
+    patch: Partial<StockLineRowFragment & { barcode?: string }>
+  ) => void;
 }
 export const StockLineForm: FC<StockLineFormProps> = ({ draft, onUpdate }) => {
   const t = useTranslation('inventory');
+  const { hasBarcodeScanner, isScanning, startScan } =
+    useBarcodeScannerContext();
+  const supplierName = draft.supplierName
+    ? draft.supplierName
+    : t('message.no-supplier');
+
+  const scanBarcode = async () => {
+    const result = await startScan();
+    if (!!result.content) {
+      const { batch, content, expiryDate, gtin } = result;
+      const barcode = gtin ?? content;
+      const draft = {
+        barcode,
+        batch,
+        expiryDate,
+      };
+
+      onUpdate(draft);
+    }
+  };
 
   return (
     <Grid
@@ -122,6 +149,33 @@ export const StockLineForm: FC<StockLineFormProps> = ({ draft, onUpdate }) => {
               onChange={(_, onHold) => onUpdate({ onHold })}
             />
           }
+        />
+        <StyledInputRow
+          label={t('label.barcode')}
+          Input={
+            <Box>
+              <BasicTextInput value={draft.barcode ?? ''} onChange={() => {}} />
+              {hasBarcodeScanner && (
+                <IconButton
+                  disabled={isScanning}
+                  onClick={scanBarcode}
+                  icon={
+                    isScanning ? (
+                      <CircularProgress size={20} color="secondary" />
+                    ) : (
+                      <ScanIcon />
+                    )
+                  }
+                  label={'Scan'}
+                />
+              )}
+            </Box>
+          }
+        />
+        <TextWithLabelRow
+          label={t('label.supplier')}
+          text={String(supplierName)}
+          textProps={{ textAlign: 'end' }}
         />
       </Grid>
     </Grid>

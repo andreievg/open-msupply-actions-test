@@ -45,7 +45,7 @@ export const StocktakeListView: FC = () => {
 
   const columns = useColumns<StocktakeRowFragment>(
     [
-      ['stocktakeNumber', { maxWidth: 50, sortable: false }],
+      ['stocktakeNumber', { maxWidth: 75, sortable: false }],
       [
         'status',
         {
@@ -90,7 +90,7 @@ export const StocktakeListView: FC = () => {
 };
 
 export const ListView: FC = () => (
-  <TableProvider createStore={createTableStore}>
+  <TableProvider createStore={createTableStore()}>
     <StocktakeListView />
   </TableProvider>
 );

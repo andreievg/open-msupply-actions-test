@@ -22,7 +22,8 @@ use service::{usize_to_u32, ListResult};
 pub enum InvoiceNodeType {
     OutboundShipment,
     InboundShipment,
-    InventoryAdjustment,
+    InventoryAddition,
+    InventoryReduction,
 }
 
 #[derive(Enum, Copy, Clone, PartialEq, Eq, Debug, Serialize)]
@@ -234,7 +235,7 @@ impl InvoiceNode {
             stock_total_after_tax: 0.0,
             service_total_before_tax: 0.0,
             service_total_after_tax: 0.0,
-            tax_percentage: None,
+            tax_percentage: self.row().tax,
         };
 
         let result_option = loader.load_one(self.row().id.to_string()).await?;
@@ -242,6 +243,10 @@ impl InvoiceNode {
         Ok(PricingNode {
             invoice_pricing: result_option.unwrap_or(default),
         })
+    }
+
+    pub async fn tax_percentage(&self) -> &Option<f64> {
+        &self.row().tax
     }
 
     pub async fn other_party(&self, ctx: &Context<'_>, store_id: String) -> Result<NameNode> {
@@ -341,7 +346,8 @@ impl InvoiceNodeType {
         match self {
             OutboundShipment => InvoiceRowType::OutboundShipment,
             InboundShipment => InvoiceRowType::InboundShipment,
-            InventoryAdjustment => InvoiceRowType::InventoryAdjustment,
+            InventoryAddition => InvoiceRowType::InventoryAddition,
+            InventoryReduction => InvoiceRowType::InventoryReduction,
         }
     }
 
@@ -350,7 +356,8 @@ impl InvoiceNodeType {
         match r#type {
             OutboundShipment => InvoiceNodeType::OutboundShipment,
             InboundShipment => InvoiceNodeType::InboundShipment,
-            InventoryAdjustment => InvoiceNodeType::InventoryAdjustment,
+            InventoryAddition => InvoiceNodeType::InventoryAddition,
+            InventoryReduction => InvoiceNodeType::InventoryReduction,
         }
     }
 }

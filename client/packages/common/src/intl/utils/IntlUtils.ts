@@ -2,18 +2,29 @@ import { i18n } from 'i18next';
 import { useTranslation as useTranslationNext } from 'react-i18next';
 import { EnvUtils } from '@common/utils';
 import { LanguageType } from '../../types/schema';
+import { LocalStorage } from '../../localStorage';
 
 export { useTranslationNext };
+
+const languageOptions = [
+  { label: 'عربي', value: 'ar' },
+  { label: 'Français', value: 'fr' },
+  { label: 'Français (Djibouti)', value: 'fr-DJ' },
+  { label: 'English', value: 'en' },
+  { label: 'Español', value: 'es' },
+  { label: 'Tetum', value: 'tet' },
+];
 
 const locales = [
   'ar' as const,
   'en' as const,
   'es' as const,
   'fr' as const,
+  'fr-DJ' as const,
   'tet' as const,
 ] as const;
 
-export type SupportedLocales = typeof locales[number];
+export type SupportedLocales = (typeof locales)[number];
 
 export const IntlUtils = {
   useChangeLanguage: () => {
@@ -53,6 +64,18 @@ export const IntlUtils = {
     }
     return 'en';
   },
+  languageOptions,
+  getLanguageName: (language: string) =>
+    languageOptions.find(option => option.value === language)?.label,
+  getUserLocale: (username: string) => {
+    const locales = LocalStorage.getItem('/localisation/locale');
+    return !!locales ? locales[username] : undefined;
+  },
+  setUserLocale: (username: string, locale: SupportedLocales) => {
+    const locales = LocalStorage.getItem('/localisation/locale') ?? {};
+    locales[username] = locale;
+    LocalStorage.setItem('/localisation/locale', locales);
+  },
 };
 
 const parseLanguage = (language?: LanguageType) => {
@@ -71,6 +94,8 @@ const parseLanguage = (language?: LanguageType) => {
       return 'ru';
     case LanguageType.Spanish:
       return 'es';
+    case LanguageType.Tetum:
+      return 'tet';
     default:
       return undefined;
   }

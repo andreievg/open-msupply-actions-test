@@ -1,19 +1,22 @@
 import { JSXElementConstructor } from 'react';
 import { SortBy } from '@common/hooks';
-import { useTranslation, LocaleKey } from '@common/intl';
+import { useTranslation, LocaleKey, TypedTFunction } from '@common/intl';
 import { RecordWithId } from '@common/types';
 
 export interface CellProps<T extends RecordWithId> {
   rowData: T;
-  rows: T[];
   columns: Column<T>[];
   column: Column<T>;
   rowKey: string;
   columnIndex: number;
   rowIndex: number;
   isDisabled?: boolean;
+  isRequired?: boolean;
+  isError?: boolean;
   // Unique name for browser autocomplete (to remember previously entered values for that name)
   autocompleteName?: string;
+  localisedText: TypedTFunction<LocaleKey>;
+  localisedDate: (date: string | number | Date) => string;
 }
 
 export interface HeaderProps<T extends RecordWithId> {
@@ -36,7 +39,6 @@ export enum ColumnAlign {
 
 export type ColumnDataAccessor<T extends RecordWithId> = (params: {
   rowData: T;
-  rows: T[];
 }) => unknown;
 
 export type Translators = {
@@ -62,6 +64,7 @@ export interface Column<T extends RecordWithId> {
   accessor: ColumnDataAccessor<T>;
 
   label: LocaleKey | '';
+  labelProps: Record<string, unknown>;
   description: LocaleKey | '';
 
   format: ColumnFormat;
@@ -72,6 +75,9 @@ export interface Column<T extends RecordWithId> {
   sortType: 'datetime' | 'numeric' | 'alphanumeric';
   sortInverted: boolean;
   getSortValue?: (row: T) => string | number;
+
+  getIsError?: (row: T) => boolean;
+  getIsDisabled?: (row: T) => boolean;
 
   onChangeSortBy?: (column: Column<T>) => void;
   sortBy?: SortBy<T>;

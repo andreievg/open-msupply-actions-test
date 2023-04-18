@@ -1,25 +1,22 @@
 package org.openmsupply.client;
 
 import android.os.Bundle;
-import android.provider.Settings;
-
 import com.getcapacitor.BridgeActivity;
-
-import org.openmsupply.client.certplugin.CertPlugin;
 
 public class MainActivity extends BridgeActivity {
     RemoteServer server = new RemoteServer();
+    DiscoveryConstants discoveryConstants;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        registerPlugin(NativeApi.class);
         super.onCreate(savedInstanceState);
-        registerPlugin(CertPlugin.class);
+
+        discoveryConstants = new DiscoveryConstants(getContentResolver());
 
         String path = getFilesDir().getAbsolutePath();
         String cache = getCacheDir().getAbsolutePath();
-        String androidId = Settings.Secure.getString(getContentResolver(),
-                Settings.Secure.ANDROID_ID);
-        server.start(8000, path, cache, androidId);
+        server.start(discoveryConstants.PORT, path, cache, discoveryConstants.hardwareId);
     }
 
     @Override

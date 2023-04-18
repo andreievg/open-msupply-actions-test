@@ -1,6 +1,7 @@
 /* eslint-disable react/jsx-key */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
+import { ViewportList } from 'react-viewport-list';
 import {
   Box,
   TableBody,
@@ -17,7 +18,7 @@ import { DataRow } from './components/DataRow/DataRow';
 import { PaginationRow } from './columns/PaginationRow';
 import { ColumnPicker, HeaderCell, HeaderRow } from './components/Header';
 import { RecordWithId } from '@common/types';
-import { useTranslation } from '@common/intl';
+import { useFormatDateTime, useTranslation } from '@common/intl';
 import { useTableStore } from './context';
 
 const DataTableComponent = <T extends RecordWithId>({
@@ -27,24 +28,29 @@ const DataTableComponent = <T extends RecordWithId>({
   data = [],
   dense = false,
   enableColumnSelection,
-  generateRowTooltip = () => '',
+  generateRowTooltip,
   isDisabled = false,
   isError = false,
   isLoading = false,
+  isRowAnimated = false,
   noDataElement,
   noDataMessage,
   overflowX = 'unset',
   pagination,
   onChangePage,
   onRowClick,
+  additionalRows,
 }: TableProps<T>): JSX.Element => {
   const t = useTranslation('common');
   const { setRows, setDisabledRows, setFocus } = useTableStore();
   const [clickFocusedRow, setClickFocusedRow] = useState(false);
   const [displayColumns, setDisplayColumns] = useState(columns);
-  const columnsToDisplay = columns.filter(c =>
-    displayColumns.map(({ key }) => key).includes(c.key)
+  const columnsToDisplay = React.useMemo(
+    () =>
+      columns.filter(c => displayColumns.map(({ key }) => key).includes(c.key)),
+    [displayColumns, columns]
   );
+  const { localisedDate } = useFormatDateTime();
 
   useRegisterActions([
     {
@@ -88,6 +94,8 @@ const DataTableComponent = <T extends RecordWithId>({
     if (page * first > total) onChangePage(0);
   }, [pagination]);
 
+  const ref = useRef<HTMLDivElement>(null);
+
   if (isLoading) return <BasicSpinner />;
 
   if (isError) {
@@ -114,11 +122,13 @@ const DataTableComponent = <T extends RecordWithId>({
 
   return (
     <TableContainer
+      ref={ref}
       sx={{
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
         overflowX,
+        overflowY: 'auto',
       }}
     >
       <MuiTable>
@@ -158,21 +168,34 @@ const DataTableComponent = <T extends RecordWithId>({
           </HeaderRow>
         </TableHead>
         <TableBody>
-          {data.map((row, idx) => (
-            <DataRow
-              key={row.id}
-              rows={data}
-              ExpandContent={ExpandContent}
-              rowIndex={idx}
-              columns={columnsToDisplay}
-              onClick={onRowClick ? onRowClick : undefined}
-              rowData={row}
-              rowKey={String(idx)}
-              dense={dense}
-              keyboardActivated={clickFocusedRow}
-              generateRowTooltip={generateRowTooltip}
-            />
-          ))}
+          <>
+            <ViewportList
+              viewportRef={ref}
+              items={data}
+              axis="y"
+              itemSize={40}
+              renderSpacer={({ ref, style }) => <tr ref={ref} style={style} />}
+            >
+              {(row, idx) => (
+                <DataRow
+                  key={row.id}
+                  ExpandContent={ExpandContent}
+                  rowIndex={idx}
+                  columns={columnsToDisplay}
+                  onClick={onRowClick ? onRowClick : undefined}
+                  rowData={row}
+                  rowKey={String(idx)}
+                  dense={dense}
+                  keyboardActivated={clickFocusedRow}
+                  generateRowTooltip={generateRowTooltip}
+                  localisedText={t}
+                  localisedDate={localisedDate}
+                  isAnimated={isRowAnimated}
+                />
+              )}
+            </ViewportList>
+            {additionalRows}
+          </>
         </TableBody>
       </MuiTable>
       <Box

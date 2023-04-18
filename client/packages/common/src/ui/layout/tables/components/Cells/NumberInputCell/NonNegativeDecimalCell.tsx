@@ -8,11 +8,12 @@ import { useBufferState, useDebounceCallback } from '@common/hooks';
 export const NonNegativeDecimalCell = <T extends RecordWithId>({
   rowData,
   column,
-  rows,
+  isError,
   isDisabled = false,
-}: CellProps<T>): React.ReactElement<CellProps<T>> => {
+  max,
+}: CellProps<T> & { max?: number }): React.ReactElement<CellProps<T>> => {
   const [buffer, setBuffer] = useBufferState(
-    column.accessor({ rowData, rows }) || ''
+    column.accessor({ rowData }) ?? ''
   );
 
   const updater = useDebounceCallback(column.setter, [column.setter], 250);
@@ -20,8 +21,10 @@ export const NonNegativeDecimalCell = <T extends RecordWithId>({
   return (
     <NonNegativeNumberInput
       disabled={isDisabled}
+      max={max}
       InputProps={{ sx: { '& .MuiInput-input': { textAlign: 'right' } } }}
       type="number"
+      error={isError}
       value={buffer}
       onChange={newValue => {
         const decimal = Math.round(newValue * 100) / 100;

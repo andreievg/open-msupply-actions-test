@@ -32,6 +32,11 @@ impl ServerSettings {
     pub fn address(&self) -> String {
         format!("0.0.0.0:{}", self.port)
     }
+
+    /// Http server port for graphql used in discovery, defaults to port + 1
+    pub fn discovery_address(&self) -> String {
+        format!("0.0.0.0:{}", self.port + 1)
+    }
 }
 
 pub fn is_develop() -> bool {
@@ -81,6 +86,24 @@ pub struct LoggingSettings {
     pub max_file_count: Option<i64>,
     /// Max logfile size in MB
     pub max_file_size: Option<usize>,
+}
+
+impl LoggingSettings {
+    pub fn new(mode: LogMode, level: Level) -> Self {
+        LoggingSettings {
+            mode,
+            level,
+            directory: None,
+            filename: None,
+            max_file_count: None,
+            max_file_size: None,
+        }
+    }
+
+    pub fn with_directory(mut self, directory: String) -> Self {
+        self.directory = Some(directory);
+        self
+    }
 }
 
 #[derive(serde::Deserialize, Clone)]

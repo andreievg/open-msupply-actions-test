@@ -8,8 +8,8 @@ use crate::sync::{
 };
 use chrono::NaiveDate;
 use repository::{
-    mock::{mock_item_a,  mock_stock_line_a},
-  InvoiceLineRow, InvoiceLineRowType,
+    mock::{mock_item_a, mock_stock_line_a},
+    InvoiceLineRow, InvoiceLineRowType,
 };
 use serde_json::json;
 
@@ -93,6 +93,7 @@ fn trans_line_1_pull_record() -> TestSyncPullRecord {
             r#type: InvoiceLineRowType::StockIn,
             number_of_packs: 700.36363636,
             note: None,
+            inventory_adjustment_reason_id: None,
         }),
     )
 }
@@ -119,6 +120,7 @@ fn trans_line_1_push_record() -> TestSyncPushRecord {
             tax: None,
             total_before_tax: Some(10.0 * 700.36363636),
             total_after_tax: Some(10.0 * 700.36363636),
+            inventory_adjustment_reason_id: None,
         }),
     }
 }
@@ -193,7 +195,7 @@ fn trans_line_2_pull_record() -> TestSyncPullRecord {
             stock_line_id: Some(mock_stock_line_a().id),
             location_id: None,
             batch: None,
-            expiry_date: Some(NaiveDate::from_ymd(2022, 02, 22)),
+            expiry_date: Some(NaiveDate::from_ymd_opt(2022, 02, 22).unwrap()),
             pack_size: 5,
             cost_price_per_pack: 5.0,
             sell_price_per_pack: 2.0,
@@ -203,6 +205,7 @@ fn trans_line_2_pull_record() -> TestSyncPullRecord {
             r#type: InvoiceLineRowType::StockOut,
             number_of_packs: 1000.9124798,
             note: Some("every FOUR to SIX hours when necessary ".to_string()),
+            inventory_adjustment_reason_id: None,
         }),
     )
 }
@@ -218,7 +221,7 @@ fn trans_line_2_push_record() -> TestSyncPushRecord {
             stock_line_id: Some(mock_stock_line_a().id),
             location_id: None,
             batch: None,
-            expiry_date: Some(NaiveDate::from_ymd(2022, 02, 22)),
+            expiry_date: Some(NaiveDate::from_ymd_opt(2022, 02, 22).unwrap()),
             pack_size: 5,
             cost_price_per_pack: 5.0,
             sell_price_per_pack: 2.0,
@@ -229,6 +232,7 @@ fn trans_line_2_push_record() -> TestSyncPushRecord {
             tax: None,
             total_before_tax: Some(2.0 * 1000.9124798),
             total_after_tax: Some(2.0 * 1000.9124798),
+            inventory_adjustment_reason_id: None,
         }),
     }
 }
@@ -306,7 +310,7 @@ fn trans_line_om_fields_pull_record() -> TestSyncPullRecord {
             stock_line_id: Some(mock_stock_line_a().id),
             location_id: None,
             batch: None,
-            expiry_date: Some(NaiveDate::from_ymd(2022, 02, 22)),
+            expiry_date: Some(NaiveDate::from_ymd_opt(2022, 02, 22).unwrap()),
             pack_size: 5,
             cost_price_per_pack: 5.0,
             sell_price_per_pack: 2.0,
@@ -316,6 +320,7 @@ fn trans_line_om_fields_pull_record() -> TestSyncPullRecord {
             r#type: InvoiceLineRowType::StockOut,
             number_of_packs: 1000.9124798,
             note: Some("every FOUR to SIX hours when necessary ".to_string()),
+            inventory_adjustment_reason_id: None,
         }),
     )
 }
@@ -331,7 +336,7 @@ fn trans_line_om_fields_push_record() -> TestSyncPushRecord {
             stock_line_id: Some(mock_stock_line_a().id),
             location_id: None,
             batch: None,
-            expiry_date: Some(NaiveDate::from_ymd(2022, 02, 22)),
+            expiry_date: Some(NaiveDate::from_ymd_opt(2022, 02, 22).unwrap()),
             pack_size: 5,
             cost_price_per_pack: 5.0,
             sell_price_per_pack: 2.0,
@@ -342,6 +347,7 @@ fn trans_line_om_fields_push_record() -> TestSyncPushRecord {
             tax: Some(33.3),
             total_before_tax: Some(105.4),
             total_after_tax: Some(130.5),
+            inventory_adjustment_reason_id: None,
         }),
     }
 }
@@ -419,7 +425,7 @@ fn trans_line_om_fields_unset_tax_pull_record() -> TestSyncPullRecord {
             stock_line_id: Some(mock_stock_line_a().id),
             location_id: None,
             batch: None,
-            expiry_date: Some(NaiveDate::from_ymd(2022, 02, 22)),
+            expiry_date: Some(NaiveDate::from_ymd_opt(2022, 02, 22).unwrap()),
             pack_size: 5,
             cost_price_per_pack: 5.0,
             sell_price_per_pack: 2.0,
@@ -429,6 +435,7 @@ fn trans_line_om_fields_unset_tax_pull_record() -> TestSyncPullRecord {
             r#type: InvoiceLineRowType::StockOut,
             number_of_packs: 1000.9124798,
             note: Some("every FOUR to SIX hours when necessary ".to_string()),
+            inventory_adjustment_reason_id: None,
         }),
     )
 }
@@ -444,7 +451,7 @@ fn trans_line_om_fields_unset_tax_push_record() -> TestSyncPushRecord {
             stock_line_id: Some(mock_stock_line_a().id),
             location_id: None,
             batch: None,
-            expiry_date: Some(NaiveDate::from_ymd(2022, 02, 22)),
+            expiry_date: Some(NaiveDate::from_ymd_opt(2022, 02, 22).unwrap()),
             pack_size: 5,
             cost_price_per_pack: 5.0,
             sell_price_per_pack: 2.0,
@@ -455,6 +462,7 @@ fn trans_line_om_fields_unset_tax_push_record() -> TestSyncPushRecord {
             tax: None,
             total_before_tax: Some(105.4),
             total_after_tax: Some(130.5),
+            inventory_adjustment_reason_id: None,
         }),
     }
 }

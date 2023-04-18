@@ -3,9 +3,7 @@ mod integration;
 mod pull_and_push;
 pub(crate) mod test_data;
 
-use std::convert::TryInto;
-
-use super::translations::{IntegrationRecords, PullDeleteRecordTable};
+use super::translations::{IntegrationRecords, PullDeleteRecord, PullDeleteRecordTable};
 use crate::sync::translations::PullUpsertRecord;
 use repository::{mock::MockData, *};
 use util::inline_init;
@@ -27,8 +25,16 @@ impl TestSyncPullRecord {
         id_and_data: (&str, &str),
         result: PullUpsertRecord,
     ) -> TestSyncPullRecord {
+        Self::new_pull_upserts(table_name, id_and_data, vec![result])
+    }
+    fn new_pull_upserts(
+        table_name: &str,
+        // .0 = id .1 = data
+        id_and_data: (&str, &str),
+        results: Vec<PullUpsertRecord>,
+    ) -> TestSyncPullRecord {
         TestSyncPullRecord {
-            translated_record: Some(IntegrationRecords::from_upsert(result)),
+            translated_record: Some(IntegrationRecords::from_upserts(results)),
             sync_buffer_row: inline_init(|r: &mut SyncBufferRow| {
                 r.table_name = table_name.to_owned();
                 r.record_id = id_and_data.0.to_owned();
@@ -44,8 +50,25 @@ impl TestSyncPullRecord {
         id: &str,
         result_table: PullDeleteRecordTable,
     ) -> TestSyncPullRecord {
+        Self::new_pull_deletes(
+            table_name,
+            id,
+            IntegrationRecords {
+                upserts: vec![],
+                deletes: vec![PullDeleteRecord {
+                    table: result_table,
+                    id: id.to_string(),
+                }],
+            },
+        )
+    }
+    fn new_pull_deletes(
+        table_name: &str,
+        id: &str,
+        delete_records: IntegrationRecords,
+    ) -> TestSyncPullRecord {
         TestSyncPullRecord {
-            translated_record: Some(IntegrationRecords::from_delete(id, result_table)),
+            translated_record: Some(delete_records),
             sync_buffer_row: inline_init(|r: &mut SyncBufferRow| {
                 r.table_name = table_name.to_owned();
                 r.record_id = id.to_string();
@@ -148,18 +171,6 @@ pub(crate) async fn check_records_against_database(
     for upsert in records.upserts {
         use PullUpsertRecord::*;
         match upsert {
-            Number(comparison_record) => {
-                assert_eq!(
-                    NumberRowRepository::new(&con)
-                        .find_one_by_type_and_store(
-                            &comparison_record.r#type.clone().try_into().unwrap(),
-                            &comparison_record.store_id
-                        )
-                        .unwrap()
-                        .expect(&format!("Number not found: {}", &comparison_record.id)),
-                    comparison_record
-                )
-            }
             Location(record) => {
                 check_record_by_id!(LocationRowRepository, con, record, "Location");
             }
@@ -168,6 +179,12 @@ pub(crate) async fn check_records_against_database(
             }
             Name(record) => {
                 check_record_by_id!(NameRowRepository, con, record, "Name");
+            }
+            NameTag(record) => {
+                check_record_by_id!(NameTagRowRepository, con, record, "NameTag");
+            }
+            NameTagJoin(record) => {
+                check_record_by_id!(NameTagJoinRepository, con, record, "NameTagJoin");
             }
             NameStoreJoin(record) => {
                 check_record_by_id!(NameStoreJoinRepository, con, record, "NameStoreJoin");
@@ -215,10 +232,27 @@ pub(crate) async fn check_records_against_database(
                 "MasterListNameJoin"
             ),
 
+            PeriodSchedule(record) => {
+                check_record_by_id!(PeriodScheduleRowRepository, con, record, "PeriodSchedule")
+            }
+
+            Period(record) => check_record_by_id!(PeriodRowRepository, con, record, "Period"),
+
             Report(record) => check_record_by_id!(ReportRowRepository, con, record, "Report"),
 
             ActivityLog(record) => {
                 check_record_by_id!(ActivityLogRowRepository, con, record, "ActivityLog")
+            }
+
+            InventoryAdjustmentReason(record) => check_record_by_id!(
+                InventoryAdjustmentReasonRowRepository,
+                con,
+                record,
+                "InventoryAdjustmentReason"
+            ),
+
+            StorePreference(record) => {
+                check_record_by_id!(StorePreferenceRowRepository, con, record, "StorePreference")
             }
         }
     }
@@ -229,6 +263,9 @@ pub(crate) async fn check_records_against_database(
         match delete.table {
             Name => {
                 check_delete_record_by_id!(NameRowRepository, con, id)
+            }
+            NameTagJoin => {
+                check_delete_record_by_id!(NameTagJoinRepository, con, id)
             }
             Unit => {
                 check_delete_record_by_id_option!(UnitRowRepository, con, id)
@@ -250,6 +287,9 @@ pub(crate) async fn check_records_against_database(
             }
             Requisition => check_delete_record_by_id!(ReportRowRepository, con, id),
             RequisitionLine => check_delete_record_by_id!(ReportRowRepository, con, id),
+            InventoryAdjustmentReason => {
+                check_delete_record_by_id!(InventoryAdjustmentReasonRowRepository, con, id)
+            }
             #[cfg(feature = "integration_test")]
             Location => check_delete_record_by_id!(LocationRowRepository, con, id),
             #[cfg(feature = "integration_test")]

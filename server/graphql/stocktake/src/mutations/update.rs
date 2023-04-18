@@ -4,8 +4,9 @@ use chrono::NaiveDate;
 use graphql_core::simple_generic_errors::{CannotEditStocktake, StocktakeIsLocked};
 use graphql_core::standard_graphql_error::{validate_auth, StandardGraphqlError};
 use graphql_core::ContextExt;
+use graphql_types::generic_errors::StockLineReducedBelowZero;
 use graphql_types::types::{StocktakeLineConnector, StocktakeNode};
-use repository::{Stocktake, StocktakeLine};
+use repository::{StockLine, Stocktake};
 use service::stocktake::UpdateStocktakeStatus;
 use service::{
     auth::{Resource, ResourceAccessRequest},
@@ -28,15 +29,32 @@ pub enum UpdateStocktakeStatusInput {
     Finalised,
 }
 
-pub struct SnapshotCountCurrentCountMismatch(Vec<StocktakeLine>);
+pub struct SnapshotCountCurrentCountMismatch(StocktakeLineConnector);
 #[Object]
 impl SnapshotCountCurrentCountMismatch {
     pub async fn description(&self) -> &'static str {
         "Snapshot count doesn't match the current stock count"
     }
 
-    pub async fn lines(&self) -> StocktakeLineConnector {
-        StocktakeLineConnector::from_domain_vec(self.0.clone())
+    pub async fn lines(&self) -> &StocktakeLineConnector {
+        &self.0
+    }
+}
+
+pub struct StockLinesReducedBelowZero(pub Vec<StockLine>);
+
+#[Object]
+impl StockLinesReducedBelowZero {
+    pub async fn description(&self) -> &'static str {
+        "Stock lines exist in new outbound shipments. "
+    }
+
+    pub async fn errors(&self) -> Vec<StockLineReducedBelowZero> {
+        self.0
+            .clone()
+            .into_iter()
+            .map(StockLineReducedBelowZero::from_domain)
+            .collect()
     }
 }
 
@@ -47,6 +65,7 @@ pub enum UpdateErrorInterface {
     SnapshotCountCurrentCountMismatch(SnapshotCountCurrentCountMismatch),
     StocktakeIsLocked(StocktakeIsLocked),
     CannotEditStocktake(CannotEditStocktake),
+    StockLinesReducedBelowZero(StockLinesReducedBelowZero),
 }
 
 #[derive(SimpleObject)]
@@ -98,7 +117,7 @@ fn map_error(err: ServiceError) -> Result<UpdateErrorInterface> {
         // Structured Errors
         ServiceError::SnapshotCountCurrentCountMismatch(lines) => {
             return Ok(UpdateErrorInterface::SnapshotCountCurrentCountMismatch(
-                SnapshotCountCurrentCountMismatch(lines),
+                SnapshotCountCurrentCountMismatch(StocktakeLineConnector::from_domain_vec(lines)),
             ))
         }
         ServiceError::StocktakeIsLocked => {
@@ -109,6 +128,11 @@ fn map_error(err: ServiceError) -> Result<UpdateErrorInterface> {
         ServiceError::CannotEditFinalised => {
             return Ok(UpdateErrorInterface::CannotEditStocktake(
                 CannotEditStocktake {},
+            ))
+        }
+        ServiceError::StockLinesReducedBelowZero(lines) => {
+            return Ok(UpdateErrorInterface::StockLinesReducedBelowZero(
+                StockLinesReducedBelowZero(lines),
             ))
         }
         // Standard Graphql Errors
@@ -156,11 +180,8 @@ impl UpdateStocktakeStatusInput {
 #[cfg(test)]
 mod graphql {
     use async_graphql::EmptyMutation;
-    use chrono::NaiveDate;
     use graphql_core::{assert_graphql_query, test_helpers::setup_graphl_test};
-    use repository::{
-        mock::MockDataInserts, StocktakeRow, StocktakeStatus, StorageConnectionManager,
-    };
+    use repository::{mock::MockDataInserts, StocktakeRow, StorageConnectionManager};
     use serde_json::json;
     use service::{
         service_provider::{ServiceContext, ServiceProvider},
@@ -273,17 +294,7 @@ mod graphql {
         let test_service = TestService(Box::new(|_, _| {
             Ok(StocktakeRow {
                 id: "id1".to_string(),
-                user_id: "".to_string(),
-                stocktake_number: 123,
-                store_id: "store id".to_string(),
-                comment: Some("comment".to_string()),
-                description: Some("description".to_string()),
-                status: StocktakeStatus::Finalised,
-                created_datetime: NaiveDate::from_ymd(2022, 1, 22).and_hms(15, 16, 0),
-                stocktake_date: Some(NaiveDate::from_ymd(2022, 01, 24)),
-                finalised_datetime: Some(NaiveDate::from_ymd(2022, 1, 23).and_hms(15, 16, 0)),
-                inventory_adjustment_id: Some("inv id".to_string()),
-                is_locked: false,
+                ..Default::default()
             })
         }));
 

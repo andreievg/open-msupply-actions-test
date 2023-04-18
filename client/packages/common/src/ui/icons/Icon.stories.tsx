@@ -24,11 +24,13 @@ import { DashboardIcon } from './Dashboard';
 import { DeleteIcon } from './Delete';
 import { DownloadIcon } from './Download';
 import { EditIcon } from './Edit';
+import { ExternalLinkIcon } from './ExternalLink';
 import { EyeIcon } from './Eye';
 import { EyeOffIcon } from './EyeOff';
 import { FilterIcon } from './Filter';
 import { HomeIcon } from './Home';
 import { InfoIcon } from './Info';
+import { InfoOutlineIcon } from './InfoOutline';
 import { InvoiceIcon } from './Invoice';
 import { MedicineIcon } from './MedicineIcon';
 import { MSupplyGuy, AnimatedMSupplyGuy } from './MSupplyGuy';
@@ -41,7 +43,9 @@ import { PrinterIcon } from './Printer';
 import { RadioIcon } from './Radio';
 import { ReportsIcon } from './Reports';
 import { RewindIcon } from './Rewind';
+import { RefreshIcon } from './Refresh';
 import { SaveIcon } from './Save';
+import { ScanIcon } from './Scan';
 import { SearchIcon } from './Search';
 import { SettingsIcon } from './Settings';
 import { SidebarIcon } from './Sidebar';
@@ -103,11 +107,13 @@ const Template: ComponentStory<React.FC<SvgIconProps>> = args => {
     { icon: <DeleteIcon {...args} />, name: 'Delete' },
     { icon: <DownloadIcon {...args} />, name: 'Download' },
     { icon: <EditIcon {...args} />, name: 'Edit' },
+    { icon: <ExternalLinkIcon {...args} />, name: 'External Link' },
     { icon: <EyeIcon {...args} />, name: 'Eye' },
     { icon: <EyeOffIcon {...args} />, name: 'EyeOff' },
     { icon: <FilterIcon {...args} />, name: 'Filter' },
     { icon: <HomeIcon {...args} />, name: 'Home' },
     { icon: <InfoIcon {...args} />, name: 'Info' },
+    { icon: <InfoOutlineIcon {...args} />, name: 'InfoOutline' },
     { icon: <InvoiceIcon {...args} />, name: 'Invoice' },
     { icon: <MSupplyGuy {...args} size="medium" />, name: 'MSupplyGuy' },
     {
@@ -123,8 +129,10 @@ const Template: ComponentStory<React.FC<SvgIconProps>> = args => {
     { icon: <PrinterIcon {...args} />, name: 'Printer' },
     { icon: <RadioIcon {...args} />, name: 'Radio' },
     { icon: <ReportsIcon {...args} />, name: 'Reports' },
+    { icon: <RefreshIcon {...args} />, name: 'Refresh' },
     { icon: <RewindIcon {...args} />, name: 'Rewind' },
     { icon: <SaveIcon {...args} />, name: 'Save' },
+    { icon: <ScanIcon {...args} />, name: 'Scan' },
     { icon: <SearchIcon {...args} />, name: 'Search' },
     { icon: <SettingsIcon {...args} />, name: 'Settings' },
     { icon: <SidebarIcon {...args} />, name: 'Sidebar' },

@@ -6,17 +6,22 @@ use repository::{
 };
 use util::inline_edit;
 
-// Ordered by referencial constraints
+// Ordered by referential constraints
 const TRANSLATION_AND_INTEGRATION_ORDER: &[&str] = &[
+    LegacyTableName::INVENTORY_ADJUSTMENT_REASON,
     LegacyTableName::NAME,
+    LegacyTableName::NAME_TAG,
+    LegacyTableName::NAME_TAG_JOIN,
     LegacyTableName::UNIT,
     LegacyTableName::ITEM,
     LegacyTableName::STORE,
+    LegacyTableName::STORE_PREFERENCE,
     LegacyTableName::LIST_MASTER,
     LegacyTableName::LIST_MASTER_LINE,
     LegacyTableName::LIST_MASTER_NAME_JOIN,
+    LegacyTableName::PERIOD_SCHEDULE,
+    LegacyTableName::PERIOD,
     LegacyTableName::REPORT,
-    LegacyTableName::NUMBER,
     LegacyTableName::LOCATION,
     LegacyTableName::ITEM_LINE,
     LegacyTableName::TRANSACT,
@@ -42,7 +47,7 @@ impl<'a> SyncBuffer<'a> {
         }
     }
 
-    pub(crate) fn record_successfull_integration(
+    pub(crate) fn record_successful_integration(
         &self,
         row: &SyncBufferRow,
     ) -> Result<(), RepositoryError> {
@@ -69,8 +74,8 @@ impl<'a> SyncBuffer<'a> {
         &self,
         action: SyncBufferAction,
     ) -> Result<Vec<SyncBufferRow>, RepositoryError> {
-        // Get ordered table names, for  upsert we sort in referencial constraint order
-        // and for delete in reverse of referencial constraint order
+        // Get ordered table names, for  upsert we sort in referential constraint order
+        // and for delete in reverse of referential constraint order
         let ordered_table_names = TRANSLATION_AND_INTEGRATION_ORDER.iter().map(|r| *r);
         let order: Vec<&str> = match action {
             SyncBufferAction::Upsert => ordered_table_names.collect(),
@@ -208,7 +213,7 @@ mod test {
         assert_eq!(row_1.integration_error, Some("Error 1".to_string()));
 
         // INTEGRATED
-        buffer.record_successfull_integration(&row_3()).unwrap();
+        buffer.record_successful_integration(&row_3()).unwrap();
 
         let result = buffer
             .get_ordered_sync_buffer_records(repository::SyncBufferAction::Upsert)
@@ -216,7 +221,7 @@ mod test {
 
         assert_eq!(result, vec![row_4()]);
 
-        buffer.record_successfull_integration(&row_4()).unwrap();
+        buffer.record_successful_integration(&row_4()).unwrap();
 
         let result = buffer
             .get_ordered_sync_buffer_records(repository::SyncBufferAction::Upsert)

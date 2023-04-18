@@ -9,7 +9,7 @@ use super::{
 
 use crate::{
     diesel_macros::apply_equal_filter, repository_error::RepositoryError, EqualFilter,
-    InvoiceRowStatus, InvoiceRowType, Pagination, StockLineRow,
+    InvoiceRowStatus, InvoiceRowType, StockLineRow,
 };
 
 use diesel::{
@@ -63,6 +63,7 @@ pub struct InvoiceLineFilter {
     pub number_of_packs: Option<EqualFilter<f64>>,
     pub invoice_type: Option<EqualFilter<InvoiceRowType>>,
     pub invoice_status: Option<EqualFilter<InvoiceRowStatus>>,
+    pub stock_line_id: Option<EqualFilter<String>>,
 }
 
 impl InvoiceLineFilter {
@@ -78,6 +79,7 @@ impl InvoiceLineFilter {
             number_of_packs: None,
             invoice_type: None,
             invoice_status: None,
+            stock_line_id: None,
         }
     }
 
@@ -130,6 +132,11 @@ impl InvoiceLineFilter {
         self.invoice_status = Some(filter);
         self
     }
+
+    pub fn stock_line_id(mut self, filter: EqualFilter<String>) -> Self {
+        self.stock_line_id = Some(filter);
+        self
+    }
 }
 
 type InvoiceLineJoin = (
@@ -159,7 +166,7 @@ impl<'a> InvoiceLineRepository<'a> {
         &self,
         filter: InvoiceLineFilter,
     ) -> Result<Vec<InvoiceLine>, RepositoryError> {
-        self.query(Pagination::new(), Some(filter))
+        self.query(Some(filter))
     }
 
     pub fn query_one(
@@ -171,16 +178,12 @@ impl<'a> InvoiceLineRepository<'a> {
 
     pub fn query(
         &self,
-        pagination: Pagination,
         filter: Option<InvoiceLineFilter>,
     ) -> Result<Vec<InvoiceLine>, RepositoryError> {
         // TODO (beyond M1), check that store_id matches current store
         let query = create_filtered_query(filter);
 
-        let result = query
-            .offset(pagination.offset as i64)
-            .limit(pagination.limit as i64)
-            .load::<InvoiceLineJoin>(&self.connection.connection)?;
+        let result = query.load::<InvoiceLineJoin>(&self.connection.connection)?;
 
         Ok(result.into_iter().map(to_domain).collect())
     }
@@ -222,6 +225,7 @@ fn create_filtered_query(filter: Option<InvoiceLineFilter>) -> BoxedInvoiceLineQ
             number_of_packs,
             invoice_type,
             invoice_status,
+            stock_line_id,
         } = f;
 
         apply_equal_filter!(query, id, invoice_line_dsl::id);
@@ -234,6 +238,7 @@ fn create_filtered_query(filter: Option<InvoiceLineFilter>) -> BoxedInvoiceLineQ
         apply_equal_filter!(query, number_of_packs, invoice_line_dsl::number_of_packs);
         apply_equal_filter!(query, invoice_type, invoice_dsl::type_);
         apply_equal_filter!(query, invoice_status, invoice_dsl::status);
+        apply_equal_filter!(query, stock_line_id, stock_line_dsl::id);
     }
 
     query
@@ -279,5 +284,8 @@ impl InvoiceLine {
 impl InvoiceLineRowType {
     pub fn equal_to(&self) -> EqualFilter<Self> {
         inline_init(|r: &mut EqualFilter<Self>| r.equal_to = Some(self.clone()))
+    }
+    pub fn not_equal_to(&self) -> EqualFilter<Self> {
+        inline_init(|r: &mut EqualFilter<Self>| r.not_equal_to = Some(self.clone()))
     }
 }

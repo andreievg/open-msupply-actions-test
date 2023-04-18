@@ -29,6 +29,12 @@ pub mod display_settings;
 pub mod initialisation_status;
 pub mod response_requisition_line_stats;
 pub use self::response_requisition_line_stats::*;
+pub mod inventory_adjustment_reason;
+pub use self::inventory_adjustment_reason::*;
+pub mod item_counts;
+pub use self::item_counts::*;
+pub mod store_preference;
+pub use self::store_preference::*;
 
 #[cfg(test)]
 mod tests;

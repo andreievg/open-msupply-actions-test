@@ -1,4 +1,4 @@
-// json! hits recursion limit in integration test (central_server_configurations), recusion_limit attribute must be top level
+// json! hits recursion limit in integration test (central_server_configurations), recursion_limit attribute must be top level
 #![cfg_attr(feature = "integration_test", recursion_limit = "256")]
 use repository::RepositoryError;
 use repository::{Pagination, PaginationOption, DEFAULT_PAGINATION_LIMIT};
@@ -12,6 +12,7 @@ pub mod auth;
 pub mod auth_data;
 pub mod dashboard;
 pub mod display_settings_service;
+pub mod inventory_adjustment_reason;
 pub mod invoice;
 pub mod invoice_line;
 pub mod item;
@@ -34,6 +35,7 @@ pub mod stock_line;
 pub mod stocktake;
 pub mod stocktake_line;
 pub mod store;
+pub mod store_preference;
 pub mod sync;
 pub mod system_user;
 pub mod token;

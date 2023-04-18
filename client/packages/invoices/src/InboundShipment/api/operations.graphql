@@ -13,6 +13,7 @@ fragment InboundLine on InvoiceLineNode {
   invoiceId
   totalBeforeTax
   totalAfterTax
+  taxPercentage
 
   item {
     __typename
@@ -67,6 +68,8 @@ fragment Inbound on InvoiceNode {
   theirReference
   transportReference
   type
+  taxPercentage
+
   linkedShipment {
     __typename
     id
@@ -116,6 +119,7 @@ fragment Inbound on InvoiceNode {
     stockTotalAfterTax
     serviceTotalAfterTax
     serviceTotalBeforeTax
+    taxPercentage
   }
 }
 
@@ -123,16 +127,19 @@ fragment InboundRow on InvoiceNode {
   __typename
   comment
   createdDatetime
-  allocatedDatetime
+  deliveredDatetime
   id
   invoiceNumber
   otherPartyName
   status
   colour
   theirReference
+  taxPercentage
+  onHold
   pricing {
     __typename
     totalAfterTax
+    taxPercentage
   }
   linkedShipment {
     id
@@ -361,6 +368,7 @@ mutation upsertInboundShipment(
   $input: BatchInboundShipmentInput!
 ) {
   batchInboundShipment(storeId: $storeId, input: $input) {
+    __typename
     updateInboundShipments {
       id
       response {

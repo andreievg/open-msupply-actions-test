@@ -3,33 +3,24 @@ import {
   ArrowRightIcon,
   useTranslation,
   LoadingButton,
-  Box,
-  Typography,
-  InitialisationStatusType,
-  AlertIcon,
   useHostContext,
-  useNavigate,
-  useElectronClient,
-  frontEndHostDisplay,
   LocalStorage,
+  ErrorWithDetails,
 } from '@openmsupply-client/common';
-import { AppRoute } from '@openmsupply-client/config';
 import { useHost } from '../../api/hooks';
 import { LoginTextInput } from './LoginTextInput';
 import { useLoginForm } from './hooks';
 import { LoginLayout } from './LoginLayout';
+import { SiteInfo } from '../SiteInfo';
 
 export const Login = () => {
   const t = useTranslation('app');
-  const { connectedServer } = useElectronClient();
   const { setPageTitle } = useHostContext();
-  const { data: initialisationStatus } = useHost.utils.initialisationStatus();
   const hashInput = {
     logo: LocalStorage.getItem('/theme/logohash') ?? '',
     theme: LocalStorage.getItem('/theme/customhash') ?? '',
   };
   const { data: displaySettings } = useHost.settings.displaySettings(hashInput);
-  const navigate = useNavigate();
 
   const passwordRef = React.useRef(null);
   const {
@@ -41,6 +32,7 @@ export const Login = () => {
     isLoggingIn,
     onLogin,
     error,
+    siteName,
   } = useLoginForm(passwordRef);
 
   useEffect(() => {
@@ -62,18 +54,8 @@ export const Login = () => {
     LocalStorage.removeItem('/auth/error');
   }, []);
 
-  useEffect(() => {
-    if (
-      !!initialisationStatus &&
-      initialisationStatus !== InitialisationStatusType.Initialised
-    ) {
-      navigate(`/${AppRoute.Initialise}`);
-    }
-  }, [initialisationStatus]);
-
   return (
     <LoginLayout
-      ServerInfo={connectedServer ? frontEndHostDisplay(connectedServer) : ''}
       UsernameInput={
         <LoginTextInput
           fullWidth
@@ -114,21 +96,16 @@ export const Login = () => {
       }
       ErrorMessage={
         error && (
-          <Box display="flex" sx={{ color: 'error.main' }} gap={1}>
-            <Box>
-              <AlertIcon />
-            </Box>
-            <Box>
-              <Typography sx={{ color: 'inherit' }}>
-                {error.message || t('error.login')}
-              </Typography>
-            </Box>
-          </Box>
+          <ErrorWithDetails
+            error={error.message || t('error.login')}
+            details={error.detail || ''}
+          />
         )
       }
       onLogin={async () => {
         if (isValid) await onLogin();
       }}
+      SiteInfo={<SiteInfo siteName={siteName} />}
     />
   );
 };

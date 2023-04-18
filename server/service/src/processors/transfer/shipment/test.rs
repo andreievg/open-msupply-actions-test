@@ -160,6 +160,7 @@ pub(crate) struct ShipmentTransferTester {
     request_requisition: RequisitionRow,
     outbound_shipment_line1: InvoiceLineRow,
     outbound_shipment_line2: InvoiceLineRow,
+    outbound_shipment_unallocated_line: InvoiceLineRow,
     outbound_shipment: InvoiceRow,
     inbound_shipment: Option<InvoiceRow>,
     response_requisition: Option<RequisitionRow>,
@@ -190,7 +191,10 @@ impl ShipmentTransferTester {
             r.status = InvoiceRowStatus::Allocated;
             r.their_reference = Some("some reference".to_string());
             r.comment = Some("some comment".to_string());
-            r.created_datetime = NaiveDate::from_ymd(1970, 1, 1).and_hms_milli(12, 30, 0, 0);
+            r.created_datetime = NaiveDate::from_ymd_opt(1970, 1, 1)
+                .unwrap()
+                .and_hms_milli_opt(12, 30, 0, 0)
+                .unwrap();
         });
 
         let location = inline_init(|r: &mut LocationRow| {
@@ -204,7 +208,7 @@ impl ShipmentTransferTester {
             r.store_id = outbound_store.id.clone();
             r.item_id = item1.id.clone();
             r.batch = Some(uuid());
-            r.expiry_date = Some(NaiveDate::from_ymd(2025, 3, 1));
+            r.expiry_date = Some(NaiveDate::from_ymd_opt(2025, 3, 1).unwrap());
             r.pack_size = 10;
             r.total_number_of_packs = 200.0;
             r.available_number_of_packs = 200.0;
@@ -236,7 +240,7 @@ impl ShipmentTransferTester {
             r.pack_size = 10;
             r.total_number_of_packs = 200.0;
             r.available_number_of_packs = 200.0;
-            r.expiry_date = Some(NaiveDate::from_ymd(2023, 1, 5));
+            r.expiry_date = Some(NaiveDate::from_ymd_opt(2023, 1, 5).unwrap());
         });
 
         let outbound_shipment_line2 = inline_init(|r: &mut InvoiceLineRow| {
@@ -256,12 +260,24 @@ impl ShipmentTransferTester {
             // Location todo
         });
 
+        let outbound_shipment_unallocated_line = inline_init(|r: &mut InvoiceLineRow| {
+            r.id = uuid();
+            r.invoice_id = outbound_shipment.id.clone();
+            r.r#type = InvoiceLineRowType::UnallocatedStock;
+            r.pack_size = 1;
+            r.number_of_packs = 10.0;
+            r.item_id = item2.id.clone();
+            r.item_name = item2.name.clone();
+            r.item_code = item2.code.clone();
+        });
+
         ShipmentTransferTester {
             outbound_store: outbound_store.clone(),
             inbound_store: inbound_store.clone(),
             request_requisition,
             outbound_shipment_line1,
             outbound_shipment_line2,
+            outbound_shipment_unallocated_line,
             outbound_shipment,
             inbound_shipment: None,
             response_requisition: None,
@@ -354,6 +370,12 @@ impl ShipmentTransferTester {
             )
             .unwrap()
             .invoice_row;
+
+        // This should not be possible, omSupply service does not allow placeholder/unallocated lines in `picked` invoices
+        // but mSupply does so we want to replicate it (make sure they don't travel through)
+        InvoiceLineRowRepository::new(&ctx.connection)
+            .upsert_one(&self.outbound_shipment_unallocated_line)
+            .unwrap();
     }
 
     pub(crate) fn check_inbound_shipment_created(&mut self, connection: &StorageConnection) {
@@ -649,5 +671,5 @@ fn check_line(
     assert_eq!(inbound_line.stock_line_id, None);
     assert_eq!(inbound_line.location_id, None);
     assert_eq!(inbound_line.sell_price_per_pack, 0.0);
-    assert_eq!(inbound_line.tax, Some(0.0));
+    assert_eq!(inbound_line.tax, None);
 }

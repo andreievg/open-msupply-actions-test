@@ -1,8 +1,8 @@
 use std::collections::{HashMap, HashSet};
 
 use repository::{
-    EqualFilter, Permission, RepositoryError, UserPermissionFilter, UserPermissionRepository,
-    UserPermissionRow,
+    EqualFilter, Pagination, Permission, RepositoryError, UserPermissionFilter,
+    UserPermissionRepository, UserPermissionRow,
 };
 
 use crate::{
@@ -66,6 +66,8 @@ pub enum Resource {
     ServerAdmin,
     SyncInfo,
     ManualSync,
+    QueryInventoryAdjustmentReasons,
+    QueryStorePreferences,
 }
 
 fn all_permissions() -> HashMap<Resource, PermissionDSL> {
@@ -238,6 +240,16 @@ fn all_permissions() -> HashMap<Resource, PermissionDSL> {
     // sync info and manual sync, not permission needed
     map.insert(Resource::SyncInfo, PermissionDSL::NoPermissionRequired);
     map.insert(Resource::ManualSync, PermissionDSL::NoPermissionRequired);
+
+    map.insert(
+        Resource::QueryInventoryAdjustmentReasons,
+        PermissionDSL::NoPermissionRequired,
+    );
+    map.insert(
+        Resource::QueryStorePreferences,
+        PermissionDSL::HasStoreAccess,
+    );
+
     map
 }
 
@@ -454,8 +466,11 @@ impl AuthServiceTrait for AuthService {
         if let Some(store_id) = &resource_request.store_id {
             permission_filter = permission_filter.store_id(EqualFilter::equal_to(store_id));
         }
-        let user_permission =
-            UserPermissionRepository::new(&connection).query_by_filter(permission_filter)?;
+        let user_permission = UserPermissionRepository::new(&connection).query(
+            Pagination::all(),
+            Some(permission_filter),
+            None,
+        )?;
         let context: Vec<String> = user_permission
             .clone()
             .into_iter()

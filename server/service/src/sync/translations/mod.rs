@@ -1,4 +1,5 @@
 pub(crate) mod activity_log;
+pub(crate) mod inventory_adjustment_reason;
 pub(crate) mod invoice;
 pub(crate) mod invoice_line;
 pub(crate) mod item;
@@ -8,7 +9,10 @@ pub(crate) mod master_list_line;
 pub(crate) mod master_list_name_join;
 pub(crate) mod name;
 pub(crate) mod name_store_join;
-pub(crate) mod number;
+pub(crate) mod name_tag;
+pub(crate) mod name_tag_join;
+pub(crate) mod period;
+pub(crate) mod period_schedule;
 pub(crate) mod report;
 pub(crate) mod requisition;
 pub(crate) mod requisition_line;
@@ -17,6 +21,7 @@ pub(crate) mod stock_line;
 pub(crate) mod stocktake;
 pub(crate) mod stocktake_line;
 pub(crate) mod store;
+pub(crate) mod store_preference;
 pub(crate) mod unit;
 
 use repository::*;
@@ -30,15 +35,20 @@ pub(crate) fn all_translators() -> SyncTanslators {
     vec![
         // Central
         Box::new(name::NameTranslation {}),
+        Box::new(name_tag::NameTagTranslation {}),
+        Box::new(name_tag_join::NameTagJoinTranslation {}),
         Box::new(unit::UnitTranslation {}),
         Box::new(item::ItemTranslation {}),
         Box::new(store::StoreTranslation {}),
         Box::new(master_list::MasterListTranslation {}),
         Box::new(master_list_line::MasterListLineTranslation {}),
         Box::new(master_list_name_join::MasterListNameJoinTranslation {}),
+        Box::new(period_schedule::PeriodScheduleTranslation {}),
+        Box::new(period::PeriodTranslation {}),
         Box::new(report::ReportTranslation {}),
+        Box::new(inventory_adjustment_reason::InventoryAdjustmentReasonTranslation {}),
+        Box::new(store_preference::StorePreferenceTranslation {}),
         // Remote
-        Box::new(number::NumberTranslation {}),
         Box::new(location::LocationTranslation {}),
         Box::new(stock_line::StockLineTranslation {}),
         Box::new(invoice::InvoiceTranslation {}),
@@ -59,6 +69,7 @@ pub(crate) fn all_translators() -> SyncTanslators {
 pub(crate) mod LegacyTableName {
     // Central
     pub(crate) const NAME: &str = "name";
+    pub(crate) const NAME_TAG: &str = "name_tag";
     pub(crate) const UNIT: &str = "unit";
     pub(crate) const ITEM: &str = "item";
     pub(crate) const STORE: &str = "store";
@@ -66,8 +77,11 @@ pub(crate) mod LegacyTableName {
     pub(crate) const LIST_MASTER_LINE: &str = "list_master_line";
     pub(crate) const LIST_MASTER_NAME_JOIN: &str = "list_master_name_join";
     pub(crate) const REPORT: &str = "report";
+    pub(crate) const INVENTORY_ADJUSTMENT_REASON: &str = "options";
+    pub(crate) const STORE_PREFERENCE: &str = "pref";
+    pub(crate) const PERIOD_SCHEDULE: &str = "periodSchedule";
+    pub(crate) const PERIOD: &str = "period";
     // Remote
-    pub(crate) const NUMBER: &str = "number";
     pub(crate) const LOCATION: &str = "Location";
     pub(crate) const ITEM_LINE: &str = "item_line";
     pub(crate) const TRANSACT: &str = "transact";
@@ -79,19 +93,23 @@ pub(crate) mod LegacyTableName {
     pub(crate) const OM_ACTIVITY_LOG: &str = "om_activity_log";
     // Remote-Central (site specific)
     pub(crate) const NAME_STORE_JOIN: &str = "name_store_join";
+    pub(crate) const NAME_TAG_JOIN: &str = "name_tag_join";
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub(crate) enum PullUpsertRecord {
     Unit(UnitRow),
     Name(NameRow),
+    NameTag(NameTagRow),
+    NameTagJoin(NameTagJoinRow),
     Item(ItemRow),
     Store(StoreRow),
     MasterList(MasterListRow),
     MasterListLine(MasterListLineRow),
     MasterListNameJoin(MasterListNameJoinRow),
+    PeriodSchedule(PeriodScheduleRow),
+    Period(PeriodRow),
     Report(ReportRow),
-    Number(NumberRow),
     Location(LocationRow),
     StockLine(StockLineRow),
     NameStoreJoin(NameStoreJoinRow),
@@ -102,6 +120,8 @@ pub(crate) enum PullUpsertRecord {
     Requisition(RequisitionRow),
     RequisitionLine(RequisitionLineRow),
     ActivityLog(ActivityLogRow),
+    InventoryAdjustmentReason(InventoryAdjustmentReasonRow),
+    StorePreference(StorePreferenceRow),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -121,8 +141,10 @@ pub(crate) enum PullDeleteRecordTable {
     MasterListNameJoin,
     Report,
     Name,
+    InventoryAdjustmentReason,
     // Remote-Central (site specific)
     NameStoreJoin,
+    NameTagJoin,
     // Remote (for other party of transfers)
     Invoice,
     InvoiceLine,
@@ -284,7 +306,6 @@ fn translate_changelog(
     changelog: &ChangelogRow,
 ) -> Result<Vec<RemoteSyncRecordV5>, anyhow::Error> {
     let mut translation_results = Vec::new();
-    let mut skip = false;
 
     for translator in translators.iter() {
         let translation_result = match changelog.row_action {
@@ -298,12 +319,7 @@ fn translate_changelog(
 
         if let Some(mut translation_result) = translation_result {
             translation_results.append(&mut translation_result);
-            skip = true;
         }
-    }
-
-    if !skip {
-        return Err(anyhow::anyhow!("Translator for record not found"));
     }
 
     Ok(translation_results)

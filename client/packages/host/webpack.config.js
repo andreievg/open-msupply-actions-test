@@ -8,7 +8,6 @@ const path = require('path');
 const BundleAnalyzerPlugin =
   require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
-const PluginTransformImport = require('swc-plugin-transform-import').default;
 
 class DummyWebpackPlugin {
   apply(compiler) {
@@ -56,7 +55,8 @@ module.exports = env => {
       plugins: [new TsconfigPathsPlugin()],
     },
     output: {
-      publicPath: isProduction ? '/' : 'http://localhost:3003/',
+      publicPath: '/',
+      path: path.resolve(__dirname, 'dist'),
       filename: '[name].[contenthash].js',
       chunkFilename: '[contenthash].js',
       clean: {
@@ -67,24 +67,29 @@ module.exports = env => {
       splitChunks: {
         chunks: 'all',
       },
+      usedExports: true,
     },
     module: {
       rules: [
         {
           test: /\.[t|j]sx?$/,
-          loader: 'swc-loader',
+          loader: isProduction ? 'ts-loader' : 'swc-loader',
           exclude: /node_modules/,
-          options: {
-            jsc: {
-              parser: {
-                dynamicImport: true,
-                syntax: 'typescript',
-                tsx: true,
+          options: isProduction
+            ? {
+                /* ts-loader options */
+              }
+            : {
+                /* swc-loader options */
+                jsc: {
+                  parser: {
+                    dynamicImport: true,
+                    syntax: 'typescript',
+                    tsx: true,
+                  },
+                  target: 'es2015',
+                },
               },
-              target: 'es2015',
-              plugin: m => new PluginTransformImport().visitProgram(m),
-            },
-          },
         },
         {
           test: /\.css$/,

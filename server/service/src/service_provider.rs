@@ -3,6 +3,7 @@ use crate::{
     auth::{AuthService, AuthServiceTrait},
     dashboard::{
         invoice_count::{InvoiceCountService, InvoiceCountServiceTrait},
+        item_count::{ItemCountServiceTrait, ItemServiceCount},
         stock_expiry_count::{StockExpiryCountServiceTrait, StockExpiryServiceCount},
     },
     display_settings_service::{DisplaySettingsService, DisplaySettingsServiceTrait},
@@ -50,6 +51,7 @@ pub struct ServiceProvider {
     // Dashboard:
     pub invoice_count_service: Box<dyn InvoiceCountServiceTrait>,
     pub stock_expiry_count_service: Box<dyn StockExpiryCountServiceTrait>,
+    pub item_count_service: Box<dyn ItemCountServiceTrait>,
     // Stock stats
     pub item_stats_service: Box<dyn ItemStatsServiceTrait>,
     // Stock
@@ -114,7 +116,7 @@ impl ServiceProvider {
             item_stats_service: Box::new(ItemStatsService {}),
             general_service: Box::new(GeneralService {}),
             report_service: Box::new(ReportService {}),
-            settings: Box::new(SettingsService {}),
+            settings: Box::new(SettingsService),
             app_data_service: Box::new(AppDataService::new(app_data_folder)),
             site_info_service: Box::new(SiteInfoService),
             sync_status_service: Box::new(SyncStatusService),
@@ -123,6 +125,7 @@ impl ServiceProvider {
             site_is_initialised_trigger,
             display_settings_service: Box::new(DisplaySettingsService {}),
             stock_line_service: Box::new(StockLineService {}),
+            item_count_service: Box::new(ItemServiceCount {}),
         }
     }
 

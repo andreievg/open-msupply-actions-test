@@ -106,12 +106,13 @@ export const InboundLineEdit: FC<InboundLineEditProps> = ({
   const { next: nextItem, disabled: nextDisabled } = useInbound.document.next(
     currentItem?.id ?? ''
   );
-  const { Modal } = useDialog({ isOpen, onClose });
+  const { Modal } = useDialog({ isOpen, onClose, disableBackdrop: true });
   const height = useKeyboardHeightAdjustment(600);
   const { draftLines, addDraftLine, updateDraftLine, isLoading, saveLines } =
     useDraftInboundLines(currentItem);
   const okNextDisabled =
     (mode === ModalMode.Update && nextDisabled) || !currentItem;
+  const zeroNumberOfPacks = draftLines.some(line => line.numberOfPacks === 0);
 
   useEffect(() => {
     setCurrentItem(item);
@@ -119,7 +120,7 @@ export const InboundLineEdit: FC<InboundLineEditProps> = ({
 
   return (
     <TableProvider
-      createStore={createTableStore}
+      createStore={createTableStore()}
       queryParamsStore={createQueryParamsStore({
         initialSortBy: { key: 'expiryDate' },
       })}
@@ -134,7 +135,7 @@ export const InboundLineEdit: FC<InboundLineEditProps> = ({
         nextButton={
           <DialogButton
             variant="next"
-            disabled={okNextDisabled}
+            disabled={okNextDisabled || zeroNumberOfPacks}
             onClick={async () => {
               await saveLines();
               if (mode === ModalMode.Update && nextItem) {
@@ -149,7 +150,7 @@ export const InboundLineEdit: FC<InboundLineEditProps> = ({
         okButton={
           <DialogButton
             variant="ok"
-            disabled={!currentItem}
+            disabled={!currentItem || zeroNumberOfPacks}
             onClick={async () => {
               try {
                 await saveLines();

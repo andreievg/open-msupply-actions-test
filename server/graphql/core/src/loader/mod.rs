@@ -1,7 +1,9 @@
+mod inventory_adjustment_reason;
 mod invoice;
 mod invoice_line;
 mod item;
 mod item_stats;
+mod item_stock_on_hand;
 mod loader_registry;
 mod location;
 mod master_list_line;
@@ -17,10 +19,12 @@ mod user;
 
 use std::{collections::HashSet, hash::Hasher};
 
+pub use inventory_adjustment_reason::*;
 pub use invoice::*;
 pub use invoice_line::*;
 pub use item::ItemLoader;
 pub use item_stats::*;
+pub use item_stock_on_hand::*;
 pub use loader_registry::{get_loaders, LoaderMap, LoaderRegistry};
 pub use location::LocationByIdLoader;
 pub use master_list_line::MasterListLineByMasterListId;

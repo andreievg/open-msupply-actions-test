@@ -15,6 +15,7 @@ Remote server can use `sqlite` or `postgres`, quick start guide is for `sqlite` 
 ### Windows
 - [Follow this guide](https://docs.microsoft.com/en-us/windows/dev-environment/rust/setup)
 - Install [perl](https://learn.perl.org/installing/windows.html)
+- For building the windows binary, you'll need to install the [Bonjour Windows SDK](https://developer.apple.com/bonjour/) and configure the environment variable `BONJOUR_SDK_HOME` to point to the installation location. This is required for the dns-sd implementation on windows, used for server discovery.
 
 ### Mac
 
@@ -35,7 +36,17 @@ rustflags = "-L /opt/homebrew/opt/libpq/lib"
 ### Ubuntu
 
 - Follow the [Rust installation guide](https://www.rust-lang.org/tools/install).
-- Install pkg-config `sudo apt install pkg-config` (needed to install/compile sqlx-cli)
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+- After a fresh `rustup` installation start a new bash to make env variable available
+- Install packages (e.g. needed to install/compile openssl-sys):
+
+```bash
+sudo apt install make gcc pkg-config libavahi-compat-libdnssd-dev libpq-dev
+```
 
 # Run without mSupply central
 
@@ -95,7 +106,11 @@ Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Co
 
 ### Ubuntu
 
-- Install Postgres dev libs: `sudo apt install postgresql-server-dev-13`
+- Install Postgres:
+
+```bash
+sudo apt install postgresql
+```
 
 ### Optional
 
@@ -256,6 +271,12 @@ cargo run --bin remote_server_cli -- initialise-from-central -u 'user1:password1
 cargo run --bin remote_server_cli -- refresh-dates
 ```
 
+# Discovery
+
+DNS-SD is available for all targets except for Android (for Android DNS-SD is toggled at runtime and is done in native java code).
+We also start another graphql server with `initialisationStatus` query endpoint, in http mode with permissive cors. 
+This allows site information (initialised/site) to be presented during discovery. 
+
 # Logging
 
 By default, the server logs to console with a logging level of `Info`
@@ -293,7 +314,7 @@ server
 │  │  └─ mock
 │  └─ test_output
 ├─ scripts
-├─ server (includes the logging, front-end hosting, certificates, mDNS discovery, configuration)
+├─ server (includes the logging, front-end hosting, certificates, DNS-SD discovery, configuration)
 ├─ service (these functions provide an intermediary between GraphQL and the repository and houses most of the business logic)
 ├─ target
 ├─ test_output

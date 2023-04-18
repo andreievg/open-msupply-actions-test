@@ -4,13 +4,11 @@ import {
   useTranslation,
   Box,
   Switch,
-  useColumns,
   MiniTable,
   useIsGrouped,
   InvoiceLineNodeType,
   useRowStyle,
   AppSxProp,
-  ArrayUtils,
   NothingHere,
   useUrlQueryParams,
 } from '@openmsupply-client/common';
@@ -18,6 +16,7 @@ import { OutboundItem } from '../../types';
 import { useOutbound } from '../api';
 import { useOutboundColumns } from './columns';
 import { OutboundLineFragment } from '../api/operations.generated';
+import { useExpansionColumns } from './OutboundLineEdit/columns';
 
 interface ContentAreaProps {
   onAddItem: () => void;
@@ -27,31 +26,10 @@ interface ContentAreaProps {
 const Expand: FC<{
   rowData: OutboundLineFragment | OutboundItem;
 }> = ({ rowData }) => {
-  const columns = useColumns([
-    'batch',
-    'expiryDate',
-    'locationName',
-    'itemUnit',
-    'numberOfPacks',
-    'packSize',
-    [
-      'unitQuantity',
-      {
-        accessor: () => {
-          if ('lines' in rowData) {
-            const { lines } = rowData;
-            return ArrayUtils.getUnitQuantity(lines);
-          } else {
-            return rowData.packSize * rowData.numberOfPacks;
-          }
-        },
-      },
-    ],
-    'sellPricePerUnit',
-  ]);
+  const expandoColumns = useExpansionColumns();
 
   if ('lines' in rowData && rowData.lines.length > 1) {
-    return <MiniTable rows={rowData.lines} columns={columns} />;
+    return <MiniTable rows={rowData.lines} columns={expandoColumns} />;
   } else {
     return null;
   }
@@ -121,9 +99,9 @@ export const ContentAreaComponent: FC<ContentAreaProps> = ({
   if (!rows) return null;
 
   return (
-    <Box flexDirection="column" style={{ width: '100%' }}>
+    <Box flexDirection="column" style={{ width: '100%' }} display="flex">
       {rows.length !== 0 && (
-        <Box style={{ padding: 5, marginInlineStart: 15 }}>
+        <Box style={{ padding: 5, marginInlineStart: 15 }} flex={0}>
           <Switch
             label={t('label.group-by-item')}
             onChange={toggleIsGrouped}
@@ -134,21 +112,24 @@ export const ContentAreaComponent: FC<ContentAreaProps> = ({
           />
         </Box>
       )}
-      <DataTable
-        id="outbound-detail"
-        onRowClick={onRowClick}
-        ExpandContent={Expand}
-        columns={columns}
-        data={rows}
-        enableColumnSelection
-        noDataElement={
-          <NothingHere
-            body={t('error.no-outbound-items')}
-            onCreate={isDisabled ? undefined : () => onAddItem()}
-            buttonText={t('button.add-item')}
-          />
-        }
-      />
+      <Box flex={1} style={{ overflowY: 'auto' }}>
+        <DataTable
+          id="outbound-detail"
+          onRowClick={onRowClick}
+          ExpandContent={Expand}
+          columns={columns}
+          data={rows}
+          enableColumnSelection
+          noDataElement={
+            <NothingHere
+              body={t('error.no-outbound-items')}
+              onCreate={isDisabled ? undefined : () => onAddItem()}
+              buttonText={t('button.add-item')}
+            />
+          }
+          isRowAnimated={true}
+        />
+      </Box>
     </Box>
   );
 };

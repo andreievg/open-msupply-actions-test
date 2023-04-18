@@ -6,11 +6,14 @@ use repository::{
 };
 use util::uuid::uuid;
 
-use crate::{activity_log::system_activity_log_entry, number::next_number};
+use crate::{
+    activity_log::system_activity_log_entry, number::next_number,
+    store_preference::get_store_preferences,
+};
 
 use super::{
-    common::generate_inbound_shipment_lines, Operation, ShipmentTransferProcessor,
-    ShipmentTransferProcessorRecord,
+    common::{convert_invoice_line_to_single_pack, generate_inbound_shipment_lines},
+    Operation, ShipmentTransferProcessor, ShipmentTransferProcessorRecord,
 };
 
 const DESCRIPTION: &'static str = "Create inbound shipment from outbound shipment";
@@ -39,13 +42,13 @@ impl ShipmentTransferProcessor for CreateInboundShipmentProcessor {
         record_for_processing: &ShipmentTransferProcessorRecord,
     ) -> Result<Option<String>, RepositoryError> {
         // Check can execute
-        let (outbound_shipment, linked_shipment, request_requistion) =
+        let (outbound_shipment, linked_shipment, request_requisition) =
             match &record_for_processing.operation {
                 Operation::Upsert {
                     shipment: outbound_shipment,
                     linked_shipment,
-                    linked_shipment_requisition: request_requistion,
-                } => (outbound_shipment, linked_shipment, request_requistion),
+                    linked_shipment_requisition: request_requisition,
+                } => (outbound_shipment, linked_shipment, request_requisition),
                 _ => return Ok(None),
             };
         // 2.
@@ -69,13 +72,19 @@ impl ShipmentTransferProcessor for CreateInboundShipmentProcessor {
             connection,
             &outbound_shipment,
             record_for_processing,
-            request_requistion,
+            request_requisition,
         )?;
         let new_inbound_lines = generate_inbound_shipment_lines(
             connection,
             &new_inbound_shipment.id,
             &outbound_shipment,
         )?;
+        let store_preferences = get_store_preferences(connection, &new_inbound_shipment.store_id)?;
+
+        let new_inbound_lines = match store_preferences.pack_to_one {
+            true => convert_invoice_line_to_single_pack(new_inbound_lines),
+            false => new_inbound_lines,
+        };
 
         InvoiceRowRepository::new(connection).upsert_one(&new_inbound_shipment)?;
 
@@ -110,7 +119,7 @@ fn generate_inbound_shipment(
     connection: &StorageConnection,
     outbound_shipment: &Invoice,
     record_for_processing: &ShipmentTransferProcessorRecord,
-    request_requistion: &Option<Requisition>,
+    request_requisition: &Option<Requisition>,
 ) -> Result<InvoiceRow, RepositoryError> {
     let store_id = record_for_processing.other_party_store_id.clone();
     let name_id = outbound_shipment.store_row.name_id.clone();
@@ -123,7 +132,7 @@ fn generate_inbound_shipment(
         _ => InvoiceRowStatus::New,
     };
 
-    let request_requisition_id = request_requistion
+    let request_requisition_id = request_requisition
         .as_ref()
         .map(|r| r.requisition_row.id.clone());
 
@@ -160,6 +169,7 @@ fn generate_inbound_shipment(
         shipped_datetime: outbound_shipment_row.shipped_datetime,
         transport_reference: outbound_shipment_row.transport_reference.clone(),
         comment: Some(formatted_comment),
+        tax: outbound_shipment_row.tax,
         // Default
         colour: None,
         user_id: None,

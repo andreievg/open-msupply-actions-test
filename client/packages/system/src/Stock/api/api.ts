@@ -13,6 +13,16 @@ export type StockApi = ReturnType<typeof getSdk>;
 const stockLineParsers = {
   toSortField: (sortBy: SortBy<StockLineNode>): StockLineSortFieldInput => {
     switch (sortBy.key) {
+      case 'batch':
+        return StockLineSortFieldInput.Batch;
+      case 'itemCode':
+        return StockLineSortFieldInput.ItemCode;
+      case 'itemName':
+        return StockLineSortFieldInput.ItemName;
+      case 'packSize':
+        return StockLineSortFieldInput.PackSize;
+      case 'supplierName':
+        return StockLineSortFieldInput.SupplierName;
       case 'numberOfPacks':
         return StockLineSortFieldInput.NumberOfPacks;
       case 'expiryDate':
@@ -60,13 +70,17 @@ export const getStockQueries = (stockApi: StockApi, storeId: string) => ({
       nodes: StockLineRowFragment[];
       totalCount: number;
     }> => {
+      const filter = {
+        ...filterBy,
+        hasPacksInStore: true,
+      };
       const result = await stockApi.stockLines({
         storeId,
         first: first,
         offset: offset,
         key: stockLineParsers.toSortField(sortBy),
         desc: sortBy.isDesc,
-        filter: filterBy,
+        filter,
       });
       const { nodes, totalCount } = result?.stockLines;
       return { nodes, totalCount };

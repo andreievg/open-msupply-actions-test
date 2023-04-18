@@ -1,8 +1,5 @@
 import { getSdk } from './operations.generated';
 
-export type DashboardApi = ReturnType<typeof getDashboardQueries> & {
-  storeId: string;
-};
 export type DashboardQueries = ReturnType<typeof getSdk>;
 
 export const getDashboardQueries = (
@@ -20,9 +17,9 @@ export const getDashboardQueries = (
         expiringSoon: result?.stockCounts.expiringSoon ?? 0,
       };
     },
-    itemStats: async () => {
-      const result = await queries.itemStats({ storeId });
-      return result?.items.nodes;
+    itemCounts: async (lowStockThreshold: number) => {
+      const result = await queries.itemCounts({ storeId, lowStockThreshold });
+      return result?.itemCounts?.itemCounts ?? {};
     },
   },
 });

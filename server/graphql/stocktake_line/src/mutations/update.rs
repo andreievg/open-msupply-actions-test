@@ -4,6 +4,7 @@ use chrono::NaiveDate;
 use graphql_core::simple_generic_errors::CannotEditStocktake;
 use graphql_core::standard_graphql_error::{validate_auth, StandardGraphqlError};
 use graphql_core::ContextExt;
+use graphql_types::generic_errors::StockLineReducedBelowZero;
 use graphql_types::types::StocktakeLineNode;
 use repository::StocktakeLine;
 use service::{
@@ -12,6 +13,10 @@ use service::{
         UpdateStocktakeLine as ServiceInput, UpdateStocktakeLineError as ServiceError,
     },
 };
+
+use crate::mutations::AdjustmentReasonNotValid;
+
+use super::AdjustmentReasonNotProvided;
 
 #[derive(InputObject)]
 #[graphql(name = "UpdateStocktakeLineInput")]
@@ -27,6 +32,7 @@ pub struct UpdateInput {
     pub cost_price_per_pack: Option<f64>,
     pub sell_price_per_pack: Option<f64>,
     pub note: Option<String>,
+    pub inventory_adjustment_reason_id: Option<String>,
 }
 
 #[derive(Union)]
@@ -41,6 +47,9 @@ pub enum UpdateResponse {
 #[graphql(field(name = "description", type = "String"))]
 pub enum UpdateErrorInterface {
     CannotEditStocktake(CannotEditStocktake),
+    StockLineReducedBelowZero(StockLineReducedBelowZero),
+    AdjustmentReasonNotProvided(AdjustmentReasonNotProvided),
+    AdjustmentReasonNotValid(AdjustmentReasonNotValid),
 }
 
 #[derive(SimpleObject)]
@@ -92,6 +101,7 @@ impl UpdateInput {
             cost_price_per_pack,
             sell_price_per_pack,
             note,
+            inventory_adjustment_reason_id,
         } = self;
 
         ServiceInput {
@@ -106,6 +116,7 @@ impl UpdateInput {
             cost_price_per_pack,
             sell_price_per_pack,
             note,
+            inventory_adjustment_reason_id,
         }
     }
 }
@@ -121,6 +132,21 @@ fn map_error(error: ServiceError) -> Result<UpdateErrorInterface> {
                 CannotEditStocktake {},
             ))
         }
+        ServiceError::StockLineReducedBelowZero(line) => {
+            return Ok(UpdateErrorInterface::StockLineReducedBelowZero(
+                StockLineReducedBelowZero::from_domain(line),
+            ))
+        }
+        ServiceError::AdjustmentReasonNotProvided => {
+            return Ok(UpdateErrorInterface::AdjustmentReasonNotProvided(
+                AdjustmentReasonNotProvided,
+            ))
+        }
+        ServiceError::AdjustmentReasonNotValid => {
+            return Ok(UpdateErrorInterface::AdjustmentReasonNotValid(
+                AdjustmentReasonNotValid,
+            ))
+        }
         // Standard Graphql Errors
         // TODO some are structured errors (where can be changed concurrently)
         ServiceError::InvalidStore => BadUserInput(formatted_error),
@@ -133,7 +159,6 @@ fn map_error(error: ServiceError) -> Result<UpdateErrorInterface> {
 
     Err(graphql_error.extend())
 }
-
 #[cfg(test)]
 mod test {
     use async_graphql::EmptyMutation;
@@ -241,11 +266,12 @@ mod test {
                     comment: Some("comment".to_string()),
                     item_id: "item id".to_string(),
                     batch: Some("batch".to_string()),
-                    expiry_date: Some(NaiveDate::from_ymd(2023, 1, 22)),
+                    expiry_date: Some(NaiveDate::from_ymd_opt(2023, 1, 22).unwrap()),
                     pack_size: Some(10),
                     cost_price_per_pack: Some(10.0),
                     sell_price_per_pack: Some(12.0),
                     note: Some("note".to_string()),
+                    inventory_adjustment_reason_id: None,
                 },
                 stock_line: Some(mock_stock_line_a()),
                 location: Some(mock_location_1()),

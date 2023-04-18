@@ -45,8 +45,6 @@ fn get_timestamp_fields() -> Vec<TableAndFieldName> {
         ("sync_log", "integration_started_datetime"),
         ("sync_log", "integration_finished_datetime"),
         ("activity_log", "datetime"),
-        ("location_movement", "enter_datetime"),
-        ("location_movement", "exit_datetime"),
     ]
     .iter()
     .map(|(table_name, field_name)| TableAndFieldName {
@@ -79,7 +77,8 @@ fn get_date_fields() -> Vec<TableAndFieldName> {
         ("invoice_line", "expiry_date"),
         ("stocktake", "stocktake_date"),
         ("stocktake_line", "expiry_date"),
-        ("sync_out", "created_at"),
+        ("period", "start_date"),
+        ("period", "end_date"),
     ]
     .iter()
     .map(|(table_name, field_name)| TableAndFieldName {
@@ -347,7 +346,10 @@ mod tests {
                 r.id = "invoice1".to_string();
                 r.name_id = mock_name_a().id;
                 r.store_id = mock_store_a().id;
-                r.created_datetime = NaiveDate::from_ymd(2021, 01, 01).and_hms(00, 00, 00);
+                r.created_datetime = NaiveDate::from_ymd_opt(2021, 01, 01)
+                    .unwrap()
+                    .and_hms_opt(00, 00, 00)
+                    .unwrap();
             })
         }
 
@@ -356,8 +358,16 @@ mod tests {
                 r.id = "invoice2".to_string();
                 r.name_id = mock_name_a().id;
                 r.store_id = mock_store_a().id;
-                r.created_datetime = NaiveDate::from_ymd(2021, 02, 01).and_hms(00, 00, 00);
-                r.shipped_datetime = Some(NaiveDate::from_ymd(2021, 01, 01).and_hms(00, 00, 00));
+                r.created_datetime = NaiveDate::from_ymd_opt(2021, 02, 01)
+                    .unwrap()
+                    .and_hms_opt(00, 00, 00)
+                    .unwrap();
+                r.shipped_datetime = Some(
+                    NaiveDate::from_ymd_opt(2021, 01, 01)
+                        .unwrap()
+                        .and_hms_opt(00, 00, 00)
+                        .unwrap(),
+                );
             })
         }
 
@@ -366,7 +376,7 @@ mod tests {
                 r.id = "stock_line1".to_string();
                 r.item_id = mock_item_a().id;
                 r.store_id = mock_store_a().id;
-                r.expiry_date = Some(NaiveDate::from_ymd(2023, 02, 01));
+                r.expiry_date = Some(NaiveDate::from_ymd_opt(2023, 02, 01).unwrap());
             })
         }
 
@@ -390,11 +400,17 @@ mod tests {
             vec![
                 IdAndTimestamp {
                     id: "invoice1".to_string(),
-                    dt: NaiveDate::from_ymd(2021, 01, 01).and_hms(00, 00, 00)
+                    dt: NaiveDate::from_ymd_opt(2021, 01, 01)
+                        .unwrap()
+                        .and_hms_opt(00, 00, 00)
+                        .unwrap()
                 },
                 IdAndTimestamp {
                     id: "invoice2".to_string(),
-                    dt: NaiveDate::from_ymd(2021, 02, 01).and_hms(00, 00, 00)
+                    dt: NaiveDate::from_ymd_opt(2021, 02, 01)
+                        .unwrap()
+                        .and_hms_opt(00, 00, 00)
+                        .unwrap()
                 },
             ]
         );
@@ -406,7 +422,10 @@ mod tests {
             result,
             vec![IdAndTimestamp {
                 id: "invoice2".to_string(),
-                dt: NaiveDate::from_ymd(2021, 01, 01).and_hms(00, 00, 00)
+                dt: NaiveDate::from_ymd_opt(2021, 01, 01)
+                    .unwrap()
+                    .and_hms_opt(00, 00, 00)
+                    .unwrap()
             }]
         );
 
@@ -419,7 +438,7 @@ mod tests {
             result,
             vec![IdAndDate {
                 id: "stock_line1".to_string(),
-                d: NaiveDate::from_ymd(2023, 02, 01)
+                d: NaiveDate::from_ymd_opt(2023, 02, 01).unwrap()
             }]
         );
 
@@ -429,7 +448,10 @@ mod tests {
             .get_new_date_values(
                 // Latest date was 2021, 02, 01, which is 11 days difference from 2021, 02, 12
                 // and -1, so should all be adjusted by 10
-                NaiveDate::from_ymd(2021, 02, 12).and_hms(00, 00, 00),
+                NaiveDate::from_ymd_opt(2021, 02, 12)
+                    .unwrap()
+                    .and_hms_opt(00, 00, 00)
+                    .unwrap(),
                 repo.get_all_date_values().unwrap(),
             )
             .unwrap()
@@ -448,7 +470,10 @@ mod tests {
                     (
                         IdAndTimestamp {
                             id: "invoice1".to_string(),
-                            dt: NaiveDate::from_ymd(2021, 01, 11).and_hms(00, 00, 00)
+                            dt: NaiveDate::from_ymd_opt(2021, 01, 11)
+                                .unwrap()
+                                .and_hms_opt(00, 00, 00)
+                                .unwrap()
                         },
                         TableAndFieldName {
                             table_name: "invoice",
@@ -458,7 +483,10 @@ mod tests {
                     (
                         IdAndTimestamp {
                             id: "invoice2".to_string(),
-                            dt: NaiveDate::from_ymd(2021, 02, 11).and_hms(00, 00, 00)
+                            dt: NaiveDate::from_ymd_opt(2021, 02, 11)
+                                .unwrap()
+                                .and_hms_opt(00, 00, 00)
+                                .unwrap()
                         },
                         TableAndFieldName {
                             table_name: "invoice",
@@ -468,7 +496,10 @@ mod tests {
                     (
                         IdAndTimestamp {
                             id: "invoice2".to_string(),
-                            dt: NaiveDate::from_ymd(2021, 01, 11).and_hms(00, 00, 00)
+                            dt: NaiveDate::from_ymd_opt(2021, 01, 11)
+                                .unwrap()
+                                .and_hms_opt(00, 00, 00)
+                                .unwrap()
                         },
                         TableAndFieldName {
                             table_name: "invoice",
@@ -479,7 +510,7 @@ mod tests {
                 dates: vec![(
                     IdAndDate {
                         id: "stock_line1".to_string(),
-                        d: NaiveDate::from_ymd(2023, 02, 11)
+                        d: NaiveDate::from_ymd_opt(2023, 02, 11).unwrap()
                     },
                     TableAndFieldName {
                         table_name: "stock_line",
@@ -490,8 +521,13 @@ mod tests {
         );
 
         // Test refresh dates
-        repo.refresh_dates(NaiveDate::from_ymd(2021, 02, 12).and_hms(00, 00, 00))
-            .unwrap();
+        repo.refresh_dates(
+            NaiveDate::from_ymd_opt(2021, 02, 12)
+                .unwrap()
+                .and_hms_opt(00, 00, 00)
+                .unwrap(),
+        )
+        .unwrap();
 
         let invoice1_result = InvoiceRowRepository::new(&connection)
             .find_one_by_id(&invoice1().id)
@@ -500,7 +536,10 @@ mod tests {
         assert_eq!(
             invoice1_result,
             inline_edit(&invoice1_result, |mut u| {
-                u.created_datetime = NaiveDate::from_ymd(2021, 01, 11).and_hms(00, 00, 00);
+                u.created_datetime = NaiveDate::from_ymd_opt(2021, 01, 11)
+                    .unwrap()
+                    .and_hms_opt(00, 00, 00)
+                    .unwrap();
                 u
             })
         );
@@ -512,8 +551,16 @@ mod tests {
         assert_eq!(
             invoice2_result,
             inline_edit(&invoice2_result, |mut u| {
-                u.created_datetime = NaiveDate::from_ymd(2021, 02, 11).and_hms(00, 00, 00);
-                u.shipped_datetime = Some(NaiveDate::from_ymd(2021, 01, 11).and_hms(00, 00, 00));
+                u.created_datetime = NaiveDate::from_ymd_opt(2021, 02, 11)
+                    .unwrap()
+                    .and_hms_opt(00, 00, 00)
+                    .unwrap();
+                u.shipped_datetime = Some(
+                    NaiveDate::from_ymd_opt(2021, 01, 11)
+                        .unwrap()
+                        .and_hms_opt(00, 00, 00)
+                        .unwrap(),
+                );
                 u
             })
         );
@@ -525,7 +572,7 @@ mod tests {
         assert_eq!(
             stock_line1_result,
             inline_edit(&stock_line1_result, |mut u| {
-                u.expiry_date = Some(NaiveDate::from_ymd(2023, 02, 11));
+                u.expiry_date = Some(NaiveDate::from_ymd_opt(2023, 02, 11).unwrap());
                 u
             })
         );

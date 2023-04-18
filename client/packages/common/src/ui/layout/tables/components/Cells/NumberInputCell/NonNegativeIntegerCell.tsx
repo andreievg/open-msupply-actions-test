@@ -8,23 +8,24 @@ import { useBufferState, useDebounceCallback } from '@common/hooks';
 export const NonNegativeIntegerCell = <T extends RecordWithId>({
   rowData,
   column,
-  rows,
+  max,
   isDisabled = false,
-}: CellProps<T>): React.ReactElement<CellProps<T>> => {
-  const [buffer, setBuffer] = useBufferState(
-    column.accessor({ rowData, rows })
-  );
+  isRequired = false,
+}: CellProps<T> & { max?: number }): React.ReactElement<CellProps<T>> => {
+  const [buffer, setBuffer] = useBufferState(column.accessor({ rowData }));
 
   const updater = useDebounceCallback(column.setter, [column.setter], 250);
 
   return (
     <NonNegativeNumberInput
       disabled={isDisabled}
+      required={isRequired}
       InputProps={{ sx: { '& .MuiInput-input': { textAlign: 'right' } } }}
       type="number"
       value={buffer}
       onChange={newValue => {
         const intValue = Math.round(newValue);
+        if (max && intValue > max) return;
         setBuffer(intValue.toString());
         updater({ ...rowData, [column.key]: intValue });
       }}

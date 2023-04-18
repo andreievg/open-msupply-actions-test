@@ -1,10 +1,14 @@
 export enum AppRoute {
+  Android = 'android',
+
   Initialise = 'initialise',
   Login = 'login',
   Distribution = 'distribution',
   OutboundShipment = 'outbound-shipment',
   CustomerRequisition = 'customer-requisition',
   Customer = 'customers',
+
+  Discovery = 'discovery',
 
   Dashboard = 'dashboard',
 

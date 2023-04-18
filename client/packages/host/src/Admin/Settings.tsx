@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import {
   Grid,
@@ -11,13 +11,27 @@ import {
   UserPermission,
   usePermissionCheck,
   LocalStorage,
+  useInitialisationStatus,
+  NativeMode,
+  RouteBuilder,
+  Switch,
+  useToggle,
+  BaseButton,
+  getPreference,
+  setPreference,
+  removePreference,
 } from '@openmsupply-client/common';
+import { Capacitor } from '@capacitor/core';
 import { themeOptions } from '@common/styles';
+import { AppRoute } from '@openmsupply-client/config';
+
 import { AppVersion, LanguageMenu } from '../components';
 import { Setting } from './Setting';
 import { SettingTextArea, TextValue } from './SettingTextArea';
 import { SyncSettings } from './SyncSettings';
 import { useHost } from '../api/hooks';
+import { SiteInfo } from '../components/SiteInfo';
+import { LogFileModal } from './LogFileModal';
 
 export const Settings: React.FC = () => {
   const t = useTranslation('common');
@@ -29,6 +43,13 @@ export const Settings: React.FC = () => {
   usePermissionCheck(UserPermission.ServerAdmin);
   const customThemeEnabled =
     !!customTheme && Object.keys(customTheme).length > 0;
+  const { data: initStatus } = useInitialisationStatus();
+  const [nativeMode, setNativeMode] = useState(NativeMode.None);
+  const {
+    isOn: isLogShown,
+    toggleOn: showLog,
+    toggleOff: hideLog,
+  } = useToggle();
 
   const customThemeValue = {
     enabled: customThemeEnabled,
@@ -109,36 +130,95 @@ export const Settings: React.FC = () => {
     }
   };
 
+  const toggleNativeMode = () => {
+    const mode =
+      nativeMode === NativeMode.Server ? NativeMode.Client : NativeMode.Server;
+
+    (async () => {
+      await removePreference('previousServer');
+      await setPreference('mode', mode);
+      navigate(RouteBuilder.create(AppRoute.Android).build());
+    })();
+  };
+
+  const AndroidSettings = () =>
+    Capacitor.isNativePlatform() ? (
+      <>
+        <Typography variant="h5" color="primary" style={{ paddingBottom: 25 }}>
+          {t('heading.settings-android')}
+        </Typography>
+        <Setting
+          title={t('label.mode')}
+          component={
+            <>
+              <Switch
+                label={t('label.client')}
+                onChange={toggleNativeMode}
+                checked={nativeMode === NativeMode.Server}
+              />
+              <Typography
+                component="div"
+                sx={{
+                  alignItems: 'center',
+                  display: 'inline-flex',
+                  fontSize: '14px',
+                  paddingLeft: 1,
+                }}
+              >
+                {t('label.server')}
+              </Typography>
+            </>
+          }
+        />
+        <Setting
+          title={t('label.server-log')}
+          component={
+            <>
+              <LogFileModal onClose={hideLog} isOpen={isLogShown} />
+              <BaseButton onClick={showLog}>View</BaseButton>
+            </>
+          }
+        />
+      </>
+    ) : null;
+
+  useEffect(() => {
+    getPreference('mode', 'none').then(setNativeMode);
+  }, []);
+
   return (
-    <Grid
-      container
-      flexDirection="column"
-      justifyContent="flex-start"
-      style={{ padding: 15, width: 500 }}
-      flexWrap="nowrap"
-    >
-      <Typography variant="h5" color="primary" style={{ paddingBottom: 25 }}>
-        {t('heading.settings-display')}
-      </Typography>
-      <Setting
-        component={<LanguageMenu />}
-        title={t('button.language')}
-        icon={<TranslateIcon />}
-      />
-      <SettingTextArea
-        defaultValue={customThemeValue}
-        onSave={saveTheme}
-        onToggle={onToggleCustomTheme}
-        title={t('heading.custom-theme')}
-      />
-      <SettingTextArea
-        defaultValue={customLogoValue}
-        onSave={saveLogo}
-        onToggle={onToggleCustomLogo}
-        title={t('heading.custom-logo')}
-      />
-      <SyncSettings />
-      <AppVersion style={{ bottom: 30, right: 15 }} />
+    <Grid display="flex" flexDirection="column" flex={1}>
+      <Grid
+        container
+        flexDirection="column"
+        justifyContent="flex-start"
+        style={{ padding: 15, width: 500 }}
+        flexWrap="nowrap"
+      >
+        <Typography variant="h5" color="primary" style={{ paddingBottom: 25 }}>
+          {t('heading.settings-display')}
+        </Typography>
+        <Setting
+          component={<LanguageMenu />}
+          title={t('button.language')}
+          icon={<TranslateIcon />}
+        />
+        <SettingTextArea
+          defaultValue={customThemeValue}
+          onSave={saveTheme}
+          onToggle={onToggleCustomTheme}
+          title={t('heading.custom-theme')}
+        />
+        <SettingTextArea
+          defaultValue={customLogoValue}
+          onSave={saveLogo}
+          onToggle={onToggleCustomLogo}
+          title={t('heading.custom-logo')}
+        />
+        <SyncSettings />
+        <AndroidSettings />
+      </Grid>
+      <AppVersion SiteInfo={<SiteInfo siteName={initStatus?.siteName} />} />
     </Grid>
   );
 };

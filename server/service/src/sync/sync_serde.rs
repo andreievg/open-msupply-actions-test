@@ -28,15 +28,15 @@ pub fn zero_date_as_option<'de, D: Deserializer<'de>>(d: D) -> Result<Option<Nai
         .and_then(|s| NaiveDate::parse_from_str(&s, "%Y-%m-%d").ok()))
 }
 
-pub fn date_and_time_to_datatime(date: NaiveDate, seconds: i64) -> NaiveDateTime {
+pub fn date_and_time_to_datetime(date: NaiveDate, seconds: i64) -> NaiveDateTime {
     NaiveDateTime::new(
         date,
-        NaiveTime::from_hms(0, 0, 0) + Duration::seconds(seconds),
+        NaiveTime::from_hms_opt(0, 0, 0).unwrap() + Duration::seconds(seconds),
     )
 }
 
 pub fn date_from_date_time(date_time: &NaiveDateTime) -> NaiveDate {
-    NaiveDate::from_ymd(date_time.year(), date_time.month(), date_time.day())
+    NaiveDate::from_ymd_opt(date_time.year(), date_time.month(), date_time.day()).unwrap()
 }
 
 /// V5 gives us a NaiveDate but V3 receives a NaiveDateTime
@@ -44,14 +44,15 @@ pub fn date_to_isostring<S>(x: &NaiveDate, s: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
-    x.and_hms(0, 0, 0).serialize(s)
+    x.and_hms_opt(0, 0, 0).unwrap().serialize(s)
 }
 
 pub fn date_option_to_isostring<S>(x: &Option<NaiveDate>, s: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
-    x.map(|date| date.and_hms(0, 0, 0)).serialize(s)
+    x.map(|date| date.and_hms_opt(0, 0, 0).unwrap())
+        .serialize(s)
 }
 
 /// Currently v5 returns times in sec and v3 expects a time string when posting. To make it more
@@ -59,5 +60,9 @@ where
 /// change on our side.
 pub fn naive_time<'de, D: Deserializer<'de>>(d: D) -> Result<NaiveTime, D::Error> {
     let secs = u32::deserialize(d)?;
-    Ok(NaiveTime::from_num_seconds_from_midnight(secs, 0))
+    // using the _opt version of the method and on error returning a time of 00:00:00
+    // as there have been some invalid time values returned by 4D - unsure of the origin of these
+    // if the deserialisation panics then the whole server crashes, so have used the error & default
+    Ok(NaiveTime::from_num_seconds_from_midnight_opt(secs, 0)
+        .unwrap_or(NaiveTime::from_hms_opt(0, 0, 0).unwrap()))
 }

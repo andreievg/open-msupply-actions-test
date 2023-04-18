@@ -15,7 +15,7 @@ use super::{
         PostInitialisationError, RemoteDataSynchroniser, RemotePullError, RemotePushError,
         WaitForIntegrationError,
     },
-    settings::SyncSettings,
+    settings::{SyncSettings, SYNC_VERSION},
     sync_buffer::SyncBuffer,
     sync_status::logger::{SyncLogger, SyncLoggerError},
     translation_and_integration::{TranslationAndIntegration, TranslationAndIntegrationResults},
@@ -89,7 +89,15 @@ impl Synchroniser {
         settings: SyncSettings,
         service_provider: Arc<ServiceProvider>,
     ) -> anyhow::Result<Self> {
-        let sync_api_v5 = SyncApiV5::new(&settings, &service_provider)?;
+        Self::new_with_version(settings, service_provider, SYNC_VERSION)
+    }
+
+    pub(crate) fn new_with_version(
+        settings: SyncSettings,
+        service_provider: Arc<ServiceProvider>,
+        sync_version: u32,
+    ) -> anyhow::Result<Self> {
+        let sync_api_v5 = SyncApiV5::new(&settings, &service_provider, sync_version)?;
         Ok(Synchroniser {
             remote: RemoteDataSynchroniser {
                 sync_api_v5: sync_api_v5.clone(),
@@ -174,8 +182,10 @@ impl Synchroniser {
 
         // INTEGRATE RECORDS
         logger.start_step(SyncStep::Integrate)?;
-        let (upserts, deletes) = integrate_and_translate_sync_buffer(&ctx.connection)
-            .map_err(SyncError::IntegrationError)?;
+        //
+        let (upserts, deletes) =
+            integrate_and_translate_sync_buffer(&ctx.connection, is_initialised)
+                .map_err(SyncError::IntegrationError)?;
         info!("Upsert Integration result: {:?}", upserts);
         info!("Delete Integration result: {:?}", deletes);
         logger.done_step(SyncStep::Integrate)?;
@@ -197,32 +207,51 @@ impl Synchroniser {
 /// Translation And Integration of sync buffer, pub since used in CLI
 pub fn integrate_and_translate_sync_buffer(
     connection: &StorageConnection,
+    is_initialised: bool,
 ) -> anyhow::Result<(
     TranslationAndIntegrationResults,
     TranslationAndIntegrationResults,
 )> {
-    // Integration is done inside of transaction, to make sure all records are available at the same time
-    // and maintain logical data integrity
-    let result = connection
-        .transaction_sync(|connection| {
-            let sync_buffer = SyncBuffer::new(connection);
-            let translation_and_integration =
-                TranslationAndIntegration::new(connection, &sync_buffer);
-            // Translate and integrate upserts (ordered by referencial database constraints)
-            let upsert_sync_buffer_records =
-                sync_buffer.get_ordered_sync_buffer_records(SyncBufferAction::Upsert)?;
-            let upsert_integration_result = translation_and_integration
-                .translate_and_integrate_sync_records(upsert_sync_buffer_records)?;
+    // Integration is done inside a transaction, to make sure all records are available at the same time
+    // and maintain logical data integrity. During initialisation nested transactions cause significant
+    // reduction in speed of this operation, since the system is not available during initialisation we don't need
+    // overall transaction to enforce logical data integrity:
+    // - initialised: create outer transaction and sub transaction for every upsert and every delete
+    //               (sub transaction is needed to 'skip' errors in postgres, see IntegrationRecords.integrate)
+    // - not initialised: no transactions at all
 
-            // Translate and integrate delete (ordered by referencial database constraints, in reverse)
-            let delete_sync_buffer_records =
-                sync_buffer.get_ordered_sync_buffer_records(SyncBufferAction::Delete)?;
-            let delete_integration_result = translation_and_integration
-                .translate_and_integrate_sync_records(delete_sync_buffer_records)?;
+    // Closure, to be run in a transaction or without a transaction
+    let integrate_and_translate = |connection: &StorageConnection| -> Result<
+        (
+            TranslationAndIntegrationResults,
+            TranslationAndIntegrationResults,
+        ),
+        RepositoryError,
+    > {
+        let sync_buffer = SyncBuffer::new(connection);
+        let translation_and_integration = TranslationAndIntegration::new(connection, &sync_buffer);
+        // Translate and integrate upserts (ordered by referential database constraints)
+        let upsert_sync_buffer_records =
+            sync_buffer.get_ordered_sync_buffer_records(SyncBufferAction::Upsert)?;
+        let upsert_integration_result = translation_and_integration
+            .translate_and_integrate_sync_records(upsert_sync_buffer_records)?;
 
-            Ok((upsert_integration_result, delete_integration_result))
-        })
-        .map_err::<RepositoryError, _>(|e| e.to_inner_error())?;
+        // Translate and integrate delete (ordered by referential database constraints, in reverse)
+        let delete_sync_buffer_records =
+            sync_buffer.get_ordered_sync_buffer_records(SyncBufferAction::Delete)?;
+        let delete_integration_result = translation_and_integration
+            .translate_and_integrate_sync_records(delete_sync_buffer_records)?;
+
+        Ok((upsert_integration_result, delete_integration_result))
+    };
+
+    let result = if is_initialised {
+        connection
+            .transaction_sync(integrate_and_translate)
+            .map_err::<RepositoryError, _>(|e| e.to_inner_error())
+    } else {
+        integrate_and_translate(&connection)
+    }?;
 
     Ok(result)
 }

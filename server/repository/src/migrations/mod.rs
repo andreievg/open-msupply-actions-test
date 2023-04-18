@@ -1,23 +1,32 @@
 mod types;
 mod v1_00_04;
+mod v1_01_01;
+mod v1_01_02;
+mod v1_01_03;
+mod v1_01_05;
+mod v1_01_11;
 mod version;
 pub(crate) use self::types::*;
 use self::v1_00_04::V1_00_04;
+use self::v1_01_01::V1_01_01;
+use self::v1_01_02::V1_01_02;
+use self::v1_01_03::V1_01_03;
 
 mod templates;
 
-pub(crate) use self::version::*;
+pub use self::version::*;
 
 use crate::{
-    run_db_migrations, DBConnection, DBType, KeyValueStoreRepository, KeyValueType,
-    RepositoryError, StorageConnection,
+    run_db_migrations, KeyValueStoreRepository, KeyValueType, RepositoryError, StorageConnection,
 };
-use diesel::{query_builder::QueryFragment, query_dsl::methods};
+use diesel::connection::SimpleConnection;
 use thiserror::Error;
 
 pub(crate) trait Migration {
     fn version(&self) -> Version;
-    fn migrate(&self, connection: &StorageConnection) -> anyhow::Result<()>;
+    fn migrate(&self, _: &StorageConnection) -> anyhow::Result<()> {
+        Ok(())
+    }
 }
 
 #[derive(Debug, Error)]
@@ -26,7 +35,7 @@ pub enum MigrationError {
     DatabaseVersionAboveAppVersion(Version, Version),
     #[error("Database version is pre release ({0}), it cannot be upgraded")]
     DatabaseVersionIsPreRelease(Version),
-    #[error("Migration version ({0}) is higher then app version ({1})")]
+    #[error("Migration version ({0}) is higher then app version ({1}), consider increasing app version in root package.json")]
     MigrationAboveAppVersion(Version, Version),
     #[error("Error during migration ({version})")]
     MigrationError {
@@ -52,6 +61,11 @@ pub fn migrate(
         Box::new(templates::data_and_schema::V1_00_07),
         #[cfg(test)]
         Box::new(templates::add_data_from_sync_buffer::V1_00_08),
+        Box::new(V1_01_01),
+        Box::new(V1_01_02),
+        Box::new(V1_01_03),
+        Box::new(v1_01_05::V1_01_05),
+        Box::new(v1_01_11::V1_01_11),
     ];
 
     // Historic diesel migrations
@@ -135,24 +149,38 @@ fn set_database_version(
 pub(crate) struct SqlError(String, #[source] RepositoryError);
 
 /// Will try and execute diesel query return SQL error which contains debug version of SQL statements
+#[cfg(test)] // uncomment this when used in queries outside of tests
 pub(crate) fn execute_sql_with_error<'a, Q>(
     connection: &StorageConnection,
     query: Q,
 ) -> Result<usize, SqlError>
 where
-    Q: methods::ExecuteDsl<DBConnection>,
-    Q: QueryFragment<DBType>,
+    Q: diesel::query_dsl::methods::ExecuteDsl<crate::DBConnection>,
+    Q: diesel::query_builder::QueryFragment<crate::DBType>,
 {
-    let debug_query = diesel::debug_query::<DBType, _>(&query).to_string();
+    let debug_query = diesel::debug_query::<crate::DBType, _>(&query).to_string();
     Q::execute(query, &connection.connection).map_err(|source| SqlError(debug_query, source.into()))
 }
 
+/// Will try and execute batch sql statements, return SQL error which contains sql being run
+/// differs to execute_sql_with_error, accepts string query rather then diesel query and
+/// allows for multiple statments to be executed
+pub(crate) fn batch_execute_sql_with_error(
+    connection: &StorageConnection,
+    query: &str,
+) -> Result<(), SqlError> {
+    connection
+        .connection
+        .batch_execute(query)
+        .map_err(|source| SqlError(query.to_string(), source.into()))
+}
+
 /// Macro will create and run SQL query, it's a less verbose way of running SQL in migrations
+/// allows batch execution
 /// $($arg:tt)* is taken directly from format! macro
 macro_rules! sql {
     ($connection:expr, $($arg:tt)*) => {{
-        let query = diesel::sql_query(&format!($($arg)*));
-        crate::migrations::execute_sql_with_error($connection, query)
+        crate::migrations::batch_execute_sql_with_error($connection, &format!($($arg)*))
     }};
 }
 

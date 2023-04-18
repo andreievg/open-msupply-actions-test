@@ -18,7 +18,7 @@ use mutations::{
 };
 use queries::{
     display_settings::{display_settings, DisplaySettingsHash, DisplaySettingsNode},
-    initialisation_status::{initialisation_status, InitialisationStatusType},
+    initialisation_status::{initialisation_status, InitialisationStatusNode},
     requisition_line_chart::{ConsumptionOptionsInput, StockEvolutionOptionsInput},
     sync_settings::{sync_settings, SyncSettingsNode},
 };
@@ -163,7 +163,7 @@ impl GeneralQueries {
     pub async fn initialisation_status(
         &self,
         ctx: &Context<'_>,
-    ) -> Result<InitialisationStatusType> {
+    ) -> Result<InitialisationStatusNode> {
         initialisation_status(ctx)
     }
 
@@ -197,6 +197,34 @@ impl GeneralQueries {
         requisition_line_id: String,
     ) -> Result<RequisitionStatsResponse> {
         response_requisition_stats(ctx, &store_id, &requisition_line_id)
+    }
+
+    pub async fn inventory_adjustment_reasons(
+        &self,
+        ctx: &Context<'_>,
+        #[graphql(desc = "Pagination option (first and offset)")] page: Option<PaginationInput>,
+        #[graphql(desc = "Filter option")] filter: Option<InventoryAdjustmentReasonFilterInput>,
+        #[graphql(desc = "Sort options (only first sort input is evaluated for this endpoint)")]
+        sort: Option<Vec<InventoryAdjustmentReasonSortInput>>,
+    ) -> Result<InventoryAdjustmentReasonResponse> {
+        inventory_adjustment_reasons(ctx, page, filter, sort)
+    }
+
+    pub async fn item_counts(
+        &self,
+        ctx: &Context<'_>,
+        store_id: String,
+        #[graphql(desc = "Low stock threshold in months")] low_stock_threshold: Option<i32>,
+    ) -> Result<ItemCounts> {
+        item_counts(ctx, store_id, low_stock_threshold)
+    }
+
+    pub async fn store_preferences(
+        &self,
+        ctx: &Context<'_>,
+        store_id: String,
+    ) -> Result<StorePreferenceNode> {
+        store_preferences(ctx, &store_id)
     }
 }
 
@@ -248,7 +276,7 @@ impl InitialisationQueries {
     pub async fn initialisation_status(
         &self,
         ctx: &Context<'_>,
-    ) -> Result<InitialisationStatusType> {
+    ) -> Result<InitialisationStatusNode> {
         initialisation_status(ctx)
     }
 
@@ -283,5 +311,19 @@ pub struct MasterListNotFoundForThisStore;
 impl MasterListNotFoundForThisStore {
     pub async fn description(&self) -> &'static str {
         "Master list not found (might not be visible to this store)"
+    }
+}
+
+/// Discovery queries
+#[derive(Default, Clone)]
+pub struct DiscoveryQueries;
+
+#[Object]
+impl DiscoveryQueries {
+    pub async fn initialisation_status(
+        &self,
+        ctx: &Context<'_>,
+    ) -> Result<InitialisationStatusNode> {
+        initialisation_status(ctx)
     }
 }

@@ -17,6 +17,10 @@ module.exports = {
     }),
     '.+\\.(gif)$': 'jest-transform-stub',
     '@awesome-cordova-plugins/printer': '<rootDir>/__mocks__/printer.ts',
+    '@capacitor-community/barcode-scanner':
+      '<rootDir>/__mocks__/barcode_scanner.ts',
   },
-  transformIgnorePatterns: ['/node_modules/(?!uuid)'],
+  transformIgnorePatterns: [
+    '/node_modules/(?!uuid|@mui/x-date-pickers|@babel)',
+  ],
 };

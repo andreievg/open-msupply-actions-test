@@ -51,11 +51,17 @@ pub use self::user::*;
 pub mod activity_log;
 pub use self::activity_log::*;
 
+pub mod period;
+pub use self::period::*;
+
 pub mod permissions;
 pub use self::permissions::*;
 
 pub mod response_requisition_stats;
 pub use self::response_requisition_stats::*;
+
+pub mod inventory_adjustment_reason;
+pub use self::inventory_adjustment_reason::*;
 
 use async_graphql::*;
 pub struct DeleteResponse(pub String);

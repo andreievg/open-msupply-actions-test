@@ -4,6 +4,7 @@ fragment ItemWithStats on ItemNode {
   code
   unitName
   defaultPackSize
+  availableStockOnHand(storeId: $storeId)
   stats(storeId: $storeId) {
     averageMonthlyConsumption
     availableStockOnHand
@@ -38,6 +39,10 @@ fragment RequestLine on RequisitionLineNode {
     availableStockOnHand
     availableMonthsOfStockOnHand
     averageMonthlyConsumption
+  }
+  linkedRequisitionLine {
+    approvedQuantity
+    approvalComment
   }
   item {
     ...ItemWithStats

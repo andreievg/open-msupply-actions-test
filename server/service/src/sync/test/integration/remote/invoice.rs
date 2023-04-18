@@ -24,6 +24,8 @@ impl SyncRecordTester for InvoiceRecordTester {
             on_hold: false,
             store_id: store_id.to_string(),
         };
+        // test option (inventory adjustment reason)
+        let inventory_adjustment_reason_id = uuid();
         let base_invoice_row = InvoiceRow {
             id: uuid(),
             name_id: uuid(),
@@ -37,7 +39,10 @@ impl SyncRecordTester for InvoiceRecordTester {
             comment: None,
             their_reference: None,
             transport_reference: None,
-            created_datetime: NaiveDate::from_ymd(2022, 03, 24).and_hms(11, 35, 15),
+            created_datetime: NaiveDate::from_ymd_opt(2022, 03, 24)
+                .unwrap()
+                .and_hms_opt(11, 35, 15)
+                .unwrap(),
             allocated_datetime: None,
             picked_datetime: None,
             shipped_datetime: None,
@@ -46,6 +51,8 @@ impl SyncRecordTester for InvoiceRecordTester {
             colour: None,
             requisition_id: None,
             linked_invoice_id: None,
+            // Tax on invoice/transact is not nullable in mSupply
+            tax: Some(0.0),
         };
         let base_invoice_line_row = InvoiceLineRow {
             id: uuid(),
@@ -66,6 +73,7 @@ impl SyncRecordTester for InvoiceRecordTester {
             tax: Some(10.0),
             number_of_packs: 10.129,
             note: None,
+            inventory_adjustment_reason_id: Some(inventory_adjustment_reason_id.clone()),
         };
         let invoice_row_1 = base_invoice_row.clone();
         let invoice_line_row_1 = base_invoice_line_row.clone();
@@ -98,25 +106,33 @@ impl SyncRecordTester for InvoiceRecordTester {
             d.id = uuid();
             d.invoice_id = invoice_row_2.id.clone();
             d.r#type = InvoiceLineRowType::StockOut;
+            d.inventory_adjustment_reason_id = None;
             d
         });
         let invoice_row_3 = inline_edit(&base_invoice_row, |mut d| {
-            d.id = uuid();
-            d.r#type = InvoiceRowType::InventoryAdjustment;
-            d.status = InvoiceRowStatus::Picked;
-            d
-        });
-        let invoice_row_4 = inline_edit(&base_invoice_row, |mut d| {
             d.id = uuid();
             d.r#type = InvoiceRowType::OutboundShipment;
             d.status = InvoiceRowStatus::Shipped;
             d
         });
 
-        let invoice_row_5 = inline_edit(&base_invoice_row, |mut d| {
+        let invoice_row_4 = inline_edit(&base_invoice_row, |mut d| {
             d.id = uuid();
             d.r#type = InvoiceRowType::OutboundShipment;
             d.status = InvoiceRowStatus::Delivered;
+            d
+        });
+        // Inventory adjustments should link to correct name
+        let invoice_row_5 = inline_edit(&base_invoice_row, |mut d| {
+            d.id = uuid();
+            d.r#type = InvoiceRowType::InventoryAddition;
+            d.status = InvoiceRowStatus::Picked;
+            d
+        });
+        let invoice_row_6 = inline_edit(&base_invoice_row, |mut d| {
+            d.id = uuid();
+            d.r#type = InvoiceRowType::InventoryReduction;
+            d.status = InvoiceRowStatus::Picked;
             d
         });
 
@@ -136,6 +152,12 @@ impl SyncRecordTester for InvoiceRecordTester {
                     "ID": base_invoice_row.name_store_id.as_ref().unwrap(),
                     "name_ID": base_invoice_row.name_id,
                     "store_mode": "store"
+                }],
+                "options": [{
+                    "ID": inventory_adjustment_reason_id,
+                    "isActive": true,
+                    "title": "POS 1",
+                    "type": "positiveInventoryAdjustment"
                 }]
             }),
             central_delete: json!({}),
@@ -146,6 +168,7 @@ impl SyncRecordTester for InvoiceRecordTester {
                 PullUpsertRecord::Invoice(invoice_row_3),
                 PullUpsertRecord::Invoice(invoice_row_4),
                 PullUpsertRecord::Invoice(invoice_row_5),
+                PullUpsertRecord::Invoice(invoice_row_6),
                 PullUpsertRecord::InvoiceLine(invoice_line_row_1.clone()),
                 PullUpsertRecord::InvoiceLine(invoice_line_row_2),
                 PullUpsertRecord::InvoiceLine(invoice_line_row_3),
@@ -179,11 +202,21 @@ impl SyncRecordTester for InvoiceRecordTester {
             d.comment = Some("invoice comment".to_string());
             d.their_reference = Some("invoice their ref".to_string());
             d.transport_reference = Some("transport reference".to_string());
-            d.allocated_datetime = Some(NaiveDate::from_ymd(2022, 03, 25).and_hms(11, 35, 15));
-            d.picked_datetime = Some(NaiveDate::from_ymd(2022, 03, 25).and_hms(11, 35, 15));
-            d.shipped_datetime = Some(NaiveDate::from_ymd(2022, 03, 26).and_hms(11, 35, 15));
-            d.delivered_datetime = Some(NaiveDate::from_ymd(2022, 03, 27).and_hms(11, 35, 15));
-            d.verified_datetime = Some(NaiveDate::from_ymd(2022, 03, 28).and_hms(11, 35, 15));
+            d.allocated_datetime = NaiveDate::from_ymd_opt(2022, 03, 25)
+                .unwrap()
+                .and_hms_opt(11, 35, 15);
+            d.picked_datetime = NaiveDate::from_ymd_opt(2022, 03, 25)
+                .unwrap()
+                .and_hms_opt(11, 35, 15);
+            d.shipped_datetime = NaiveDate::from_ymd_opt(2022, 03, 26)
+                .unwrap()
+                .and_hms_opt(11, 35, 15);
+            d.delivered_datetime = NaiveDate::from_ymd_opt(2022, 03, 27)
+                .unwrap()
+                .and_hms_opt(11, 35, 15);
+            d.verified_datetime = NaiveDate::from_ymd_opt(2022, 03, 28)
+                .unwrap()
+                .and_hms_opt(11, 35, 15);
             d.colour = Some("#1A1919".to_string());
             d.requisition_id = Some(requisition_row.id.clone());
             d.linked_invoice_id = Some(invoice_row_2.id.clone());
@@ -199,18 +232,16 @@ impl SyncRecordTester for InvoiceRecordTester {
             d.stock_line_id = Some(stock_line_row.id.clone());
             d.location_id = None;
             d.batch = Some("invoice line batch".to_string());
-            d.expiry_date = Some(NaiveDate::from_ymd(2024, 04, 04));
+            d.expiry_date = NaiveDate::from_ymd_opt(2024, 04, 04);
             d.pack_size = 10;
             d.cost_price_per_pack = 15.0;
             d.sell_price_per_pack = 15.0;
             d.total_before_tax = 10.0;
             d.total_after_tax = 15.0;
-            // TODO test to unset the tax, this is currently not working but should
-            // work with the new push endpoint
-            // d.tax = None;
             d.tax = Some(0.0);
             d.number_of_packs = 15.120;
             d.note = Some("invoice line note".to_string());
+            d.inventory_adjustment_reason_id = None;
             d
         });
 

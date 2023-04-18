@@ -27,7 +27,10 @@ pub fn mock_new_invoice_with_unallocated_line() -> InvoiceRow {
         r.invoice_number = 1;
         r.r#type = InvoiceRowType::OutboundShipment;
         r.status = InvoiceRowStatus::New;
-        r.created_datetime = NaiveDate::from_ymd(1970, 1, 5).and_hms_milli(15, 30, 0, 0);
+        r.created_datetime = NaiveDate::from_ymd_opt(1970, 1, 5)
+            .unwrap()
+            .and_hms_milli_opt(15, 30, 0, 0)
+            .unwrap();
     })
 }
 
@@ -51,6 +54,7 @@ pub fn mock_unallocated_line() -> InvoiceLineRow {
         r#type: InvoiceLineRowType::UnallocatedStock,
         number_of_packs: 1.0,
         note: None,
+        inventory_adjustment_reason_id: None,
     }
 }
 
@@ -64,7 +68,10 @@ pub fn mock_new_invoice_with_unallocated_line2() -> InvoiceRow {
         r.invoice_number = 2;
         r.r#type = InvoiceRowType::OutboundShipment;
         r.status = InvoiceRowStatus::New;
-        r.created_datetime = NaiveDate::from_ymd(1970, 1, 5).and_hms_milli(15, 30, 0, 0);
+        r.created_datetime = NaiveDate::from_ymd_opt(1970, 1, 5)
+            .unwrap()
+            .and_hms_milli_opt(15, 30, 0, 0)
+            .unwrap();
     })
 }
 
@@ -88,6 +95,7 @@ pub fn mock_unallocated_line2() -> InvoiceLineRow {
         r#type: InvoiceLineRowType::UnallocatedStock,
         number_of_packs: 1.0,
         note: None,
+        inventory_adjustment_reason_id: None,
     }
 }
 
@@ -99,7 +107,15 @@ pub fn mock_allocated_invoice() -> InvoiceRow {
         r.invoice_number = 1;
         r.r#type = InvoiceRowType::OutboundShipment;
         r.status = InvoiceRowStatus::Allocated;
-        r.created_datetime = NaiveDate::from_ymd(1970, 1, 5).and_hms_milli(15, 30, 0, 0);
-        r.allocated_datetime = Some(NaiveDate::from_ymd(1970, 1, 5).and_hms_milli(15, 30, 0, 0));
+        r.created_datetime = NaiveDate::from_ymd_opt(1970, 1, 5)
+            .unwrap()
+            .and_hms_milli_opt(15, 30, 0, 0)
+            .unwrap();
+        r.allocated_datetime = Some(
+            NaiveDate::from_ymd_opt(1970, 1, 5)
+                .unwrap()
+                .and_hms_milli_opt(15, 30, 0, 0)
+                .unwrap(),
+        );
     })
 }

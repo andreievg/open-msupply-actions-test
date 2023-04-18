@@ -5,7 +5,7 @@ use crate::sync::{
 use chrono::NaiveDate;
 use repository::{
     ChangelogRow, ChangelogTableName, InvoiceLineRow, InvoiceLineRowRepository, InvoiceLineRowType,
-    ItemRowRepository, StorageConnection, SyncBufferRow,
+    ItemRowRepository, StockLineRowRepository, StorageConnection, SyncBufferRow,
 };
 use serde::{Deserialize, Serialize};
 
@@ -80,6 +80,9 @@ pub struct LegacyTransLineRow {
     pub total_before_tax: Option<f64>,
     #[serde(rename = "om_total_after_tax")]
     pub total_after_tax: Option<f64>,
+    #[serde(rename = "optionID")]
+    #[serde(deserialize_with = "empty_str_as_option_string")]
+    pub inventory_adjustment_reason_id: Option<String>,
 }
 
 pub(crate) struct InvoiceLineTranslation {}
@@ -112,6 +115,7 @@ impl SyncTranslation for InvoiceLineTranslation {
             tax,
             total_before_tax,
             total_after_tax,
+            inventory_adjustment_reason_id,
         } = serde_json::from_str::<LegacyTransLineRow>(&sync_record.data)?;
 
         let line_type = to_invoice_line_type(&r#type).ok_or(anyhow::Error::msg(format!(
@@ -149,14 +153,36 @@ impl SyncTranslation for InvoiceLineTranslation {
                 (item.code, None, total, total)
             }
         };
-        // When invoice lines are coming from another site, we don't get stock line and location
-        // so foreign key constraint is violated, thus we want to set them to None if it's foreign site record.
-        let (stock_line_id, location_id) = if is_active_record_on_site(
+
+        let is_record_active_on_site = is_active_record_on_site(
             &connection,
             ActiveRecordCheck::InvoiceLine {
                 invoice_id: invoice_id.clone(),
             },
-        )? {
+        )?;
+
+        // TODO: remove the stock_line_is_valid check once central server does not generate the inbound shipment
+        // omSupply should be generating the inbound, with valid stock lines.
+        // Currently a uuid is assigned by central for the stock_line id which causes a foreign key constraint violation
+        let is_stock_line_valid = match stock_line_id {
+            Some(ref stock_line_id) => StockLineRowRepository::new(connection)
+                .find_one_by_id(&stock_line_id)
+                .is_ok(),
+            None => false,
+        };
+
+        if !is_stock_line_valid {
+            log::warn!(
+                "Stock line is not valid, invoice_line_id: {}, stock_line_id: {:?}",
+                id,
+                stock_line_id
+            );
+        }
+
+        // When invoice lines are coming from another site, we don't get stock line and location
+        // so foreign key constraint is violated, thus we want to set them to None if it's foreign site record.
+        // If the invoice is an auto generated inbound shipment, then the stock_lines are not valid either.
+        let (stock_line_id, location_id) = if is_record_active_on_site && is_stock_line_valid {
             (stock_line_id, location_id)
         } else {
             (None, None)
@@ -181,6 +207,7 @@ impl SyncTranslation for InvoiceLineTranslation {
             r#type: line_type,
             number_of_packs,
             note,
+            inventory_adjustment_reason_id,
         };
 
         Ok(Some(IntegrationRecords::from_upsert(
@@ -232,6 +259,7 @@ impl SyncTranslation for InvoiceLineTranslation {
             r#type,
             number_of_packs,
             note,
+            inventory_adjustment_reason_id,
         } = InvoiceLineRowRepository::new(connection).find_one_by_id(&changelog.record_id)?;
 
         let legacy_row = LegacyTransLineRow {
@@ -253,6 +281,7 @@ impl SyncTranslation for InvoiceLineTranslation {
             tax,
             total_before_tax: Some(total_before_tax),
             total_after_tax: Some(total_after_tax),
+            inventory_adjustment_reason_id,
         };
 
         Ok(Some(vec![RemoteSyncRecordV5::new_upsert(
@@ -311,7 +340,13 @@ mod tests {
 
         let (_, connection, _, _) = setup_all_with_data(
             "test_invoice_line_translation",
-            MockDataInserts::none().units().items().names().stores(),
+            MockDataInserts::none()
+                .units()
+                .items()
+                .names()
+                .stores()
+                .locations()
+                .stock_lines(),
             inline_init(|r: &mut MockData| {
                 r.invoices = vec![mock_outbound_shipment_a()];
                 r.key_value_store_rows = vec![inline_init(|r: &mut KeyValueStoreRow| {

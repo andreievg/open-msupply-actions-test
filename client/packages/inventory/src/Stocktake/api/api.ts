@@ -11,6 +11,7 @@ import {
   DeleteStocktakeLineInput,
   StocktakeNodeStatus,
   UpdateStocktakeStatusInput,
+  InsertStocktakeInput,
 } from '@openmsupply-client/common';
 import {
   Sdk,
@@ -57,6 +58,8 @@ const stocktakeParser = {
       expiryDate: line.expiryDate
         ? Formatter.naiveDate(new Date(line.expiryDate))
         : undefined,
+      comment: line.comment ?? '',
+      inventoryAdjustmentReasonId: line.inventoryAdjustmentReason?.id,
     }),
     toInsert: (line: DraftStocktakeLine): InsertStocktakeLineInput => ({
       locationId: line.location?.id,
@@ -72,6 +75,8 @@ const stocktakeParser = {
       expiryDate: line.expiryDate
         ? Formatter.naiveDate(new Date(line.expiryDate))
         : undefined,
+      comment: line.comment ?? '',
+      inventoryAdjustmentReasonId: line.inventoryAdjustmentReason?.id,
     }),
   },
 };
@@ -148,19 +153,11 @@ export const getStocktakeQueries = (sdk: Sdk, storeId: string) => ({
 
     return result;
   },
-  update: async (
-    patch: RecordPatch<StocktakeFragment>
-  ): Promise<UpdateStocktakeInput> => {
+  update: async (patch: RecordPatch<StocktakeFragment>) => {
     const input = stocktakeParser.toUpdate(patch);
     const result = (await sdk.updateStocktake({ input, storeId })) || {};
 
-    const { updateStocktake } = result;
-
-    if (updateStocktake?.__typename === 'StocktakeNode') {
-      return input;
-    }
-
-    throw new Error('Could not update stocktake');
+    return result.updateStocktake;
   },
   deleteStocktakes: async (stocktakes: StocktakeRowFragment[]) => {
     const result =
@@ -180,8 +177,22 @@ export const getStocktakeQueries = (sdk: Sdk, storeId: string) => ({
     const result = await sdk.upsertStocktakeLines(input);
     return result;
   },
+  insertStocktake: async (input: InsertStocktakeInput) => {
+    const result =
+      (await sdk.insertStocktake({
+        input,
+        storeId,
+      })) || {};
 
-  insertStocktake: async ({
+    const { insertStocktake } = result;
+
+    if (insertStocktake?.__typename === 'StocktakeNode') {
+      return insertStocktake;
+    }
+
+    throw new Error('Could not create stocktake');
+  },
+  insertStocktakeWithItems: async ({
     description,
     items,
   }: {

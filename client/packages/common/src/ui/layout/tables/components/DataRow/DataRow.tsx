@@ -1,6 +1,7 @@
-import React, { FC, useEffect } from 'react';
+import React, { FC, PropsWithChildren, ReactElement, useEffect } from 'react';
 import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
+import { alpha } from '@mui/material/styles';
 import { Column } from '../../columns/types';
 import { RecordWithId } from '@common/types';
 import {
@@ -10,10 +11,10 @@ import {
   useRowStyle,
 } from '../../context';
 import { Fade, Tooltip } from '@mui/material';
+import { TypedTFunction, LocaleKey } from '@common/intl';
 
 interface DataRowProps<T extends RecordWithId> {
   columns: Column<T>[];
-  rows: T[];
   onClick?: (rowData: T) => void;
   rowData: T;
   rowKey: string;
@@ -21,10 +22,24 @@ interface DataRowProps<T extends RecordWithId> {
   dense?: boolean;
   rowIndex: number;
   keyboardActivated?: boolean;
-  generateRowTooltip: (row: T) => string;
+  generateRowTooltip?: (row: T) => string;
+  localisedText: TypedTFunction<LocaleKey>;
+  localisedDate: (date: string | number | Date) => string;
+  isAnimated: boolean;
 }
+const Animation: FC<PropsWithChildren<{ isAnimated: boolean }>> = ({
+  children,
+  isAnimated,
+}) =>
+  isAnimated ? (
+    <Fade in={true} timeout={500}>
+      {children as ReactElement}
+    </Fade>
+  ) : (
+    <>{children}</>
+  );
 
-export const DataRow = <T extends RecordWithId>({
+const DataRowComponent = <T extends RecordWithId>({
   columns,
   onClick,
   rowData,
@@ -32,9 +47,11 @@ export const DataRow = <T extends RecordWithId>({
   rowIndex,
   ExpandContent,
   dense = false,
-  rows,
   keyboardActivated,
   generateRowTooltip,
+  localisedText,
+  localisedDate,
+  isAnimated,
 }: DataRowProps<T>): JSX.Element => {
   const hasOnClick = !!onClick;
   const { isExpanded } = useExpanded(rowData.id);
@@ -45,6 +62,7 @@ export const DataRow = <T extends RecordWithId>({
   const onRowClick = () => onClick && onClick(rowData);
   const paddingX = dense ? '12px' : '16px';
   const paddingY = dense ? '4px' : 0;
+  const rowTitle = generateRowTooltip?.(rowData) ?? '';
 
   useEffect(() => {
     if (isFocused) onRowClick();
@@ -52,27 +70,32 @@ export const DataRow = <T extends RecordWithId>({
 
   return (
     <>
-      <Fade in={true} timeout={500}>
-        <Tooltip
-          title={generateRowTooltip(rowData)}
-          followCursor
-          placement="bottom-start"
-        >
+      <Animation isAnimated={isAnimated}>
+        <Tooltip title={rowTitle} followCursor placement="bottom-start">
           <TableRow
+            key={`tr-${rowKey}`}
             sx={{
+              backgroundColor: isFocused
+                ? theme => alpha(theme.palette.secondary.main, 0.1)
+                : null,
               '&.MuiTableRow-root': {
+                '&:nth-of-type(even)': {
+                  backgroundColor: 'background.toolbar',
+                },
                 '&:hover': hasOnClick
-                  ? { backgroundColor: 'background.menu' }
+                  ? theme => ({
+                      backgroundColor: alpha(theme.palette.secondary.main, 0.1),
+                    })
                   : {},
               },
               color: isDisabled ? 'gray.main' : 'black',
-              backgroundColor: isFocused ? 'background.menu' : null,
               alignItems: 'center',
               height: '40px',
               maxHeight: '45px',
               boxShadow: dense
                 ? 'none'
-                : 'inset 0 0.5px 0 0 rgba(143, 144, 166, 0.5)',
+                : theme =>
+                    `inset 0 0.5px 0 0 ${alpha(theme.palette.gray.main, 0.5)}`,
               ...rowStyle,
             }}
             onClick={onRowClick}
@@ -100,25 +123,29 @@ export const DataRow = <T extends RecordWithId>({
                     fontWeight: 'normal',
                   }}
                 >
-                  <column.Cell
-                    isDisabled={isDisabled}
-                    rows={rows}
-                    rowData={rowData}
-                    columns={columns}
-                    column={column}
-                    rowKey={rowKey}
-                    columnIndex={columnIndex}
-                    rowIndex={rowIndex}
-                    autocompleteName={column.autocompleteProvider?.(rowData)}
-                  />
+                  {
+                    <column.Cell
+                      isDisabled={isDisabled || column.getIsDisabled?.(rowData)}
+                      rowData={rowData}
+                      columns={columns}
+                      isError={column.getIsError?.(rowData)}
+                      column={column}
+                      rowKey={rowKey}
+                      columnIndex={columnIndex}
+                      rowIndex={rowIndex}
+                      autocompleteName={column.autocompleteProvider?.(rowData)}
+                      localisedText={localisedText}
+                      localisedDate={localisedDate}
+                    />
+                  }
                 </TableCell>
               );
             })}
           </TableRow>
         </Tooltip>
-      </Fade>
+      </Animation>
       {isExpanded && !!ExpandContent ? (
-        <tr>
+        <tr key={`${rowKey}_expando`}>
           <td colSpan={columns.length}>
             <ExpandContent rowData={rowData} isExpanded={isExpanded} />
           </td>
@@ -127,3 +154,5 @@ export const DataRow = <T extends RecordWithId>({
     </>
   );
 };
+
+export const DataRow = React.memo(DataRowComponent) as typeof DataRowComponent;

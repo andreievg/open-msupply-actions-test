@@ -142,7 +142,10 @@ impl RequisitionTransferTester {
             r.store_id = request_store.id.clone();
             r.r#type = RequisitionRowType::Request;
             r.status = RequisitionRowStatus::Draft;
-            r.created_datetime = NaiveDate::from_ymd(2021, 01, 01).and_hms(0, 0, 0);
+            r.created_datetime = NaiveDate::from_ymd_opt(2021, 01, 01)
+                .unwrap()
+                .and_hms_opt(0, 0, 0)
+                .unwrap();
             r.sent_datetime = None;
             r.their_reference = Some("some reference".to_string());
             r.comment = Some("some comment".to_string());
@@ -159,7 +162,12 @@ impl RequisitionTransferTester {
             r.comment = Some("line comment".to_string());
             r.available_stock_on_hand = 1;
             r.average_monthly_consumption = 1;
-            r.snapshot_datetime = Some(NaiveDate::from_ymd(2021, 01, 01).and_hms(1, 0, 0));
+            r.snapshot_datetime = Some(
+                NaiveDate::from_ymd_opt(2021, 01, 01)
+                    .unwrap()
+                    .and_hms_opt(1, 0, 0)
+                    .unwrap(),
+            );
         });
 
         let request_requisition_line2 = inline_init(|r: &mut RequisitionLineRow| {
@@ -170,7 +178,12 @@ impl RequisitionTransferTester {
             r.suggested_quantity = 20;
             r.available_stock_on_hand = 30;
             r.average_monthly_consumption = 10;
-            r.snapshot_datetime = Some(NaiveDate::from_ymd(2021, 01, 01).and_hms(2, 0, 0));
+            r.snapshot_datetime = Some(
+                NaiveDate::from_ymd_opt(2021, 01, 01)
+                    .unwrap()
+                    .and_hms_opt(2, 0, 0)
+                    .unwrap(),
+            );
         });
 
         RequisitionTransferTester {
@@ -239,11 +252,11 @@ impl RequisitionTransferTester {
         assert_eq!(response_requisition.name_id, self.request_store.name_id);
         assert_eq!(
             response_requisition.their_reference,
-            Some("From request requisition 3 (some reference)".to_string())
+            Some("From internal order 3 (some reference)".to_string())
         );
         assert_eq!(
             response_requisition.comment,
-            Some("From request requisition 3 (some comment)".to_string())
+            Some("From internal order 3 (some comment)".to_string())
         );
         assert_eq!(
             response_requisition.max_months_of_stock,

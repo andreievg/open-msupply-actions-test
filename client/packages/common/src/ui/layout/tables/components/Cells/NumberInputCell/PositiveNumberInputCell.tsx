@@ -8,14 +8,12 @@ import { useBufferState, useDebounceCallback } from '@common/hooks';
 export const PositiveNumberInputCell = <T extends RecordWithId>({
   rowData,
   column,
-  rows,
   rowIndex,
   columnIndex,
+  isError,
   isDisabled = false,
 }: CellProps<T>): React.ReactElement<CellProps<T>> => {
-  const [buffer, setBuffer] = useBufferState(
-    column.accessor({ rowData, rows })
-  );
+  const [buffer, setBuffer] = useBufferState(column.accessor({ rowData }));
   const updater = useDebounceCallback(column.setter, [column.setter], 250);
 
   const autoFocus = rowIndex === 0 && columnIndex === 0;
@@ -26,6 +24,7 @@ export const PositiveNumberInputCell = <T extends RecordWithId>({
       autoFocus={autoFocus}
       InputProps={{ sx: { '& .MuiInput-input': { textAlign: 'right' } } }}
       type="number"
+      error={isError}
       value={buffer}
       onChange={newValue => {
         setBuffer(newValue.toString());

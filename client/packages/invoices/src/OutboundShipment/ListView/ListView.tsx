@@ -84,6 +84,7 @@ const OutboundShipmentListViewComponent: FC = () => {
 
       <DataTable
         id="outbound-list"
+        enableColumnSelection
         pagination={{ ...pagination, total: data?.totalCount }}
         onChangePage={updatePaginationQuery}
         columns={columns}
@@ -105,7 +106,7 @@ const OutboundShipmentListViewComponent: FC = () => {
 };
 
 export const OutboundShipmentListView: FC = () => (
-  <TableProvider createStore={createTableStore}>
+  <TableProvider createStore={createTableStore()}>
     <OutboundShipmentListViewComponent />
   </TableProvider>
 );

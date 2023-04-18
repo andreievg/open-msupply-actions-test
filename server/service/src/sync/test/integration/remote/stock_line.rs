@@ -34,9 +34,10 @@ impl SyncRecordTester for StockLineRecordTester {
             sell_price_per_pack: 15.0,
             available_number_of_packs: 100.3333,
             total_number_of_packs: 150.0,
-            expiry_date: Some(NaiveDate::from_ymd(2021, 03, 21)),
+            expiry_date: NaiveDate::from_ymd_opt(2021, 03, 21),
             on_hold: true,
             note: Some("some remote sync test note".to_string()),
+            supplier_id: Some(new_site_properties.name_id.clone()),
         };
 
         result.push(TestStepData {
@@ -60,9 +61,10 @@ impl SyncRecordTester for StockLineRecordTester {
             d.sell_price_per_pack = 20.0;
             d.available_number_of_packs = 110.393939;
             d.total_number_of_packs = 160.2190;
-            d.expiry_date = Some(NaiveDate::from_ymd(2021, 03, 22));
+            d.expiry_date = NaiveDate::from_ymd_opt(2021, 03, 22);
             d.on_hold = false;
             d.note = Some("some remote sync test note 2".to_string());
+            d.supplier_id = None;
             d
         });
         result.push(TestStepData {

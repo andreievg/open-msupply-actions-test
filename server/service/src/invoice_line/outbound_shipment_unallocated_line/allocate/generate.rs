@@ -44,7 +44,7 @@ pub fn generate(
         });
         return Ok(result);
     }
-// Asc, by expiry date, nulls last
+    // Asc, by expiry date, nulls last
     let sorted_available_stock_lines =
         get_sorted_available_stock_lines(connection, store_id, &unallocated_line)?;
     // Use FEFO to allocate
@@ -214,7 +214,7 @@ fn get_sorted_available_stock_lines(
         desc: Some(false),
     };
 
-    StockLineRepository::new(connection).query(Pagination::new(), Some(filter), Some(sort))
+    StockLineRepository::new(connection).query(Pagination::new(), Some(filter), Some(sort), None)
 }
 
 fn get_allocated_lines(

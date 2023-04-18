@@ -113,7 +113,7 @@ impl<'a> TranslationAndIntegration<'a> {
             match integration_result {
                 Ok(_) => {
                     self.sync_buffer
-                        .record_successfull_integration(&sync_record)?;
+                        .record_successful_integration(&sync_record)?;
                     result.insert_success(&sync_record.table_name)
                 }
                 // Record database_error in sync buffer and in result
@@ -135,20 +135,31 @@ impl<'a> TranslationAndIntegration<'a> {
 
 impl IntegrationRecords {
     pub(crate) fn integrate(&self, connection: &StorageConnection) -> Result<(), RepositoryError> {
+        // Only start nested transaction if transaction is already ongoing. See integrate_and_translate_sync_buffer
+        let start_nested_transaction = { connection.transaction_level.get() > 0 };
+
         for upsert in self.upserts.iter() {
             // Integrate every record in a sub transaction. This is mainly for Postgres where the
             // whole transaction fails when there is a DB error (not a problem in sqlite).
-            connection
-                .transaction_sync_etc(|sub_tx| upsert.upsert(sub_tx), false)
-                .map_err(|e| e.to_inner_error())?;
+            if start_nested_transaction {
+                connection
+                    .transaction_sync_etc(|sub_tx| upsert.upsert(sub_tx), false)
+                    .map_err(|e| e.to_inner_error())?;
+            } else {
+                upsert.upsert(&connection)?;
+            }
         }
 
         for delete in self.deletes.iter() {
             // Integrate every record in a sub transaction. This is mainly for Postgres where the
             // whole transaction fails when there is a DB error (not a problem in sqlite).
-            connection
-                .transaction_sync_etc(|sub_tx| delete.delete(sub_tx), false)
-                .map_err(|e| e.to_inner_error())?;
+            if start_nested_transaction {
+                connection
+                    .transaction_sync_etc(|sub_tx| delete.delete(sub_tx), false)
+                    .map_err(|e| e.to_inner_error())?;
+            } else {
+                delete.delete(&connection)?;
+            }
         }
 
         Ok(())
@@ -160,14 +171,17 @@ impl PullUpsertRecord {
         use PullUpsertRecord::*;
         match self {
             Name(record) => NameRowRepository::new(con).upsert_one(record),
+            NameTag(record) => NameTagRowRepository::new(con).upsert_one(record),
+            NameTagJoin(record) => NameTagJoinRepository::new(con).upsert_one(record),
             Unit(record) => UnitRowRepository::new(con).upsert_one(record),
             Item(record) => ItemRowRepository::new(con).upsert_one(record),
             Store(record) => StoreRowRepository::new(con).upsert_one(record),
             MasterList(record) => MasterListRowRepository::new(con).upsert_one(record),
             MasterListLine(record) => MasterListLineRowRepository::new(con).upsert_one(record),
             MasterListNameJoin(record) => MasterListNameJoinRepository::new(con).upsert_one(record),
+            PeriodSchedule(record) => PeriodScheduleRowRepository::new(con).upsert_one(record),
+            Period(record) => PeriodRowRepository::new(con).upsert_one(record),
             Report(record) => ReportRowRepository::new(con).upsert_one(record),
-            Number(record) => NumberRowRepository::new(con).upsert_one(record),
             Location(record) => LocationRowRepository::new(con).upsert_one(record),
             StockLine(record) => StockLineRowRepository::new(con).upsert_one(record),
             NameStoreJoin(record) => NameStoreJoinRepository::new(con).upsert_one(record),
@@ -178,6 +192,10 @@ impl PullUpsertRecord {
             Requisition(record) => RequisitionRowRepository::new(con).upsert_one(record),
             RequisitionLine(record) => RequisitionLineRowRepository::new(con).upsert_one(record),
             ActivityLog(record) => ActivityLogRowRepository::new(con).insert_one(record),
+            InventoryAdjustmentReason(record) => {
+                InventoryAdjustmentReasonRowRepository::new(con).upsert_one(record)
+            }
+            StorePreference(record) => StorePreferenceRowRepository::new(con).upsert_one(record),
         }
     }
 }
@@ -188,6 +206,7 @@ impl PullDeleteRecord {
         let id = &self.id;
         match self.table {
             Name => NameRowRepository::new(con).delete(id),
+            NameTagJoin => NameTagJoinRepository::new(con).delete(id),
             Unit => UnitRowRepository::new(con).delete(id),
             Item => ItemRowRepository::new(con).delete(id),
             Store => StoreRowRepository::new(con).delete(id),
@@ -200,6 +219,9 @@ impl PullDeleteRecord {
             InvoiceLine => InvoiceLineRowRepository::new(con).delete(id),
             Requisition => RequisitionRowRepository::new(con).delete(id),
             RequisitionLine => RequisitionLineRowRepository::new(con).delete(id),
+            InventoryAdjustmentReason => {
+                InventoryAdjustmentReasonRowRepository::new(con).delete(id)
+            }
             #[cfg(all(test, feature = "integration_test"))]
             Location => LocationRowRepository::new(con).delete(id),
             #[cfg(all(test, feature = "integration_test"))]

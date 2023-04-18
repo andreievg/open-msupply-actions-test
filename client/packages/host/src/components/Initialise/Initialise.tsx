@@ -10,6 +10,7 @@ import { LoginTextInput } from '../Login/LoginTextInput';
 import { InitialiseLayout } from './InitialiseLayout';
 import { useInitialiseForm } from './hooks';
 import { SyncProgress } from '../SyncProgress';
+import { SiteInfo } from '../SiteInfo';
 
 export const Initialise = () => {
   const t = useTranslation('app');
@@ -29,10 +30,11 @@ export const Initialise = () => {
     setUrl,
     siteCredentialsError: error,
     syncStatus,
+    siteName,
   } = useInitialiseForm();
 
   useEffect(() => {
-    setPageTitle(`${t('app.initialise')} | ${t('app')} `);
+    setPageTitle(`${t('messages.not-initialised')} | ${t('app')} `);
   }, []);
 
   const isInputDisabled = isInitialising || isLoading;
@@ -94,7 +96,7 @@ export const Initialise = () => {
             !isInitialising /* isValid would be false if isInitialising since password is emptied out */
           }
         >
-          {/* Retry will only be shown when not loading and is initialised (when sync error occured) */}
+          {/* Retry will only be shown when not loading and is initialised (when sync error occurred) */}
           {isInitialising ? t('button.retry') : t('button.initialise')}
         </LoadingButton>
       }
@@ -103,6 +105,7 @@ export const Initialise = () => {
         /* onInitialise from layout only happens on form key event, form is disabled when isInitialising */
         if (isValid) await onInitialise();
       }}
+      SiteInfo={<SiteInfo siteName={siteName} />}
     />
   );
 };

@@ -11,6 +11,7 @@ export const useInbound = {
     delete: Document.useInboundDelete,
     insert: Document.useInsertInbound,
     update: Document.useUpdateInbound,
+    updateTax: Document.useUpdateInboundServiceTax,
 
     fields: Document.useInboundFields,
     next: Document.useNextItem,
@@ -28,6 +29,7 @@ export const useInbound = {
   utils: {
     addFromMasterList: Utils.useAddFromMasterList,
     api: Utils.useInboundApi,
+    counts: Utils.useInboundCounts,
     isDisabled: Utils.useIsInboundDisabled,
     isStatusChangeDisabled: Utils.useIsStatusChangeDisabled,
   },

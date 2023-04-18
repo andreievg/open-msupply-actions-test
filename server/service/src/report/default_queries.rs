@@ -52,6 +52,8 @@ query InvoiceQuery($storeId: String, $dataId: String) {
         isCustomer
         id
         code
+        address1
+        address2
       }
       lines {
         nodes {
@@ -122,6 +124,7 @@ query InvoiceQuery($storeId: String, $dataId: String) {
       }
       code
       storeName
+      logo
     }
     ... on NodeError {
       __typename
@@ -151,9 +154,9 @@ const STOCKTAKE_QUERY: &str = r#"query StocktakeQuery($storeId: String, $dataId:
       createdDatetime
       description
       finalisedDatetime
-      inventoryAdjustmentId
+      inventoryAdjustmentId: inventoryAdditionId
       isLocked
-      inventoryAdjustment {
+      inventoryAdjustment: inventoryAddition {
         allocatedDatetime
         colour
         comment
@@ -214,6 +217,7 @@ const STOCKTAKE_QUERY: &str = r#"query StocktakeQuery($storeId: String, $dataId:
       }
       code
       storeName
+      logo
     }
     ... on NodeError {
       __typename
@@ -325,6 +329,7 @@ const REQUISITION_QUERY: &str = r#"query RequisitionQuery($storeId: String, $dat
       }
       code
       storeName
+      logo
     }
     ... on NodeError {
       __typename

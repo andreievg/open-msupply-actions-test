@@ -12,7 +12,7 @@ pub fn mock_outbound_shipment_a_invoice_lines() -> Vec<InvoiceLineRow> {
         item_code: String::from("item_a_code"),
         stock_line_id: Some(String::from("item_a_line_a")),
         batch: Some(String::from("item_a_line_a")),
-        expiry_date: Some(NaiveDate::from_ymd(2020, 8, 1)),
+        expiry_date: Some(NaiveDate::from_ymd_opt(2020, 8, 1).unwrap()),
         pack_size: 1,
         cost_price_per_pack: 0.0,
         sell_price_per_pack: 0.0,
@@ -22,6 +22,7 @@ pub fn mock_outbound_shipment_a_invoice_lines() -> Vec<InvoiceLineRow> {
         r#type: InvoiceLineRowType::StockOut,
         number_of_packs: 10.0,
         note: None,
+        inventory_adjustment_reason_id: None,
     };
 
     let mock_outbound_shipment_a_invoice_line_b: InvoiceLineRow = InvoiceLineRow {
@@ -33,7 +34,7 @@ pub fn mock_outbound_shipment_a_invoice_lines() -> Vec<InvoiceLineRow> {
         item_code: String::from("item_b_code"),
         stock_line_id: Some(String::from("item_b_line_a")),
         batch: Some(String::from("item_a_line_a")),
-        expiry_date: Some(NaiveDate::from_ymd(2020, 8, 2)),
+        expiry_date: Some(NaiveDate::from_ymd_opt(2020, 8, 2).unwrap()),
         pack_size: 1,
         cost_price_per_pack: 0.0,
         sell_price_per_pack: 0.0,
@@ -43,6 +44,7 @@ pub fn mock_outbound_shipment_a_invoice_lines() -> Vec<InvoiceLineRow> {
         r#type: InvoiceLineRowType::StockOut,
         number_of_packs: 4.0,
         note: None,
+        inventory_adjustment_reason_id: None,
     };
 
     vec![
@@ -61,7 +63,7 @@ pub fn mock_outbound_shipment_b_invoice_lines() -> Vec<InvoiceLineRow> {
         item_code: String::from("item_a_code"),
         stock_line_id: Some(String::from("item_a_line_a")),
         batch: Some(String::from("item_a_line_a")),
-        expiry_date: Some(NaiveDate::from_ymd(2020, 8, 3)),
+        expiry_date: Some(NaiveDate::from_ymd_opt(2020, 8, 3).unwrap()),
         pack_size: 1,
         cost_price_per_pack: 0.0,
         sell_price_per_pack: 0.0,
@@ -71,6 +73,7 @@ pub fn mock_outbound_shipment_b_invoice_lines() -> Vec<InvoiceLineRow> {
         r#type: InvoiceLineRowType::StockOut,
         number_of_packs: 3.0,
         note: None,
+        inventory_adjustment_reason_id: None,
     };
 
     let mock_outbound_shipment_b_invoice_line_b: InvoiceLineRow = InvoiceLineRow {
@@ -82,7 +85,7 @@ pub fn mock_outbound_shipment_b_invoice_lines() -> Vec<InvoiceLineRow> {
         item_code: String::from("item_b_code"),
         stock_line_id: Some(String::from("item_b_line_a")),
         batch: Some(String::from("item_a_line_a")),
-        expiry_date: Some(NaiveDate::from_ymd(2020, 8, 4)),
+        expiry_date: Some(NaiveDate::from_ymd_opt(2020, 8, 4).unwrap()),
         pack_size: 1,
         cost_price_per_pack: 0.0,
         sell_price_per_pack: 0.0,
@@ -92,6 +95,7 @@ pub fn mock_outbound_shipment_b_invoice_lines() -> Vec<InvoiceLineRow> {
         r#type: InvoiceLineRowType::StockOut,
         number_of_packs: 5.0,
         note: None,
+        inventory_adjustment_reason_id: None,
     };
 
     vec![
@@ -110,7 +114,7 @@ pub fn mock_outbound_shipment_c_invoice_lines() -> Vec<InvoiceLineRow> {
         item_code: String::from("item_a_code"),
         stock_line_id: Some(String::from("stock_line_ci_c_siline_a")),
         batch: Some(String::from("item_a_ci_c_siline_a")),
-        expiry_date: Some(NaiveDate::from_ymd(2020, 1, 4)),
+        expiry_date: Some(NaiveDate::from_ymd_opt(2020, 1, 4).unwrap()),
         pack_size: 3,
         cost_price_per_pack: 8.0,
         sell_price_per_pack: 9.0,
@@ -120,6 +124,7 @@ pub fn mock_outbound_shipment_c_invoice_lines() -> Vec<InvoiceLineRow> {
         r#type: InvoiceLineRowType::StockOut,
         number_of_packs: 3.0,
         note: None,
+        inventory_adjustment_reason_id: None,
     };
 
     let mock_outbound_shipment_c_invoice_line_b: InvoiceLineRow = InvoiceLineRow {
@@ -131,7 +136,7 @@ pub fn mock_outbound_shipment_c_invoice_lines() -> Vec<InvoiceLineRow> {
         item_code: String::from("item_b_code"),
         stock_line_id: Some(String::from("stock_line_ci_c_siline_b")),
         batch: None,
-        expiry_date: Some(NaiveDate::from_ymd(2020, 3, 23)),
+        expiry_date: Some(NaiveDate::from_ymd_opt(2020, 3, 23).unwrap()),
         pack_size: 7,
         cost_price_per_pack: 54.0,
         sell_price_per_pack: 34.0,
@@ -141,6 +146,7 @@ pub fn mock_outbound_shipment_c_invoice_lines() -> Vec<InvoiceLineRow> {
         r#type: InvoiceLineRowType::StockOut,
         number_of_packs: 1.0,
         note: None,
+        inventory_adjustment_reason_id: None,
     };
 
     vec![
@@ -159,7 +165,7 @@ pub fn mock_outbound_shipment_d_invoice_lines() -> Vec<InvoiceLineRow> {
         item_code: String::from("item_a_code"),
         stock_line_id: Some(String::from("stock_line_ci_d_siline_a")),
         batch: Some(String::from("stock_line_ci_d_siline_a")),
-        expiry_date: Some(NaiveDate::from_ymd(2020, 1, 4)),
+        expiry_date: Some(NaiveDate::from_ymd_opt(2020, 1, 4).unwrap()),
         pack_size: 2,
         cost_price_per_pack: 10.0,
         sell_price_per_pack: 11.0,
@@ -169,6 +175,7 @@ pub fn mock_outbound_shipment_d_invoice_lines() -> Vec<InvoiceLineRow> {
         r#type: InvoiceLineRowType::StockOut,
         number_of_packs: 2.0,
         note: None,
+        inventory_adjustment_reason_id: None,
     };
 
     vec![mock_outbound_shipment_d_invoice_line_a]
@@ -184,7 +191,7 @@ pub fn mock_outbound_shipment_no_stock_line() -> Vec<InvoiceLineRow> {
         item_code: String::from("item_a_code"),
         stock_line_id: None,
         batch: None,
-        expiry_date: Some(NaiveDate::from_ymd(2020, 1, 4)),
+        expiry_date: Some(NaiveDate::from_ymd_opt(2020, 1, 4).unwrap()),
         pack_size: 2,
         cost_price_per_pack: 10.0,
         sell_price_per_pack: 11.0,
@@ -194,6 +201,7 @@ pub fn mock_outbound_shipment_no_stock_line() -> Vec<InvoiceLineRow> {
         r#type: InvoiceLineRowType::StockOut,
         number_of_packs: 2.0,
         note: None,
+        inventory_adjustment_reason_id: None,
     };
 
     vec![mock_outbound_shipment_no_stock_line]
@@ -209,7 +217,7 @@ pub fn mock_inbound_shipment_a_invoice_lines() -> Vec<InvoiceLineRow> {
         item_code: String::from("item_a_code"),
         stock_line_id: Some(String::from("item_a_line_a")),
         batch: Some(String::from("item_a_line_a")),
-        expiry_date: Some(NaiveDate::from_ymd(2020, 8, 5)),
+        expiry_date: Some(NaiveDate::from_ymd_opt(2020, 8, 5).unwrap()),
         pack_size: 1,
         cost_price_per_pack: 0.0,
         sell_price_per_pack: 0.0,
@@ -219,6 +227,7 @@ pub fn mock_inbound_shipment_a_invoice_lines() -> Vec<InvoiceLineRow> {
         r#type: InvoiceLineRowType::StockIn,
         number_of_packs: 1.0,
         note: None,
+        inventory_adjustment_reason_id: None,
     };
 
     let mock_inbound_shipment_a_invoice_line_b: InvoiceLineRow = InvoiceLineRow {
@@ -230,7 +239,7 @@ pub fn mock_inbound_shipment_a_invoice_lines() -> Vec<InvoiceLineRow> {
         item_code: String::from("item_b_code"),
         stock_line_id: Some(String::from("item_b_line_a")),
         batch: Some(String::from("item_a_line_a")),
-        expiry_date: Some(NaiveDate::from_ymd(2020, 8, 6)),
+        expiry_date: Some(NaiveDate::from_ymd_opt(2020, 8, 6).unwrap()),
         pack_size: 1,
         cost_price_per_pack: 0.0,
         sell_price_per_pack: 0.0,
@@ -240,6 +249,7 @@ pub fn mock_inbound_shipment_a_invoice_lines() -> Vec<InvoiceLineRow> {
         r#type: InvoiceLineRowType::StockIn,
         number_of_packs: 1.0,
         note: None,
+        inventory_adjustment_reason_id: None,
     };
 
     vec![
@@ -258,7 +268,7 @@ pub fn mock_inbound_shipment_b_invoice_lines() -> Vec<InvoiceLineRow> {
         item_code: String::from("item_a_code"),
         stock_line_id: Some(String::from("item_a_line_a")),
         batch: Some(String::from("item_a_line_a")),
-        expiry_date: Some(NaiveDate::from_ymd(2020, 8, 7)),
+        expiry_date: Some(NaiveDate::from_ymd_opt(2020, 8, 7).unwrap()),
         pack_size: 1,
         cost_price_per_pack: 0.0,
         sell_price_per_pack: 0.0,
@@ -268,6 +278,7 @@ pub fn mock_inbound_shipment_b_invoice_lines() -> Vec<InvoiceLineRow> {
         r#type: InvoiceLineRowType::StockIn,
         number_of_packs: 1.0,
         note: None,
+        inventory_adjustment_reason_id: None,
     };
 
     let mock_inbound_shipment_b_invoice_line_b: InvoiceLineRow = InvoiceLineRow {
@@ -279,7 +290,7 @@ pub fn mock_inbound_shipment_b_invoice_lines() -> Vec<InvoiceLineRow> {
         item_code: String::from("item_b_code"),
         stock_line_id: Some(String::from("item_b_line_a")),
         batch: Some(String::from("item_a_line_a")),
-        expiry_date: Some(NaiveDate::from_ymd(2020, 8, 8)),
+        expiry_date: Some(NaiveDate::from_ymd_opt(2020, 8, 8).unwrap()),
         pack_size: 1,
         cost_price_per_pack: 0.0,
         sell_price_per_pack: 0.0,
@@ -289,6 +300,7 @@ pub fn mock_inbound_shipment_b_invoice_lines() -> Vec<InvoiceLineRow> {
         r#type: InvoiceLineRowType::StockIn,
         number_of_packs: 1.0,
         note: None,
+        inventory_adjustment_reason_id: None,
     };
 
     vec![
@@ -317,6 +329,7 @@ pub fn mock_inbound_shipment_c_invoice_lines() -> Vec<InvoiceLineRow> {
         r#type: InvoiceLineRowType::StockIn,
         number_of_packs: 3.0,
         note: None,
+        inventory_adjustment_reason_id: None,
     };
 
     let mock_inbound_shipment_c_invoice_line_b: InvoiceLineRow = InvoiceLineRow {
@@ -328,7 +341,7 @@ pub fn mock_inbound_shipment_c_invoice_lines() -> Vec<InvoiceLineRow> {
         item_code: String::from("item_b_code"),
         stock_line_id: None,
         batch: Some(String::from("item_b_si_c_siline_b")),
-        expiry_date: Some(NaiveDate::from_ymd(2020, 8, 8)),
+        expiry_date: Some(NaiveDate::from_ymd_opt(2020, 8, 8).unwrap()),
         pack_size: 1,
         cost_price_per_pack: 4.0,
         sell_price_per_pack: 2.0,
@@ -338,6 +351,7 @@ pub fn mock_inbound_shipment_c_invoice_lines() -> Vec<InvoiceLineRow> {
         r#type: InvoiceLineRowType::StockIn,
         number_of_packs: 2.0,
         note: None,
+        inventory_adjustment_reason_id: None,
     };
 
     vec![
@@ -366,6 +380,7 @@ pub fn mock_inbound_shipment_d_invoice_lines() -> Vec<InvoiceLineRow> {
         r#type: InvoiceLineRowType::StockIn,
         number_of_packs: 7.0,
         note: None,
+        inventory_adjustment_reason_id: None,
     };
 
     let mock_inbound_shipment_d_invoice_line_b: InvoiceLineRow = InvoiceLineRow {
@@ -377,7 +392,7 @@ pub fn mock_inbound_shipment_d_invoice_lines() -> Vec<InvoiceLineRow> {
         item_code: String::from("item_b_code"),
         stock_line_id: Some(String::from("stock_line_si_d_siline_b")),
         batch: Some(String::from("item_b_si_c_siline_d")),
-        expiry_date: Some(NaiveDate::from_ymd(2020, 8, 11)),
+        expiry_date: Some(NaiveDate::from_ymd_opt(2020, 8, 11).unwrap()),
         pack_size: 3,
         cost_price_per_pack: 45.0,
         sell_price_per_pack: 34.0,
@@ -387,6 +402,7 @@ pub fn mock_inbound_shipment_d_invoice_lines() -> Vec<InvoiceLineRow> {
         r#type: InvoiceLineRowType::StockIn,
         number_of_packs: 2.0,
         note: None,
+        inventory_adjustment_reason_id: None,
     };
 
     vec![

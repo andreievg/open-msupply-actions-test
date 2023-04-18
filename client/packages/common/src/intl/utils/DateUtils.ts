@@ -2,6 +2,7 @@ import { IntlUtils, SupportedLocales } from '@common/intl';
 import {
   isValid,
   differenceInMonths,
+  differenceInMinutes,
   isPast,
   isThisWeek,
   isToday,
@@ -14,8 +15,16 @@ import {
   fromUnixTime,
   formatRelative,
   formatDistanceToNow,
+  formatRFC3339,
 } from 'date-fns';
-import { enGB, enUS, fr, ar, es } from 'date-fns/locale';
+// importing individually to reduce bundle size
+// the date-fns methods are tree shaking correctly
+// but the locales are not. when adding, please add as below
+import enGB from 'date-fns/locale/en-GB';
+import enUS from 'date-fns/locale/en-US';
+import fr from 'date-fns/locale/fr';
+import ar from 'date-fns/locale/ar';
+import es from 'date-fns/locale/es';
 
 // Map locale string (from i18n) to locale object (from date-fns)
 const getLocaleObj = { fr, ar, es };
@@ -43,8 +52,10 @@ const formatIfValid = (
 ): string => (isValid(date) ? format(date, dateFormat, options) : '');
 
 export const DateUtils = {
-  getDateOrNull: (date?: string | null): Date | null => {
+  differenceInMinutes,
+  getDateOrNull: (date?: Date | string | null): Date | null => {
     if (!date) return null;
+    if (date instanceof Date) return date;
     const maybeDate = new Date(date);
     return isValid(maybeDate) ? maybeDate : null;
   },
@@ -59,6 +70,9 @@ export const DateUtils = {
   isAfter,
   isBefore,
   isEqual,
+  isValid,
+  formatRFC3339: (date: Date | null | undefined) =>
+    isValid(date) ? formatRFC3339(date as Date) : undefined,
 };
 
 const getLocale = (language: SupportedLocales) => {
@@ -67,6 +81,8 @@ const getLocale = (language: SupportedLocales) => {
       return navigator.language === 'en-US' ? enUS : enGB;
     case 'tet':
       return enGB;
+    case 'fr-DJ':
+      return fr;
     default:
       return getLocaleObj[language];
   }

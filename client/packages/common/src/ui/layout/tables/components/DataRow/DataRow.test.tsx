@@ -8,6 +8,8 @@ import { useColumns } from '../../hooks';
 import { TestingProvider } from '../../../../../utils';
 
 describe('DataRow', () => {
+  const t = () => '';
+  const localisedDate = () => '';
   const Example = () => {
     const columns = useColumns([
       {
@@ -21,12 +23,14 @@ describe('DataRow', () => {
       <Table>
         <TableBody>
           <DataRow
-            rows={[]}
             columns={columns}
             rowKey="rowKey"
             rowIndex={0}
             rowData={{ id: 'josh' }}
             generateRowTooltip={() => ''}
+            isAnimated={false}
+            localisedText={t}
+            localisedDate={localisedDate}
           />
         </TableBody>
       </Table>

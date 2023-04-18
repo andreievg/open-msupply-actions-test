@@ -7,10 +7,13 @@ use crate::{
 };
 
 use self::middleware::{compress as compress_middleware, logger as logger_middleware};
+use actix_cors::Cors;
 use anyhow::Context;
 use graphql_core::loader::{get_loaders, LoaderRegistry};
 
-use graphql::{attach_graphql_schema, GraphSchemaData, GraphqlSchema};
+use graphql::{
+    attach_discovery_graphql_schema, attach_graphql_schema, GraphSchemaData, GraphqlSchema,
+};
 use log::info;
 use repository::{get_storage_connection_manager, migrations::migrate};
 
@@ -104,9 +107,9 @@ pub async fn start_server(
         .unwrap_or("".to_string());
     service_provider
         .app_data_service
-        .set_hardware_id(machine_uid)
+        .set_hardware_id(machine_uid.clone())
         .unwrap();
-    info!("Setting hardware uuid..done");
+    info!("Setting hardware uuid..done [{}]", machine_uid.clone());
 
     // CHECK SYNC STATUS
     info!("Checking sync status..");
@@ -123,14 +126,14 @@ pub async fn start_server(
         // to confirm that site is still the same (request_and_set_site_info checks site UUID)
         (Some(database_sync_settings), Some(yaml_sync_settings)) => {
             if database_sync_settings.core_site_details_changed(&yaml_sync_settings) {
-                info!("Sync settings in configurations dont match database");
-                info!("Checking sync credentails are for the same site..");
+                info!("Sync settings in configurations don't match database");
+                info!("Checking sync credentials are for the same site..");
                 service_provider
                     .site_info_service
                     .request_and_set_site_info(&service_provider, &yaml_sync_settings)
                     .await
                     .unwrap();
-                info!("Checking sync credentails are for the same site..done");
+                info!("Checking sync credentials are for the same site..done");
             }
             service_provider
                 .settings
@@ -141,14 +144,14 @@ pub async fn start_server(
         }
         (None, Some(yaml_sync_settings)) => {
             info!("Sync settings in configurations and not in database");
-            info!("Checking sync credentails..");
+            info!("Checking sync credentials..");
             // If fresh sync settings provided in yaml, check credentials against central server and save them in database
             service_provider
                 .site_info_service
                 .request_and_set_site_info(&service_provider, &yaml_sync_settings)
                 .await
                 .unwrap();
-            info!("Checking sync credentails..done");
+            info!("Checking sync credentials..done");
             service_provider
                 .settings
                 .update_sync_settings(&service_context, &yaml_sync_settings)
@@ -198,12 +201,24 @@ pub async fn start_server(
     // Don't do discovery in android
     #[cfg(not(target_os = "android"))]
     {
-        info!("Starting server discovery",);
-        let _ = discovery::Discovery::start(discovery::ServerInfo::new(
-            certificates.protocol(),
-            &settings.server,
-        ));
+        info!("Starting server DNS-SD discovery",);
+        discovery::start_discovery(certificates.protocol(), settings.server.port, machine_uid);
     }
+
+    info!("Starting discovery graphql server",);
+    let closure_service_provider = service_provider.clone();
+    // See attach_discovery_graphql_schema for more details
+    actix_web::rt::spawn(
+        HttpServer::new(move || {
+            App::new()
+                .wrap(Cors::permissive())
+                .configure(attach_discovery_graphql_schema(
+                    closure_service_provider.clone(),
+                ))
+        })
+        .bind(settings.server.discovery_address())?
+        .run(),
+    );
 
     // ADD SYSTEM USER
     service_provider

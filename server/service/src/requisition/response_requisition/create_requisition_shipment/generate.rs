@@ -44,6 +44,7 @@ pub fn generate(
         verified_datetime: None,
         colour: None,
         linked_invoice_id: None,
+        tax: None,
     };
 
     let invoice_line_rows = generate_invoice_lines(connection, &new_invoice.id, fullfilments)?;
@@ -83,6 +84,7 @@ pub fn generate_invoice_lines(
             sell_price_per_pack: 0.0,
             cost_price_per_pack: 0.0,
             stock_line_id: None,
+            inventory_adjustment_reason_id: None,
         });
     }
 

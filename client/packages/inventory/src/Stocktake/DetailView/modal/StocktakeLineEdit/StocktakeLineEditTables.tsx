@@ -15,10 +15,18 @@ import {
   Theme,
   useTheme,
   useTableStore,
-  CellProps,
 } from '@openmsupply-client/common';
-import { getLocationInputColumn } from '@openmsupply-client/system';
 import { DraftStocktakeLine } from './utils';
+import {
+  Adjustment,
+  getLocationInputColumn,
+  InventoryAdjustmentReasonRowFragment,
+  InventoryAdjustmentReasonSearchInput,
+} from '@openmsupply-client/system';
+import {
+  useStocktakeLineErrorContext,
+  UseStocktakeLineErrors,
+} from '../../../context';
 
 interface StocktakeLineEditTableProps {
   isDisabled?: boolean;
@@ -66,10 +74,66 @@ const getCountThisLineColumn = (
   return {
     key: 'countThisLine',
     label: 'label.count-this-line',
-    width: 100,
+    width: 80,
     Cell: EnabledCheckboxCell,
     setter: patch => setter({ ...patch }),
     backgroundColor: alpha(theme.palette.background.menu, 0.4),
+  };
+};
+
+const getInventoryAdjustmentReasonInputColumn = (
+  setter: DraftLineSetter,
+  { getError }: UseStocktakeLineErrors
+): ColumnDescription<DraftStocktakeLine> => {
+  return {
+    key: 'inventoryAdjustmentReasonInput',
+    label: 'label.reason',
+    sortable: false,
+    width: 120,
+    accessor: ({ rowData }) => rowData.inventoryAdjustmentReason || '',
+    Cell: ({ rowData, column, columnIndex, rowIndex }) => {
+      const value = column.accessor({
+        rowData,
+      }) as InventoryAdjustmentReasonRowFragment | null;
+
+      const onChange = (
+        inventoryAdjustmentReason: InventoryAdjustmentReasonRowFragment | null
+      ) => {
+        setter({ ...rowData, inventoryAdjustmentReason });
+      };
+
+      const autoFocus = columnIndex === 0 && rowIndex === 0;
+
+      const getAdjustment = () => {
+        if (!rowData.countThisLine) return Adjustment.None;
+        if (typeof rowData.countedNumberOfPacks !== 'number')
+          return Adjustment.None;
+        if (rowData.snapshotNumberOfPacks == rowData.countedNumberOfPacks)
+          return Adjustment.None;
+        if (rowData.snapshotNumberOfPacks > rowData.countedNumberOfPacks)
+          return Adjustment.Reduction;
+
+        return Adjustment.Addition;
+      };
+
+      const errorType = getError(rowData)?.__typename;
+      const isAdjustmentReasonError =
+        errorType === 'AdjustmentReasonNotProvided' ||
+        errorType === 'AdjustmentReasonNotValid';
+
+      // https://github.com/openmsupply/open-msupply/pull/1252#discussion_r1119577142, this would ideally live in inventory package
+      // and instead of this method we do all of the logic in InventoryAdjustmentReasonSearchInput and use it in `Cell` field of the column
+      return (
+        <InventoryAdjustmentReasonSearchInput
+          autoFocus={autoFocus}
+          value={value}
+          width={column.width}
+          onChange={onChange}
+          adjustment={getAdjustment()}
+          isError={isAdjustmentReasonError}
+        />
+      );
+    },
   };
 };
 
@@ -82,12 +146,7 @@ export const BatchTable: FC<StocktakeLineEditTableProps> = ({
   const theme = useTheme();
   useDisableStocktakeRows(batches);
 
-  const PackSizeCell = (props: CellProps<DraftStocktakeLine>) => (
-    <PositiveNumberInputCell
-      {...props}
-      isDisabled={!!props.rowData.stockLine}
-    />
-  );
+  const errorsContext = useStocktakeLineErrorContext();
 
   const columns = useColumns<DraftStocktakeLine>([
     getCountThisLineColumn(update, theme),
@@ -96,31 +155,50 @@ export const BatchTable: FC<StocktakeLineEditTableProps> = ({
       key: 'snapshotNumberOfPacks',
       label: 'label.num-packs',
       width: 100,
+      getIsError: rowData =>
+        errorsContext.getError(rowData)?.__typename ===
+        'SnapshotCountCurrentCountMismatch',
       setter: patch => update({ ...patch, countThisLine: true }),
-      accessor: ({ rowData }) => rowData.snapshotNumberOfPacks || '',
+      accessor: ({ rowData }) => rowData.snapshotNumberOfPacks || '0',
     },
     {
       key: 'packSize',
       label: 'label.pack-size',
-      width: 125,
-      Cell: PackSizeCell,
+      width: 100,
+      getIsDisabled: rowData => !!rowData.stockLine,
+      Cell: PositiveNumberInputCell,
       setter: patch => update({ ...patch, countThisLine: true }),
     },
     {
       key: 'countedNumberOfPacks',
       label: 'label.counted-num-of-packs',
       width: 100,
+      getIsError: rowData =>
+        errorsContext.getError(rowData)?.__typename ===
+        'StockLineReducedBelowZero',
       Cell: NonNegativeDecimalCell,
-      setter: patch => update({ ...patch, countThisLine: true }),
-      accessor: ({ rowData }) => rowData.countedNumberOfPacks || '',
+      setter: patch => {
+        // If counted number of packs was changed to result in no adjustment
+        // we should remove inventoryAdjustmentReason, otherwise could have a reason
+        // on a line with no adjustments
+        const inventoryAdjustmentReason =
+          !patch.countedNumberOfPacks ||
+          patch.snapshotNumberOfPacks == patch.countedNumberOfPacks
+            ? null
+            : patch.inventoryAdjustmentReason;
+
+        update({ ...patch, countThisLine: true, inventoryAdjustmentReason });
+      },
+      accessor: ({ rowData }) => rowData.countedNumberOfPacks ?? '',
     },
     [
       expiryDateColumn,
       {
-        width: 100,
+        width: 120,
         setter: patch => update({ ...patch, countThisLine: true }),
       },
     ],
+    getInventoryAdjustmentReasonInputColumn(update, errorsContext),
   ]);
 
   return (
@@ -188,8 +266,18 @@ export const LocationTable: FC<StocktakeLineEditTableProps> = ({
     [
       getLocationInputColumn(),
       {
-        width: 400,
+        width: 300,
         setter: patch => update({ ...patch, countThisLine: true }),
+      },
+    ],
+    [
+      'comment',
+      {
+        label: 'label.stocktake-comment',
+        Cell: TextInputCell,
+        width: 200,
+        setter: patch => update({ ...patch, countThisLine: true }),
+        accessor: ({ rowData }) => rowData.comment || '',
       },
     ],
   ]);

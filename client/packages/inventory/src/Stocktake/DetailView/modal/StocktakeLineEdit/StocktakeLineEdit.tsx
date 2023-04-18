@@ -6,16 +6,15 @@ import {
 import {
   BasicSpinner,
   Divider,
-  useTranslation,
   useIsMediumScreen,
   Box,
   ModalMode,
-  useNotification,
   TableProvider,
   createTableStore,
   createQueryParamsStore,
   QueryParamsProvider,
   useRowStyle,
+  useNotification,
 } from '@openmsupply-client/common';
 import { StocktakeLineEditForm } from './StocktakeLineEditForm';
 import { useStocktakeLineEdit } from './hooks';
@@ -46,16 +45,20 @@ export const StocktakeLineEdit: FC<StocktakeLineEditProps> = ({
   isOpen,
 }) => {
   const isDisabled = useStocktake.utils.isDisabled();
-  const { error } = useNotification();
   const [currentItem, setCurrentItem] = useState(item);
   const isMediumScreen = useIsMediumScreen();
-  const t = useTranslation(['common', 'inventory']);
   const { draftLines, update, addLine, isLoading, save, nextItem } =
     useStocktakeLineEdit(currentItem);
-  const { setRowStyle } = useRowStyle();
+  const { setRowStyles } = useRowStyle();
+  const { error } = useNotification();
 
   const onNext = async () => {
-    await save(draftLines);
+    const { errorMessages } = await save();
+    if (errorMessages) {
+      errorMessages.forEach(errorMessage => error(errorMessage)());
+      return;
+    }
+
     if (mode === ModalMode.Update && nextItem) setCurrentItem(nextItem);
     else if (mode === ModalMode.Create) setCurrentItem(null);
     else onClose();
@@ -64,26 +67,28 @@ export const StocktakeLineEdit: FC<StocktakeLineEditProps> = ({
   };
 
   const onOk = async () => {
-    try {
-      await save(draftLines);
-      if (item) {
-        const highlight = {
-          animation: 'highlight 1.5s',
-        };
-        const rowIds = draftLines.map(line => line.id);
-        rowIds.forEach(id => setRowStyle(id, highlight));
-      }
-      onClose();
-    } catch (e) {
-      error(t('error.cant-save'))();
+    const { errorMessages } = await save();
+    if (errorMessages) {
+      errorMessages.forEach(errorMessage => error(errorMessage)());
+      return;
     }
+
+    if (item) {
+      setRowStyles(
+        draftLines.map(line => line.id),
+        {
+          animation: 'highlight 1.5s',
+        }
+      );
+    }
+    onClose();
   };
 
   const hasValidBatches = draftLines.length > 0;
 
   return (
     <TableProvider
-      createStore={createTableStore}
+      createStore={createTableStore()}
       queryParamsStore={createQueryParamsStore({
         initialSortBy: { key: 'expiryDate' },
       })}
@@ -146,11 +151,11 @@ export const StocktakeLineEdit: FC<StocktakeLineEditProps> = ({
                     <StyledTabPanel value={Tabs.Location}>
                       <StyledTabContainer>
                         <QueryParamsProvider
-                          createStore={() =>
-                            createQueryParamsStore<LocationRowFragment>({
+                          createStore={createQueryParamsStore<LocationRowFragment>(
+                            {
                               initialSortBy: { key: 'name' },
-                            })
-                          }
+                            }
+                          )}
                         >
                           <LocationTable
                             isDisabled={isDisabled}

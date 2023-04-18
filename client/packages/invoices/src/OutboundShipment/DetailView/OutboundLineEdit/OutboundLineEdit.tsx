@@ -14,6 +14,8 @@ import {
   createTableStore,
   createQueryParamsStore,
   useKeyboardHeightAdjustment,
+  InvoiceLineNodeType,
+  useNotification,
 } from '@openmsupply-client/common';
 import { ItemRowFragment } from '@openmsupply-client/system';
 import { OutboundLineEditTable } from './OutboundLineEditTable';
@@ -28,6 +30,7 @@ import {
   allocateQuantities,
   sumAvailableQuantity,
   getAllocatedQuantity,
+  getAllocatedPacks,
 } from './utils';
 import { useOutbound } from '../../api';
 import { DraftOutboundLine } from '../../../types';
@@ -46,7 +49,8 @@ export const OutboundLineEdit: React.FC<ItemDetailsModalProps> = ({
   mode,
 }) => {
   const t = useTranslation(['distribution']);
-  const { Modal } = useDialog({ isOpen, onClose });
+  const { info } = useNotification();
+  const { Modal } = useDialog({ isOpen, onClose, disableBackdrop: true });
   const [currentItem, setCurrentItem] = useBufferState(item);
 
   const { mutate } = useOutbound.line.save();
@@ -62,9 +66,17 @@ export const OutboundLineEdit: React.FC<ItemDetailsModalProps> = ({
   const { next, disabled: nextDisabled } = useNextItem(currentItem?.id);
   const { isDirty, setIsDirty } = useDirtyCheck();
   const height = useKeyboardHeightAdjustment(700);
+  const placeholder = draftOutboundLines?.find(
+    ({ type, numberOfPacks }) =>
+      type === InvoiceLineNodeType.UnallocatedStock && numberOfPacks !== 0
+  );
 
   const onNext = async () => {
     if (isDirty) await mutate(draftOutboundLines);
+    if (!!placeholder) {
+      const infoSnack = info(t('message.placeholder-line'));
+      infoSnack();
+    }
     if (mode === ModalMode.Update && next) setCurrentItem(next);
     else if (mode === ModalMode.Create) setCurrentItem(null);
     else onClose();
@@ -107,6 +119,10 @@ export const OutboundLineEdit: React.FC<ItemDetailsModalProps> = ({
             try {
               if (isDirty) await mutate(draftOutboundLines);
               setIsDirty(false);
+              if (!!placeholder) {
+                const infoSnack = info(t('message.placeholder-line'));
+                infoSnack();
+              }
               onClose();
             } catch (e) {
               // console.log(e);
@@ -115,7 +131,7 @@ export const OutboundLineEdit: React.FC<ItemDetailsModalProps> = ({
         />
       }
       height={height}
-      width={900}
+      width={1000}
     >
       <Grid container gap={0.5}>
         <OutboundLineEditForm
@@ -136,6 +152,8 @@ export const OutboundLineEdit: React.FC<ItemDetailsModalProps> = ({
           packSizeController={packSizeController}
           updateQuantity={updateQuantity}
           draftOutboundLines={draftOutboundLines}
+          allocatedQuantity={getAllocatedQuantity(draftOutboundLines)}
+          allocatedPacks={getAllocatedPacks(draftOutboundLines)}
         />
       </Grid>
     </Modal>
@@ -149,6 +167,8 @@ interface TableProps {
   packSizeController: PackSizeController;
   updateQuantity: (batchId: string, updateQuantity: number) => void;
   draftOutboundLines: DraftOutboundLine[];
+  allocatedQuantity: number;
+  allocatedPacks: number;
 }
 
 const TableWrapper: React.FC<TableProps> = ({
@@ -158,6 +178,8 @@ const TableWrapper: React.FC<TableProps> = ({
   packSizeController,
   updateQuantity,
   draftOutboundLines,
+  allocatedQuantity,
+  allocatedPacks,
 }) => {
   const t = useTranslation('distribution');
 
@@ -185,7 +207,7 @@ const TableWrapper: React.FC<TableProps> = ({
 
   return (
     <TableProvider
-      createStore={createTableStore}
+      createStore={createTableStore()}
       queryParamsStore={createQueryParamsStore({
         initialSortBy: { key: 'expiryDate' },
       })}
@@ -194,6 +216,9 @@ const TableWrapper: React.FC<TableProps> = ({
         packSizeController={packSizeController}
         onChange={updateQuantity}
         rows={draftOutboundLines}
+        item={currentItem}
+        allocatedQuantity={allocatedQuantity}
+        allocatedPacks={allocatedPacks}
       />
     </TableProvider>
   );

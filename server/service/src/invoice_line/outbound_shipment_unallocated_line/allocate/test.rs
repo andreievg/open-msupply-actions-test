@@ -177,7 +177,7 @@ mod test {
                 r.item_id = mock_item_a().id;
                 r.pack_size = 3;
                 r.available_number_of_packs = 10.0;
-                r.expiry_date = Some(NaiveDate::from_ymd(3021, 01, 01))
+                r.expiry_date = Some(NaiveDate::from_ymd_opt(3021, 01, 01).unwrap());
             })
         }
 
@@ -188,7 +188,7 @@ mod test {
                 r.item_id = mock_item_a().id;
                 r.pack_size = 3;
                 r.available_number_of_packs = 2.0;
-                r.expiry_date = Some(NaiveDate::from_ymd(3021, 02, 01))
+                r.expiry_date = Some(NaiveDate::from_ymd_opt(3021, 02, 01).unwrap());
             })
         }
 
@@ -199,7 +199,7 @@ mod test {
                 r.item_id = mock_item_a().id;
                 r.pack_size = 1;
                 r.available_number_of_packs = 2.0;
-                r.expiry_date = None
+                r.expiry_date = None;
             })
         }
 
@@ -317,7 +317,7 @@ mod test {
 
         fn stock_line_expired() -> StockLineRow {
             inline_edit(&base_stock_line("stock_line_expired"), |mut u| {
-                u.expiry_date = Some(NaiveDate::from_ymd(2021, 01, 01));
+                u.expiry_date = Some(NaiveDate::from_ymd_opt(2021, 01, 01).unwrap());
                 u
             })
         }
@@ -410,6 +410,7 @@ mod test {
             result.skipped_expired_stock_lines[0],
             inline_init(|r: &mut StockLine| {
                 r.stock_line_row = stock_line_expired();
+                r.item_row = mock_item_a();
             })
         );
 
@@ -417,6 +418,7 @@ mod test {
             result.skipped_on_hold_stock_lines[0],
             inline_init(|r: &mut StockLine| {
                 r.stock_line_row = stock_line_on_hold();
+                r.item_row = mock_item_a();
             })
         );
 
@@ -424,6 +426,7 @@ mod test {
             result.issued_expiring_soon_stock_lines[0],
             inline_init(|r: &mut StockLine| {
                 r.stock_line_row = stock_line_expiring_soon();
+                r.item_row = mock_item_a();
             })
         );
     }
@@ -457,7 +460,7 @@ mod test {
                 r.item_id = mock_item_a().id;
                 r.pack_size = 1;
                 r.available_number_of_packs = 30.0;
-                r.expiry_date = Some(NaiveDate::from_ymd(3021, 02, 01))
+                r.expiry_date = Some(NaiveDate::from_ymd_opt(3021, 02, 01).unwrap());
             })
         }
 

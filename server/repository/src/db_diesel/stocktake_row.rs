@@ -4,7 +4,7 @@ use super::{
 
 use crate::repository_error::RepositoryError;
 
-use diesel::prelude::*;
+use diesel::{dsl::max, prelude::*};
 
 use chrono::{NaiveDate, NaiveDateTime};
 use diesel_derive_enum::DbEnum;
@@ -22,7 +22,8 @@ table! {
         created_datetime -> Timestamp,
         stocktake_date -> Nullable<Date>,
         finalised_datetime -> Nullable<Timestamp>,
-        inventory_adjustment_id -> Nullable<Text>,
+        inventory_addition_id -> Nullable<Text>,
+        inventory_reduction_id -> Nullable<Text>,
         is_locked -> Bool,
     }
 }
@@ -50,7 +51,8 @@ pub struct StocktakeRow {
     pub stocktake_date: Option<NaiveDate>,
     pub finalised_datetime: Option<NaiveDateTime>,
     /// reference to the inventory adjustment shipment
-    pub inventory_adjustment_id: Option<String>,
+    pub inventory_addition_id: Option<String>,
+    pub inventory_reduction_id: Option<String>,
     pub is_locked: bool,
 }
 
@@ -74,7 +76,8 @@ impl Default for StocktakeRow {
             comment: Default::default(),
             description: Default::default(),
             finalised_datetime: Default::default(),
-            inventory_adjustment_id: Default::default(),
+            inventory_addition_id: Default::default(),
+            inventory_reduction_id: Default::default(),
             is_locked: Default::default(),
         }
     }
@@ -126,6 +129,17 @@ impl<'a> StocktakeRowRepository<'a> {
         let result = stocktake_dsl::stocktake
             .filter(stocktake_dsl::id.eq_any(ids))
             .load(&self.connection.connection)?;
+        Ok(result)
+    }
+
+    pub fn find_max_stocktake_number(
+        &self,
+        store_id: &str,
+    ) -> Result<Option<i64>, RepositoryError> {
+        let result = stocktake_dsl::stocktake
+            .filter(stocktake_dsl::store_id.eq(store_id))
+            .select(max(stocktake_dsl::stocktake_number))
+            .first(&self.connection.connection)?;
         Ok(result)
     }
 }

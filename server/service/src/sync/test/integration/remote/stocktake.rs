@@ -35,10 +35,14 @@ impl SyncRecordTester for StocktakeRecordTester {
             comment: None,
             description: None,
             status: StocktakeStatus::New,
-            created_datetime: NaiveDate::from_ymd(2022, 03, 22).and_hms(9, 51, 0),
+            created_datetime: NaiveDate::from_ymd_opt(2022, 03, 22)
+                .unwrap()
+                .and_hms_opt(9, 51, 0)
+                .unwrap(),
             stocktake_date: None,
             finalised_datetime: None,
-            inventory_adjustment_id: None,
+            inventory_addition_id: None,
+            inventory_reduction_id: None,
             is_locked: true,
         };
         let stocktake_line_row = StocktakeLineRow {
@@ -56,6 +60,7 @@ impl SyncRecordTester for StocktakeRecordTester {
             cost_price_per_pack: Some(0.0),
             sell_price_per_pack: Some(0.0),
             note: None,
+            inventory_adjustment_reason_id: None,
         };
         result.push(TestStepData {
             central_upsert: json!({"item": [{
@@ -75,6 +80,7 @@ impl SyncRecordTester for StocktakeRecordTester {
             r.name_id = new_site_properties.name_id.clone();
             r.store_id = store_id.clone();
             r.name_store_id = Some(store_id.clone());
+            r.tax = Some(0.0);
         });
 
         let stock_line_row = inline_init(|r: &mut StockLineRow| {
@@ -88,9 +94,13 @@ impl SyncRecordTester for StocktakeRecordTester {
             d.comment = Some("comment sync test".to_string());
             d.description = Some("description sync test".to_string());
             d.status = StocktakeStatus::Finalised;
-            d.stocktake_date = Some(NaiveDate::from_ymd(2022, 03, 23));
-            d.finalised_datetime = Some(NaiveDate::from_ymd(2022, 03, 24).and_hms(8, 15, 30));
-            d.inventory_adjustment_id = Some(invoice_row.id.clone());
+            d.stocktake_date = NaiveDate::from_ymd_opt(2022, 03, 23);
+            d.finalised_datetime = NaiveDate::from_ymd_opt(2022, 03, 24)
+                .unwrap()
+                .and_hms_opt(8, 15, 30);
+            // Not testing that logically invoices are correct inventory adjustments just testing they sync corrrectly
+            d.inventory_addition_id = Some(invoice_row.id.clone());
+            d.inventory_reduction_id = Some(invoice_row.id.clone());
             d.is_locked = true;
             d
         });
@@ -103,7 +113,7 @@ impl SyncRecordTester for StocktakeRecordTester {
             d.item_id = stock_line_row.item_id.clone();
             d.stock_line_id = Some(stock_line_row.id.clone());
             d.batch = Some(uuid());
-            d.expiry_date = Some(NaiveDate::from_ymd(2025, 03, 24));
+            d.expiry_date = NaiveDate::from_ymd_opt(2025, 03, 24);
             d.pack_size = Some(thread_rng().gen::<i32>());
             d.cost_price_per_pack = Some(gen_f64());
             d.sell_price_per_pack = Some(gen_f64());

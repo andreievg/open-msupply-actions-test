@@ -132,8 +132,13 @@ fn generate(
         min_months_of_stock,
         // Default
         sent_datetime: None,
+        approval_status: None,
         finalised_datetime: None,
         linked_requisition_id: None,
+        is_sync_update: false,
+        program_id: None,
+        period_id: None,
+        order_type: None,
     };
 
     Ok(result)
@@ -272,7 +277,7 @@ mod test_insert {
                     comment: Some("new comment".to_owned()),
                     max_months_of_stock: 1.0,
                     min_months_of_stock: 0.5,
-                    expected_delivery_date: Some(NaiveDate::from_ymd(2022, 01, 03)),
+                    expected_delivery_date: Some(NaiveDate::from_ymd_opt(2022, 01, 03).unwrap()),
                 },
             )
             .unwrap();
@@ -295,7 +300,7 @@ mod test_insert {
                 u.comment = Some("new comment".to_owned());
                 u.max_months_of_stock = 1.0;
                 u.min_months_of_stock = 0.5;
-                u.expected_delivery_date = Some(NaiveDate::from_ymd(2022, 01, 03));
+                u.expected_delivery_date = Some(NaiveDate::from_ymd_opt(2022, 01, 03).unwrap());
                 u
             })
         );
