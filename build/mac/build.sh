@@ -21,7 +21,7 @@ fi
 
 
 # Add target
-# rustup target add $TARGET
+rustup target add $TARGET
 
 # Buid (on Mac)
 cd client
@@ -30,31 +30,28 @@ cd client
 
 cd ../server
 # cargo clean
-# cargo build --release --bin remote_server --bin remote_server_cli --target $TARGET
+cargo build --release --bin remote_server --bin remote_server_cli --target $TARGET
 cd ../
 
 # Copy binaries to $DESTINATION
 rm -rf $DESTINATION
 mkdir $DESTINATION
 mkdir $DESTINATION/bin
-# cp server/target/$TARGET/release/remote_server $DESTINATION/bin 
-# cp server/target/$TARGET/release/remote_server_cli $DESTINATION/bin 
-
-# Initialise demo data
-if [ "$SHOULD_INCLUDE_DEMO_DATA" == "yes" ]; then
-    # cp $DESTINATION/bin/remote_server_cli server/
-    # cd server
-    # remote_server_cli initialise-from-export reference1
-    # cp omsupply-database $DESTINATION
-    # cd ../
-
-    echo "demo data" > $DESTINATION/demo.data
-fi
+cp server/target/$TARGET/release/remote_server $DESTINATION/bin 
+cp server/target/$TARGET/release/remote_server_cli $DESTINATION/bin 
 
 # Copy configurations
 mkdir $DESTINATION/configuration && cp -R server/configuration/base.yaml $DESTINATION/configuration/
 # Local file should be present
 touch $DESTINATION/configuration/local.yaml
+
+# Initialise demo data
+if [ "$SHOULD_INCLUDE_DEMO_DATA" == "true" ]; then
+    cp -R server/data $DESTINATION
+    cd $DESTINATION
+    ./bin/remote_server_cli initialise-from-export -n reference1
+    cd ../
+fi
 
 # Copy launch script
 cp build/mac/open_msupply_server.sh $DESTINATION/
