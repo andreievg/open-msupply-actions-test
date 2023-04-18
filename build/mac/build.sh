@@ -20,38 +20,38 @@ else
 fi
 
 
-# Add target
-rustup target add $TARGET
+# # Add target
+# rustup target add $TARGET
 
-# Buid (on Mac)
-cd client
-# yarn install
-# yarn build
+# # Buid (on Mac)
+# cd client
+# # yarn install
+# # yarn build
 
-cd ../server
-# cargo clean
-cargo build --release --bin remote_server --bin remote_server_cli --target $TARGET
-cd ../
+# cd ../server
+# # cargo clean
+# cargo build --release --bin remote_server --bin remote_server_cli --target $TARGET
+# cd ../
 
-# Copy binaries to $DESTINATION
-rm -rf $DESTINATION
-mkdir $DESTINATION
-mkdir $DESTINATION/bin
-cp server/target/$TARGET/release/remote_server $DESTINATION/bin 
-cp server/target/$TARGET/release/remote_server_cli $DESTINATION/bin 
+# # Copy binaries to $DESTINATION
+# rm -rf $DESTINATION
+# mkdir $DESTINATION
+# mkdir $DESTINATION/bin
+# cp server/target/$TARGET/release/remote_server $DESTINATION/bin 
+# cp server/target/$TARGET/release/remote_server_cli $DESTINATION/bin 
 
-# Copy configurations
-mkdir $DESTINATION/configuration && cp -R server/configuration/base.yaml $DESTINATION/configuration/
-# Local file should be present
-touch $DESTINATION/configuration/local.yaml
+# # Copy configurations
+# mkdir $DESTINATION/configuration && cp -R server/configuration/base.yaml $DESTINATION/configuration/
+# # Local file should be present
+# touch $DESTINATION/configuration/local.yaml
 
-# Initialise demo data
-if [ "$SHOULD_INCLUDE_DEMO_DATA" == "true" ]; then
-    cp -R server/data $DESTINATION
-    cd $DESTINATION
-    ./bin/remote_server_cli initialise-from-export -n reference1
-    cd ../
-fi
+# # Initialise demo data
+# if [ "$SHOULD_INCLUDE_DEMO_DATA" == "true" ]; then
+#     cp -R server/data $DESTINATION
+#     cd $DESTINATION
+#     ./bin/remote_server_cli initialise-from-export -n reference1
+#     cd ../
+# fi
 
 # Copy launch script
 cp build/mac/open_msupply_server.sh $DESTINATION/

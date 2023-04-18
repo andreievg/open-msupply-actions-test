@@ -35,9 +35,16 @@ jobs:
           prefix-key: ${{ inputs.architechture }}
       - name: Build
         run: ./build/mac/build.sh ${{ inputs.architechture }} ${{ inputs.includeDemoData }}
-      - name: Get Name
-        run: echo "artifactName=$(./build/mac/get_name.sh ${{ inputs.architechture }})" >> $GITHUB_ENV
+      - name: Get Name and Zip
+        run: |
+          ARTIFACT_NAME=$(./build/mac/get_name.sh ${{ inputs.architechture }}))
+          ZIPPED_ARTIFACT_NAME="${ARTIFACT_NAME}.zip"
+          zip -r $ZIPPED_ARTIFACT_NAME "${ARTIFACT_NAME}/"
+          # Below would add it env.zippedArtifactName, so it can be used in upload-artifacat action
+          echo "zippedArtifactName=${ZIPPED_ARTIFACT_NAME}" >> $GITHUB_ENV
+      - name: Zip
+        run:  zip -r my-archive.zip my-directory/
       - uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.artifactName }}
-          path: ${{ env.artifactName }}
+          name: ${{ env.zippedArtifactName }}
+          path: ${{ env.zippedArtifactName }}
