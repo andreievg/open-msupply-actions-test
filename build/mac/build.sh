@@ -34,9 +34,9 @@ fi
 # cd ../
 
 # # Copy binaries to $DESTINATION
-# rm -rf $DESTINATION
-# mkdir $DESTINATION
-# mkdir $DESTINATION/bin
+rm -rf $DESTINATION
+mkdir $DESTINATION
+mkdir $DESTINATION/bin
 # cp server/target/$TARGET/release/remote_server $DESTINATION/bin 
 # cp server/target/$TARGET/release/remote_server_cli $DESTINATION/bin 
 
