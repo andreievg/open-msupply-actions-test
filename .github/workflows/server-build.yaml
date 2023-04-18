@@ -15,8 +15,9 @@ on:
         default: 'no'
         type: choice
         options:
-          - yes
           - no
+          - yes
+
 
 name: Remote Server Mac Build
 
