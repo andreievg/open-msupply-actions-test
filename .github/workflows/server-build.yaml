@@ -9,14 +9,14 @@ on:
         options:
           - intel
           - arm
-      architechture:
-        description: 'Architechture'
+      includeDemoData:
+        description: 'Includ demo data'
         required: true
-        default: 'intel'
+        default: 'no'
         type: choice
         options:
-          - intel
-          - arm
+          - yes
+          - no
 
 name: Remote Server Mac Build
 
@@ -34,7 +34,7 @@ jobs:
           workspaces: server
           prefix-key: ${{ inputs.architechture }}
       - name: Build
-        run: ./build/mac/build.sh ${{ inputs.architechture }}
+        run: ./build/mac/build.sh ${{ inputs.architechture }} ${{ inputs.includeDemoData }}
       - name: Get Name
         run: echo "artifactName=$(./build/mac/build.sh ${{ inputs.architechture }})" >> $GITHUB_ENV
       - uses: actions/upload-artifact@v3
