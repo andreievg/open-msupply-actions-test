@@ -28,7 +28,6 @@ yarn install
 yarn build
 
 cd ../server
-cargo clean
 cargo build --release --bin remote_server --bin remote_server_cli --target $TARGET
 cd ../
 
