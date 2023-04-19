@@ -11,7 +11,7 @@ echo "destination: ${DESTINATION}"
 
 # Select target
 if [ "$ARCHITECHTURE" == "intel" ]; then
-    TARGET="x86_64-apple-darwin "
+    TARGET="x86_64-apple-darwin"
 elif [ "$ARCHITECHTURE" == "arm" ]; then
     TARGET="aarch64-apple-darwin"
 else
