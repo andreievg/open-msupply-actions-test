@@ -18,11 +18,11 @@ on:
           - false
           - true
 
-name: Remote Server Mac Build
+name: Build mac demo
 
 jobs:
   build_and_test:
-    name: Remote Server Mac Build
+    name: Build mac demo
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
@@ -35,7 +35,7 @@ jobs:
           prefix-key: ${{ inputs.architechture }}
       - name: Build
         run: ./build/mac/build.sh ${{ inputs.architechture }} ${{ inputs.includeDemoData }}
-      # Upload artifact would remove +x (execute) permission and attributes from files
+      # Upload artifact would remove +x (execute) permission and attributes from files when zipping
       # thus need to manually zip (unfortunately it would be double zipped)
       - name: Get Name and Zip
         run: |
@@ -43,9 +43,10 @@ jobs:
           ZIPPED_ARTIFACT_NAME="${ARTIFACT_NAME}.zip"
           # https://developer.apple.com/forums/thread/690457 (keep attributes)
           ditto -c -k --keepParent --sequesterRsrc "${ARTIFACT_NAME}/" $ZIPPED_ARTIFACT_NAME
-          # Below would add it env.zippedArtifactName, so it can be used in upload-artifact action
+          # Below would add it env.artifactName and env.zippedArtifactName, so it can be used in upload-artifact action
+          echo "artifactName=${ARTIFACT_NAME}" >> $GITHUB_ENV
           echo "zippedArtifactName=${ZIPPED_ARTIFACT_NAME}" >> $GITHUB_ENV
       - uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.zippedArtifactName }}
+          name: ${{ env.artifactName }}
           path: ${{ env.zippedArtifactName }}
