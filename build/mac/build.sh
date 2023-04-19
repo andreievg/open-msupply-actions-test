@@ -36,11 +36,12 @@ cd ../
 rm -rf $DESTINATION
 mkdir $DESTINATION
 mkdir $DESTINATION/bin
-cp server/target/$TARGET/release/remote_server $DESTINATION/bin 
-cp server/target/$TARGET/release/remote_server_cli $DESTINATION/bin 
+cp "server/target/${TARGET}/release/remote_server" $DESTINATION/bin 
+cp "server/target/${TARGET}/release/remote_server_cli" $DESTINATION/bin 
 
 # Copy configurations
-mkdir $DESTINATION/configuration && cp -R server/configuration/base.yaml $DESTINATION/configuration/
+mkdir $DESTINATION/configuration
+cp -R server/configuration/base.yaml $DESTINATION/configuration/
 # Local file should be present
 touch $DESTINATION/configuration/local.yaml
 
