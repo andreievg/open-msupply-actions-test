@@ -2,7 +2,8 @@
 mod tests {
     use crate::sync::test::integration::remote::{
         activity_log::ActivityLogRecordTester, invoice::InvoiceRecordTester,
-        location::LocationRecordTester, requisition::RequisitionRecordTester,
+        location::LocationRecordTester, location_movement::LocationMovementRecordTester,
+        program_requisition::ProgramRequisitionTester, requisition::RequisitionRecordTester,
         stock_line::StockLineRecordTester, stocktake::StocktakeRecordTester,
         test_remote_sync_record,
     };
@@ -10,6 +11,11 @@ mod tests {
     #[actix_rt::test]
     async fn integration_sync_remote_location() {
         test_remote_sync_record("location", &LocationRecordTester).await;
+    }
+
+    #[actix_rt::test]
+    async fn integration_sync_remote_location_movement() {
+        test_remote_sync_record("location_movement", &LocationMovementRecordTester).await;
     }
 
     #[actix_rt::test]
@@ -35,5 +41,10 @@ mod tests {
     #[actix_rt::test]
     async fn integration_sync_remote_activity_log() {
         test_remote_sync_record("om_activity_log", &ActivityLogRecordTester).await;
+    }
+
+    #[actix_rt::test]
+    async fn intergration_sync_program_requisition() {
+        test_remote_sync_record("program_requisition", &ProgramRequisitionTester).await;
     }
 }

@@ -11,7 +11,7 @@ table! {
     }
 }
 
-#[derive(Clone, Queryable, Insertable, AsChangeset, Debug, PartialEq)]
+#[derive(Clone, Queryable, Insertable, AsChangeset, Debug, PartialEq, Default)]
 #[table_name = "period_schedule"]
 pub struct PeriodScheduleRow {
     pub id: String,
@@ -49,6 +49,17 @@ impl<'a> PeriodScheduleRowRepository<'a> {
     pub fn find_one_by_id(&self, id: &str) -> Result<Option<PeriodScheduleRow>, RepositoryError> {
         let result = period_schedule_dsl::period_schedule
             .filter(period_schedule_dsl::id.eq(id))
+            .first(&self.connection.connection)
+            .optional()?;
+        Ok(result)
+    }
+
+    pub fn find_one_by_name(
+        &self,
+        name: &str,
+    ) -> Result<Option<PeriodScheduleRow>, RepositoryError> {
+        let result = period_schedule_dsl::period_schedule
+            .filter(period_schedule_dsl::name.eq(name))
             .first(&self.connection.connection)
             .optional()?;
         Ok(result)

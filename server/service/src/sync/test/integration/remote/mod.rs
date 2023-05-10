@@ -1,6 +1,8 @@
 pub(crate) mod activity_log;
 pub(crate) mod invoice;
 pub(crate) mod location;
+pub(crate) mod location_movement;
+pub(crate) mod program_requisition;
 pub(crate) mod requisition;
 pub(crate) mod stock_line;
 pub(crate) mod stocktake;
@@ -94,7 +96,7 @@ fn replace_system_name_ids(records: &mut IntegrationRecords, connection: &Storag
     let inventory_adjustment_name = NameRowRepository::new(connection)
         .find_one_by_code(INVENTORY_ADJUSTMENT_NAME_CODE)
         .unwrap()
-        .expect("Cannont find intenvory adjustment name");
+        .expect("Cannot find inventory adjustment name");
 
     for mut record in records.upserts.iter_mut() {
         if let PullUpsertRecord::Invoice(invoice) = &mut record {

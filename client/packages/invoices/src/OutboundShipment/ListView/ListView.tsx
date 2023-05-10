@@ -80,7 +80,7 @@ const OutboundShipmentListViewComponent: FC = () => {
   return (
     <>
       <Toolbar filter={filter} />
-      <AppBarButtons sortBy={sortBy} modalController={modalController} />
+      <AppBarButtons modalController={modalController} />
 
       <DataTable
         id="outbound-list"
@@ -106,7 +106,7 @@ const OutboundShipmentListViewComponent: FC = () => {
 };
 
 export const OutboundShipmentListView: FC = () => (
-  <TableProvider createStore={createTableStore()}>
+  <TableProvider createStore={createTableStore}>
     <OutboundShipmentListViewComponent />
   </TableProvider>
 );

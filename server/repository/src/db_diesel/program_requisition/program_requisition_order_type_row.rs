@@ -14,13 +14,13 @@ table! {
         name -> Text,
         threshold_mos -> Double,
         max_mos -> Double,
-        max_order_per_period -> Double,
+        max_order_per_period -> Integer,
     }
 }
 
 joinable!(program_requisition_order_type -> program_requisition_settings (program_requisition_settings_id));
 
-#[derive(Clone, Queryable, Insertable, AsChangeset, Debug, PartialEq)]
+#[derive(Clone, Queryable, Insertable, AsChangeset, Debug, PartialEq, Default)]
 #[table_name = "program_requisition_order_type"]
 pub struct ProgramRequisitionOrderTypeRow {
     pub id: String,
@@ -28,7 +28,7 @@ pub struct ProgramRequisitionOrderTypeRow {
     pub name: String,
     pub threshold_mos: f64,
     pub max_mos: f64,
-    pub max_order_per_period: f64,
+    pub max_order_per_period: i32,
 }
 
 pub struct ProgramRequisitionOrderTypeRowRepository<'a> {
@@ -70,20 +70,23 @@ impl<'a> ProgramRequisitionOrderTypeRowRepository<'a> {
         Ok(result)
     }
 
-    pub fn find_one_by_program_and_name(
+    pub fn find_many_by_program_requisition_settings_ids(
         &self,
-        program_id: &str,
-        name: &str,
-    ) -> Result<Option<ProgramRequisitionOrderTypeRow>, RepositoryError> {
+        ids: &[String],
+    ) -> Result<Vec<ProgramRequisitionOrderTypeRow>, RepositoryError> {
         let result = program_requisition_order_type_dsl::program_requisition_order_type
-            .inner_join(program_requisition_settings::table)
-            .filter(program_requisition_settings::program_id.eq(program_id))
-            .filter(program_requisition_order_type_dsl::name.eq(name))
-            .select(
-                program_requisition_order_type_dsl::program_requisition_order_type::all_columns(),
-            )
-            .first(&self.connection.connection)
-            .optional()?;
+            .filter(program_requisition_order_type_dsl::program_requisition_settings_id.eq_any(ids))
+            .load(&self.connection.connection)?;
+
         Ok(result)
+    }
+
+    pub fn delete(&self, order_type_id: &str) -> Result<(), RepositoryError> {
+        diesel::delete(
+            program_requisition_order_type_dsl::program_requisition_order_type
+                .filter(program_requisition_order_type_dsl::id.eq(order_type_id)),
+        )
+        .execute(&self.connection.connection)?;
+        Ok(())
     }
 }

@@ -72,7 +72,7 @@ export const InboundListView: FC = () => {
   return (
     <>
       <Toolbar filter={filter} />
-      <AppBarButtons sortBy={sortBy} modalController={modalController} />
+      <AppBarButtons modalController={modalController} />
 
       <DataTable
         id="inbound-line-list"
@@ -98,7 +98,7 @@ export const InboundListView: FC = () => {
 };
 
 export const ListView: FC = () => (
-  <TableProvider createStore={createTableStore()}>
+  <TableProvider createStore={createTableStore}>
     <InboundListView />
   </TableProvider>
 );

@@ -37,7 +37,7 @@ const MasterListComponent: FC = () => {
   return (
     <>
       <Toolbar filter={filter} />
-      <AppBarButtons sortBy={sortBy} />
+      <AppBarButtons />
       <DataTable
         id="master-list-list"
         pagination={{ ...pagination, total: data?.totalCount }}
@@ -55,7 +55,7 @@ const MasterListComponent: FC = () => {
 
 export const MasterListListView: FC = () => (
   <TableProvider<MasterListRowFragment>
-    createStore={createTableStore()}
+    createStore={createTableStore}
     queryParamsStore={createQueryParamsStore<MasterListRowFragment>({
       initialSortBy: { key: 'name' },
     })}

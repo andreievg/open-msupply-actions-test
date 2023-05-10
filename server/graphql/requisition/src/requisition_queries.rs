@@ -30,6 +30,9 @@ pub enum RequisitionSortFieldInput {
     FinalisedDatetime,
     ExpectedDeliveryDate,
     TheirReference,
+    OrderType,
+    ProgramName,
+    PeriodName,
 }
 
 #[derive(InputObject)]
@@ -71,6 +74,7 @@ pub struct RequisitionFilterInput {
     pub colour: Option<EqualFilterStringInput>,
     pub their_reference: Option<SimpleStringFilterInput>,
     pub comment: Option<SimpleStringFilterInput>,
+    pub order_type: Option<EqualFilterStringInput>,
 }
 
 #[derive(Union)]
@@ -199,6 +203,9 @@ impl RequisitionSortInput {
             from::FinalisedDatetime => to::FinalisedDatetime,
             from::ExpectedDeliveryDate => to::ExpectedDeliveryDate,
             from::TheirReference => to::TheirReference,
+            from::OrderType => to::OrderType,
+            from::ProgramName => to::ProgramName,
+            from::PeriodName => to::PeriodName,
         };
 
         RequisitionSort {
@@ -231,6 +238,7 @@ impl RequisitionFilterInput {
             comment: self.comment.map(SimpleStringFilter::from),
             linked_requisition_id: None,
             store_id: None,
+            order_type: self.order_type.map(EqualFilter::from),
         }
     }
 }

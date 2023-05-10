@@ -16,5 +16,6 @@
   "label.this-week": "Cette Semaine",
   "label.today": "Aujourd'hui",
   "label.total-items_one": "Article",
-  "label.total-items_other": "Articles"
+  "label.total-items_other": "Articles",
+  "error.failed-to-create-requisition": "Impossible de créer le bon de commande {{message}}"
 }

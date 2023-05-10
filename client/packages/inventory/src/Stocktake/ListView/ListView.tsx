@@ -65,7 +65,7 @@ export const StocktakeListView: FC = () => {
   return (
     <>
       <Toolbar filter={filter} />
-      <AppBarButtons sortBy={sortBy} modalController={modalController} />
+      <AppBarButtons modalController={modalController} />
 
       <DataTable
         id="stocktake-list"
@@ -90,7 +90,7 @@ export const StocktakeListView: FC = () => {
 };
 
 export const ListView: FC = () => (
-  <TableProvider createStore={createTableStore()}>
+  <TableProvider createStore={createTableStore}>
     <StocktakeListView />
   </TableProvider>
 );

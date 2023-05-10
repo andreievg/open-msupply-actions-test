@@ -12,14 +12,26 @@ import {
   ApiException,
 } from '@openmsupply-client/common';
 import { useFormatNumber, useTranslation } from '@common/intl';
-import { useOutbound } from '../api';
+import { useDashboard } from '../api';
+import { useOutbound } from '@openmsupply-client/invoices';
 
-export const OutboundShipmentWidget: React.FC = () => {
+export const DistributionWidget: React.FC = () => {
   const modalControl = useToggle(false);
   const { error: errorNotification } = useNotification();
-  const t = useTranslation(['app', 'dashboard']);
+  const t = useTranslation('dashboard');
   const formatNumber = useFormatNumber();
-  const { data, isLoading, isError, error } = useOutbound.utils.count();
+  const {
+    data: outboundCount,
+    isLoading: isOutboundCountLoading,
+    isError: isOutboundCountError,
+    error: outboundCountError,
+  } = useDashboard.statistics.outbound();
+  const {
+    data: requisitionCount,
+    isLoading: isRequisitionCountLoading,
+    isError: isRequisitionCountError,
+    error: requisitionCountError,
+  } = useDashboard.statistics.requisitions();
 
   const { mutateAsync: onCreate } = useOutbound.document.insert();
   const onError = (e: unknown) => {
@@ -48,7 +60,7 @@ export const OutboundShipmentWidget: React.FC = () => {
           }}
         />
       ) : null}
-      <Widget title={t('outbound-shipments')}>
+      <Widget title={t('distribution', { ns: 'app' })}>
         <Grid
           container
           justifyContent="flex-start"
@@ -57,14 +69,28 @@ export const OutboundShipmentWidget: React.FC = () => {
         >
           <Grid item>
             <StatsPanel
-              error={error as ApiException}
-              isError={isError}
-              isLoading={isLoading}
-              title={t('heading.shipments-to-be-picked')}
+              error={outboundCountError as ApiException}
+              isError={isOutboundCountError}
+              isLoading={isOutboundCountLoading}
+              title={t('heading.shipments')}
               stats={[
                 {
-                  label: t('label.today', { ns: 'dashboard' }),
-                  value: formatNumber.round(data?.toBePicked),
+                  label: t('label.have-not-shipped'),
+                  value: formatNumber.round(outboundCount?.notShipped),
+                },
+              ]}
+            />
+          </Grid>
+          <Grid item>
+            <StatsPanel
+              error={requisitionCountError as ApiException}
+              isError={isRequisitionCountError}
+              isLoading={isRequisitionCountLoading}
+              title={t('customer-requisition', { ns: 'app' })}
+              stats={[
+                {
+                  label: t('label.new'),
+                  value: formatNumber.round(requisitionCount?.response?.new),
                 },
               ]}
             />

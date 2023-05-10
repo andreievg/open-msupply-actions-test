@@ -43,6 +43,7 @@ pub enum ChangelogAction {
 pub enum ChangelogTableName {
     Number,
     Location,
+    LocationMovement,
     StockLine,
     Invoice,
     InvoiceLine,
@@ -52,6 +53,7 @@ pub enum ChangelogTableName {
     RequisitionLine,
     ActivityLog,
     InventoryAdjustmentReason,
+    Barcode,
 }
 
 #[derive(Clone, Queryable, Debug, PartialEq, Insertable)]
