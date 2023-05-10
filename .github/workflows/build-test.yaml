@@ -1,0 +1,16 @@
+on: workflow_dispatch
+
+name: Build Windows
+jobs:
+  build_and_test:
+    name: Build test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        working-directory: client
+        run: yarn install && yarn electron:build
+      - uses: actions/upload-artifact@v3
+        with:
+          name: "etron"
+          path: "client/packages/electron/out"
