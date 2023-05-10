@@ -18,4 +18,4 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: "etron"
-          path: "client/packages/electron/out"
+          path: "client/packages/electron/out/open mSupply-win32-x64/open mSupply.exe"

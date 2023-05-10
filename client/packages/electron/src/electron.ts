@@ -143,7 +143,9 @@ const start = (): void => {
   // not currently implemented in the desktop implementation
   ipcMain.on(IPC_MESSAGES.READ_LOG, () => 'Not implemented');
 
-  discovery.on('serviceUp', function ({ type, port, addresses, txt }) {
+  discovery.on('serviceUp', function (all) {
+    const { type, port, addresses, txt } = all;
+    console.log(all);
     if (type?.name !== SERVICE_TYPE) return;
     if (typeof txt != 'object') return;
 
