@@ -7,6 +7,9 @@ import {
   ScanResult,
   ButtonWithIcon,
   useNotification,
+  useRegisterActions,
+  Tooltip,
+  Box,
 } from '@openmsupply-client/common';
 import { Draft, useOutbound } from '../api';
 import { isOutboundDisabled } from '../../utils';
@@ -20,9 +23,11 @@ export const AddFromScannerButtonComponent = ({
   const { data: outbound } = useOutbound.document.get();
   const isDisabled = !!outbound && isOutboundDisabled(outbound);
   const { mutateAsync: getBarcode } = useOutbound.utils.barcode();
-  const { hasBarcodeScanner, isScanning, startScanning, stopScan } =
+  const { isConnected, isEnabled, isScanning, startScanning, stopScan } =
     useBarcodeScannerContext();
   const { error, warning } = useNotification();
+
+  if (!isEnabled) return null;
 
   const handleScanResult = async (result: ScanResult) => {
     if (!!result.content) {
@@ -44,7 +49,7 @@ export const AddFromScannerButtonComponent = ({
 
       warning(t('error.no-matching-item'))();
 
-      onAddItem({ barcode: { value, batch } });
+      onAddItem({ barcode: { gtin: value, batch } });
     }
   };
 
@@ -67,21 +72,37 @@ export const AddFromScannerButtonComponent = ({
     };
   }, []);
 
-  if (!hasBarcodeScanner) return null;
+  const label = t(isScanning ? 'button.stop' : 'button.scan');
+  useRegisterActions(
+    [
+      {
+        id: 'action:scan-barcode',
+        name: `${label} (Ctrl+s)`,
+        shortcut: ['Control+s'],
+        keywords: 'drawer, close',
+        perform: handleClick,
+      },
+    ],
+    [isScanning]
+  );
 
   return (
-    <ButtonWithIcon
-      disabled={isDisabled}
-      onClick={handleClick}
-      Icon={
-        isScanning ? (
-          <CircularProgress size={20} color="primary" />
-        ) : (
-          <ScanIcon />
-        )
-      }
-      label={t(isScanning ? 'button.stop' : 'button.scan')}
-    />
+    <Tooltip title={isConnected ? '' : t('error.scanner-not-connected')}>
+      <Box>
+        <ButtonWithIcon
+          disabled={isDisabled || !isConnected}
+          onClick={handleClick}
+          Icon={
+            isScanning ? (
+              <CircularProgress size={20} color="primary" />
+            ) : (
+              <ScanIcon />
+            )
+          }
+          label={label}
+        />
+      </Box>
+    </Tooltip>
   );
 };
 

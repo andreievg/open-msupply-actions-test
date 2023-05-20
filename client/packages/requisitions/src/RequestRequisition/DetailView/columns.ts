@@ -48,7 +48,7 @@ export const useRequestColumns = () => {
     },
     {
       key: 'defaultPackSize',
-      label: 'label.default-pack-size',
+      label: 'label.dps',
       description: 'description.default-pack-size',
       align: ColumnAlign.Right,
       accessor: ({ rowData }) => rowData.item.defaultPackSize,
@@ -134,6 +134,18 @@ export const useRequestColumns = () => {
       sortable: false,
       accessor: ({ rowData }) =>
         rowData.linkedRequisitionLine?.approvedQuantity,
+    });
+    columnDefinitions.push({
+      key: 'approvedNumPacks',
+      label: 'label.approved-packs',
+      align: ColumnAlign.Right,
+      accessor: ({ rowData }) =>
+        formatNumber.round(
+          (rowData.linkedRequisitionLine?.approvedQuantity ?? 0) /
+            rowData.item.defaultPackSize,
+          2
+        ),
+      sortable: false,
     });
     columnDefinitions.push({
       key: 'approvalComment',

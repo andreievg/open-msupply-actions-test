@@ -1,4 +1,4 @@
-import React, { FC } from 'react';
+import React, { FC, useEffect } from 'react';
 import {
   Checkbox,
   Grid,
@@ -17,6 +17,7 @@ import {
   useBarcodeScannerContext,
   CircularProgress,
   useNotification,
+  Tooltip,
 } from '@openmsupply-client/common';
 import { StockLineRowFragment } from '../api';
 import { LocationSearchInput } from '../../Location/Components/LocationSearchInput';
@@ -36,15 +37,13 @@ const StyledInputRow = ({ label, Input }: InputWithLabelRowProps) => (
   />
 );
 interface StockLineFormProps {
-  draft: StockLineRowFragment & { barcode?: string };
-  onUpdate: (
-    patch: Partial<StockLineRowFragment & { barcode?: string }>
-  ) => void;
+  draft: StockLineRowFragment;
+  onUpdate: (patch: Partial<StockLineRowFragment>) => void;
 }
 export const StockLineForm: FC<StockLineFormProps> = ({ draft, onUpdate }) => {
   const t = useTranslation('inventory');
   const { error } = useNotification();
-  const { hasBarcodeScanner, isScanning, startScan } =
+  const { isConnected, isEnabled, isScanning, startScan } =
     useBarcodeScannerContext();
   const supplierName = draft.supplierName
     ? draft.supplierName
@@ -69,6 +68,16 @@ export const StockLineForm: FC<StockLineFormProps> = ({ draft, onUpdate }) => {
       error(t('error.unable-to-scan', { error: e }))();
     }
   };
+
+  useEffect(() => {
+    function handleKeyDown(this: HTMLElement, ev: KeyboardEvent) {
+      if (ev.ctrlKey && ev.key === 's') {
+        scanBarcode();
+      }
+    }
+    document.body.addEventListener('keydown', handleKeyDown);
+    return () => document.body.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <Grid
@@ -166,7 +175,7 @@ export const StockLineForm: FC<StockLineFormProps> = ({ draft, onUpdate }) => {
               disabled={false}
               value={location}
               width={160}
-              onChange={(location) => {
+              onChange={location => {
                 onUpdate({ location, locationId: location?.id });
               }}
             />
@@ -176,20 +185,29 @@ export const StockLineForm: FC<StockLineFormProps> = ({ draft, onUpdate }) => {
           label={t('label.barcode')}
           Input={
             <Box display="flex" style={{ width: 162 }}>
-              <BasicTextInput value={draft.barcode ?? ''} onChange={() => {}} />
-              {hasBarcodeScanner && (
-                <IconButton
-                  disabled={isScanning}
-                  onClick={scanBarcode}
-                  icon={
-                    isScanning ? (
-                      <CircularProgress size={20} color="secondary" />
-                    ) : (
-                      <ScanIcon />
-                    )
-                  }
-                  label={t('button.scan')}
-                />
+              <BasicTextInput
+                value={draft.barcode ?? ''}
+                onChange={e => onUpdate({ barcode: e.target.value })}
+              />
+              {isEnabled && (
+                <Tooltip
+                  title={isConnected ? '' : t('error.scanner-not-connected')}
+                >
+                  <Box>
+                    <IconButton
+                      disabled={isScanning || !isConnected}
+                      onClick={scanBarcode}
+                      icon={
+                        isScanning ? (
+                          <CircularProgress size={20} color="secondary" />
+                        ) : (
+                          <ScanIcon />
+                        )
+                      }
+                      label={t('button.scan')}
+                    />
+                  </Box>
+                </Tooltip>
               )}
             </Box>
           }

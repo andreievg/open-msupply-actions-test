@@ -29,7 +29,6 @@ import {
   allocateQuantities,
   sumAvailableQuantity,
   getAllocatedQuantity,
-  getAllocatedPacks,
 } from './utils';
 import { Draft, DraftItem, useOutbound } from '../../api';
 import { DraftOutboundLine } from '../../../types';
@@ -99,11 +98,7 @@ export const OutboundLineEdit: React.FC<ItemDetailsModalProps> = ({
 
     const { barcode } = draft;
     const barcodeExists = !!barcode?.id;
-    console.info(
-      `barcode: ${JSON.stringify(barcode)} currentItem: ${JSON.stringify(
-        currentItem
-      )} barcodeExists: ${barcodeExists})`
-    );
+
     if (!barcode || !currentItem || barcodeExists) return;
 
     // it is possible for the user to select multiple batch lines
@@ -115,7 +110,7 @@ export const OutboundLineEdit: React.FC<ItemDetailsModalProps> = ({
 
     const input = {
       input: {
-        value: barcode.value,
+        gtin: barcode.gtin,
         itemId: currentItem?.id,
         packSize,
       },
@@ -210,7 +205,6 @@ export const OutboundLineEdit: React.FC<ItemDetailsModalProps> = ({
           updateQuantity={updateQuantity}
           draftOutboundLines={draftOutboundLines}
           allocatedQuantity={getAllocatedQuantity(draftOutboundLines)}
-          allocatedPacks={getAllocatedPacks(draftOutboundLines)}
           batch={draft?.barcode?.batch}
         />
       </Grid>
@@ -226,7 +220,6 @@ interface TableProps {
   updateQuantity: (batchId: string, updateQuantity: number) => void;
   draftOutboundLines: DraftOutboundLine[];
   allocatedQuantity: number;
-  allocatedPacks: number;
   batch?: string;
 }
 
@@ -238,7 +231,6 @@ const TableWrapper: React.FC<TableProps> = ({
   updateQuantity,
   draftOutboundLines,
   allocatedQuantity,
-  allocatedPacks,
   batch,
 }) => {
   const t = useTranslation('distribution');
@@ -279,7 +271,6 @@ const TableWrapper: React.FC<TableProps> = ({
         item={currentItem}
         batch={batch}
         allocatedQuantity={allocatedQuantity}
-        allocatedPacks={allocatedPacks}
       />
     </TableProvider>
   );
