@@ -63,7 +63,7 @@ mod sync_on_central;
 use serve_frontend_plugins::config_server_frontend_plugins;
 use upload::config_upload;
 // Only import discovery for non android features (otherwise build for android targets would fail due to local-ip-address)
-#[cfg(not(target_os = "android"))]
+#[cfg(any(target_os = "macos", target_os = "windows"))]
 mod discovery;
 
 /// Starts the server
@@ -272,8 +272,8 @@ pub async fn start_server(
     info!("Creating graphql schema..done",);
 
     // START DISCOVERY
-    // Don't do discovery in android
-    #[cfg(not(target_os = "android"))]
+    // Only run discovery on Mac or Windows
+    #[cfg(any(target_os = "macos", target_os = "windows"))]
     {
         let discovery_enabled = match settings.server.discovery {
             DiscoveryMode::Disabled => false,

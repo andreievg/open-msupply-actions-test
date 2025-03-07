@@ -1,0 +1,4 @@
+server:
+  danger_allow_http: true # allow http in production mode
+logging:
+  mode: All
