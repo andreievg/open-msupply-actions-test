@@ -8,7 +8,7 @@
     "start-local": "lerna run --scope @openmsupply-client/* --parallel start-local -- --env $1 _",
     "start-remote": "lerna run --scope @openmsupply-client/* --parallel start-remote -- --env $1 _",
     "start": "yarn start-local",
-    "build": "lerna run --scope @openmsupply-client/* build",
+    "build": "lerna run --scope @openmsupply-client/host build",
     "build-stats": "lerna run --scope @openmsupply-client/* build-stats",
     "build-plugins": "lerna run --scope @openmsupply-client/* build-plugin",
     "serve": "lerna run --scope @openmsupply-client/* --parallel serve",
