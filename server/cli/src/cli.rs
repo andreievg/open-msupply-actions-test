@@ -64,7 +64,10 @@ struct Args {
 #[derive(clap::Subcommand)]
 enum Action {
     /// Export graphql schema
-    ExportGraphqlSchema,
+    ExportGraphqlSchema {
+        #[clap(short, long)]
+        path: Option<PathBuf>,
+    },
     /// Initialise empty database (existing database will be dropped, and new one created and migrated)
     InitialiseDatabase,
     /// Initialise from running mSupply server (uses configuration/.*yaml for sync credentials), drops existing database, creates new database with latest schema and initialises (syncs) initial data from central server (including users)
@@ -288,12 +291,15 @@ async fn main() -> anyhow::Result<()> {
         configuration::get_configuration().expect("Problem loading configurations");
 
     match args.action {
-        Action::ExportGraphqlSchema => {
+        Action::ExportGraphqlSchema { path } => {
             info!("Exporting graphql schema");
             let schema =
                 OperationalSchema::build(Queries::new(), Mutations::new(), EmptySubscription)
                     .finish();
-            fs::write("schema.graphql", schema.sdl())?;
+            fs::write(
+                path.unwrap_or(PathBuf::from("schema.graphql")),
+                schema.sdl(),
+            )?;
             info!("Schema exported in schema.graphql");
         }
         Action::InitialiseDatabase => {

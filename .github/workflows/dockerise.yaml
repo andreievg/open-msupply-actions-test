@@ -30,7 +30,7 @@ jobs:
         run: cd ./client && yarn build
 
       - name: Build server
-        run: docker run --rm --user "$(id -u)":"$(id -g)" -v "$PWD":/usr/src/omsupply -w /usr/src/omsupply/server rust:slim cargo build --release --bin remote_server --bin remote_server_cli
+        run: cd ./server && cargo build --bin remote_server --bin remote_server_cli
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
