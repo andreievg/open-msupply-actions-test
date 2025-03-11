@@ -40,7 +40,7 @@ jobs:
     name: Build Server
     needs: build-client
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -52,7 +52,7 @@ jobs:
           path: client/packages/host/dist
           
       - name: Build server
-        run: cd ./server && cargo build --release --bin remote_server --bin remote_server_cli
+        run: docker run --rm --user "$(id -u)":"$(id -g)" -v "$PWD":/usr/src/omsupply -w /usr/src/omsupply/server rust:slim cargo build --release --bin remote_server --bin remote_server_cli
 
       - name: Save artifacts
         uses: actions/upload-artifact@v4
