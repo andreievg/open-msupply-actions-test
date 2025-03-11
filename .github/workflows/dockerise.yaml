@@ -52,20 +52,20 @@ jobs:
           path: client/packages/host/dist
           
       - name: Build server
-        run: cd ./server && cargo build --bin remote_server --bin remote_server_cli
+        run: cd ./server && cargo build --release --bin remote_server --bin remote_server_cli
 
       - name: Save artifacts
         uses: actions/upload-artifact@v4
         with:
           name: server-executables
           path: | 
-            server/target/debug/remote_server
-            server/target/debug/remote_server_cli
+            server/target/release/remote_server
+            server/target/release/remote_server_cli
           retention-days: 1
 
   dockerise:
     name: Dockerise
-    # needs: build-server
+    needs: build-server
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -76,7 +76,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: server-executables
-          path: server/target/debug/
+          path: server/target/release/
           
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
