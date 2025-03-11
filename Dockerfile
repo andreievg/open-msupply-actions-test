@@ -29,6 +29,6 @@ RUN chmod +x remote_server
 RUN chmod +x remote_server_cli
 RUN chmod +x entry.sh
 
-ENTRYPOINT ["/usr/src/omsupply/entry.sh"]
+ENTRYPOINT ["/usr/src/omsupply/server/entry.sh"]
 
 EXPOSE 8000
