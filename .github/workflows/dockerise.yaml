@@ -52,7 +52,7 @@ jobs:
           path: client/packages/host/dist
           
       - name: Build server
-        run: docker run --rm --user "$(id -u)":"$(id -g)" -v "$PWD":/usr/src/omsupply -w /usr/src/omsupply/server rust:slim cargo build --debug --bin remote_server --bin remote_server_cli
+        run: docker run --rm --user "$(id -u)":"$(id -g)" -v "$PWD":/usr/src/omsupply -w /usr/src/omsupply/server rust:slim cargo build --bin remote_server --bin remote_server_cli
 
       - name: Save artifacts
         uses: actions/upload-artifact@v4
