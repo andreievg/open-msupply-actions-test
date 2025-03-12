@@ -1,7 +1,7 @@
 
 FROM rust:slim
 
-RUN apt-get update && apt-get install git make
+RUN apt-get update && apt-get install -y git make
 
 # Install faketime
 WORKDIR /usr/src/
