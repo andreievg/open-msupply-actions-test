@@ -5,8 +5,8 @@ RUN apt-get update && apt-get install -y faketime
 
 WORKDIR /usr/src/omsupply/server
 # Copy executable
-COPY server/target/release/remote_server .
-COPY server/target/release/remote_server_cli .
+COPY server/target/debug/remote_server .
+COPY server/target/debug/remote_server_cli .
 # Copy entry
 COPY docker/entry.sh .
 # Copy reference file
