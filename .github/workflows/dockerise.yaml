@@ -52,15 +52,15 @@ jobs:
           path: client/packages/host/dist
           
       - name: Build server
-        run: docker run --rm --user "$(id -u)":"$(id -g)" -v "$PWD":/usr/src/omsupply -w /usr/src/omsupply/server rust:slim cargo build --bin remote_server --bin remote_server_cli
+        run: docker run --rm --user "$(id -u)":"$(id -g)" -v "$PWD":/usr/src/omsupply -w /usr/src/omsupply/server rust:slim cargo build --release --bin remote_server --bin remote_server_cli
 
       - name: Save artifacts
         uses: actions/upload-artifact@v4
         with:
           name: server-executables
           path: | 
-            server/target/debug/remote_server
-            server/target/debug/remote_server_cli
+            server/target/release/remote_server
+            server/target/release/remote_server_cli
           retention-days: 1
 
   dockerise:
@@ -76,7 +76,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: server-executables
-          path: server/target/debug/
+          path: server/target/release/
           
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
