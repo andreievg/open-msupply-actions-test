@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests;
 
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use actix_web::web::{self, Data};
 use actix_web::HttpResponse;
@@ -250,7 +250,7 @@ impl Mutations {
 /// this is done to avoid validations check in operational mode where
 /// data for validation is not available, this struct helps achieve this
 pub struct GraphqlSchema {
-    operational: OperationalSchema,
+    operational: Arc<OperationalSchema>,
     initialisation: InitialisationSchema,
     /// Set on startup based on InitialisationStatus and then updated via SiteIsInitialisedCallback after initialisation
     is_operational: RwLock<bool>,
@@ -310,7 +310,7 @@ impl GraphqlSchema {
         .data(service_provider.clone());
 
         GraphqlSchema {
-            operational: operational_builder.finish(),
+            operational: Arc::new(operational_builder.finish()),
             initialisation: initialisation_builder.finish(),
             is_operational: RwLock::new(is_operational),
         }
@@ -325,7 +325,14 @@ impl GraphqlSchema {
         if *self.is_operational.read().await {
             // auth_data is only available in schema in operational mode
             let user_data = auth_data_from_request(&http_req);
-            self.operational.execute(req.data(user_data)).await
+            let operational_closure = self.operational.clone();
+            tokio::spawn(async move {
+                // Process each socket concurrently.
+                operational_closure.execute(req.data(user_data)).await
+            })
+            .await
+            .unwrap()
+            .into()
         } else {
             self.initialisation.execute(req).await
         }
