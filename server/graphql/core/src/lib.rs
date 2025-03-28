@@ -41,6 +41,7 @@ pub trait ContextExt {
     fn get_settings(&self) -> &Settings;
     fn get_validated_plugins(&self) -> &Mutex<ValidatedPluginBucket>;
     fn restart_switch(&self) -> Sender<bool>;
+    fn service_provider_owned(&self) -> Data<ServiceProvider>;
 }
 
 impl<'a> ContextExt for Context<'a> {
@@ -54,6 +55,10 @@ impl<'a> ContextExt for Context<'a> {
 
     fn service_provider(&self) -> &ServiceProvider {
         self.data_unchecked::<Data<ServiceProvider>>()
+    }
+
+    fn service_provider_owned(&self) -> Data<ServiceProvider> {
+        self.data_unchecked::<Data<ServiceProvider>>().clone()
     }
 
     fn get_auth_data(&self) -> &AuthData {

@@ -20,6 +20,7 @@ diesel = { version = "2.2.6", default-features = false, features = [
     "64-column-tables",
     "with-deprecated",
 ] }
+tokio = { workspace = true }
 diesel-derive-enum = { version = "2.1.0", default-features = false }
 diesel_migrations = "2.2.0"
 futures-util = { workspace = true }

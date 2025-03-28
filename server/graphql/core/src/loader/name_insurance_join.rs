@@ -15,9 +15,14 @@ impl Loader<String> for NameInsuranceJoinLoader {
 
     async fn load(&self, ids: &[String]) -> Result<HashMap<String, Self::Value>, Self::Error> {
         let connection = self.connection_manager.connection()?;
-        let repo = NameInsuranceJoinRowRepository::new(&connection);
+        let ids = ids.to_owned();
+        let result = tokio::task::spawn_blocking(move || {
+            let repo = NameInsuranceJoinRowRepository::new(&connection);
 
-        let result = repo.find_many_by_ids(ids)?;
+            repo.find_many_by_ids(&ids)
+        })
+        .await
+        .unwrap()?;
 
         Ok(result
             .into_iter()

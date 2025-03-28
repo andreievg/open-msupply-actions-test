@@ -1,4 +1,4 @@
-use std::sync::{Mutex, MutexGuard};
+use std::sync::{Arc, Mutex, MutexGuard};
 
 use super::{get_connection, DBBackendConnection, DBConnection};
 
@@ -30,6 +30,10 @@ impl<'a> LockedConnection<'a> {
         &mut self.raw_connection
     }
 
+    pub async fn with_connection(&mut self) -> &mut DBConnection {
+        &mut self.raw_connection
+    }
+
     /// Current level of nested transaction.
     /// For example:
     /// 0 => no transaction
@@ -58,10 +62,25 @@ impl<'a> LockedConnection<'a> {
 }
 
 pub struct StorageConnection {
-    raw_connection: Mutex<DBConnection>,
+    raw_connection: Arc<Mutex<DBConnection>>,
 }
 
 impl StorageConnection {
+    pub async fn with_lock<T, E, F>(&self, f: F) -> Result<T, E>
+    where
+        F: FnOnce(&mut DBConnection) -> Result<T, E> + Send + 'static,
+        T: Send + 'static,
+        E: Send + 'static,
+    {
+        let connection = self.raw_connection.clone();
+        tokio::task::spawn_blocking(move || {
+            let mut connection = connection.lock().unwrap();
+            f(&mut connection)
+        })
+        .await
+        .unwrap()
+    }
+
     pub fn lock(&self) -> LockedConnection {
         LockedConnection {
             raw_connection: self.raw_connection.lock().unwrap(),
@@ -108,7 +127,7 @@ impl From<TransactionError<RepositoryError>> for RepositoryError {
 impl StorageConnection {
     pub fn new(connection: DBConnection) -> StorageConnection {
         StorageConnection {
-            raw_connection: Mutex::new(connection),
+            raw_connection: Arc::new(Mutex::new(connection)),
         }
     }
 

@@ -16,7 +16,12 @@ impl Loader<String> for NameRowLoader {
 
     async fn load(&self, keys: &[String]) -> Result<HashMap<String, Self::Value>, Self::Error> {
         let service_context = self.service_provider.basic_context()?;
-        let results = NameRowRepository::new(&service_context.connection).find_many_by_id(keys)?;
+        let keys = keys.to_owned();
+        let results = tokio::task::spawn_blocking(move || {
+            NameRowRepository::new(&service_context.connection).find_many_by_id(&keys)
+        })
+        .await
+        .unwrap()?;
 
         Ok(results
             .into_iter()

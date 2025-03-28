@@ -1,6 +1,6 @@
 use super::{
     name_link, name_row::name, ChangeLogInsertRow, ChangelogRepository, ChangelogTableName,
-    RowActionType, StorageConnection,
+    DBConnection, RowActionType, StorageConnection,
 };
 
 use crate::{diesel_macros::apply_sort, repository_error::RepositoryError, Sort, Upsert};

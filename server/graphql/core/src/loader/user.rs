@@ -15,15 +15,21 @@ impl Loader<String> for UserLoader {
 
     async fn load(&self, keys: &[String]) -> Result<HashMap<String, Self::Value>, Self::Error> {
         let connection = self.connection_manager.connection()?;
-        let repo = UserRepository::new(&connection);
-        Ok(repo
-            .query(
-                Pagination::all(),
-                Some(UserFilter::new().id(EqualFilter::equal_any(keys.to_vec()))),
-                None,
-            )?
-            .into_iter()
-            .map(|user| (user.user_row.id.clone(), user))
-            .collect())
+        let keys = keys.to_owned();
+        tokio::task::spawn_blocking(move || {
+            let repo = UserRepository::new(&connection);
+
+            Ok(repo
+                .query(
+                    Pagination::all(),
+                    Some(UserFilter::new().id(EqualFilter::equal_any(keys.to_vec()))),
+                    None,
+                )?
+                .into_iter()
+                .map(|user| (user.user_row.id.clone(), user))
+                .collect())
+        })
+        .await
+        .unwrap()
     }
 }

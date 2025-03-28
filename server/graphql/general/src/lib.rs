@@ -92,7 +92,7 @@ impl GeneralQueries {
     }
 
     pub async fn me(&self, ctx: &Context<'_>) -> Result<UserResponse> {
-        me(ctx)
+        me(ctx).await
     }
 
     pub async fn is_central_server(&self) -> bool {
