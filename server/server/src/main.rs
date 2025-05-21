@@ -2,7 +2,7 @@ use server::{configuration, logging_init, start_server};
 use service::settings::Settings;
 // use std::sync::mpsc;
 
-#[actix_web::main]
+#[tokio::main(flavor = "multi_thread")]
 async fn main() -> std::io::Result<()> {
     let settings: Settings =
         configuration::get_configuration().expect("Failed to parse configuration settings");

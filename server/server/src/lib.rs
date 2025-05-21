@@ -293,7 +293,7 @@ pub async fn start_server(
     info!("Starting discovery graphql server",);
     let closure_service_provider = service_provider.clone();
     // See attach_discovery_graphql_schema for more details
-    actix_web::rt::spawn(
+    tokio::spawn(
         HttpServer::new(move || {
             App::new()
                 .wrap(Cors::permissive())
@@ -364,7 +364,7 @@ pub async fn start_server(
         settings.server.port, version
     );
     // run server in another task so that we can handle restart/off events here
-    actix_web::rt::spawn(running_server);
+    tokio::spawn(running_server);
 
     tokio::select! {
         // TODO log error in ctrl_c and None in off_switch
