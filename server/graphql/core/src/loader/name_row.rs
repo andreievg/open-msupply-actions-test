@@ -17,7 +17,7 @@ impl Loader<String> for NameRowLoader {
     async fn load(&self, keys: &[String]) -> Result<HashMap<String, Self::Value>, Self::Error> {
         let service_context = self.service_provider.basic_context()?;
         let keys = keys.to_owned();
-        let results = tokio::task::spawn_blocking(move || {
+        let results = actix_web::rt::spawn(move || {
             NameRowRepository::new(&service_context.connection).find_many_by_id(&keys)
         })
         .await

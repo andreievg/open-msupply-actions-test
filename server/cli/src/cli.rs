@@ -5,6 +5,7 @@ use clap::{ArgAction, Parser};
 use graphql::{Mutations, OperationalSchema, Queries};
 use log::info;
 
+use actix_web::rt::spawn;
 use report_builder::{
     print::{generate_report_inner, Config, ReportGenerateData},
     Format,
@@ -40,7 +41,6 @@ use std::{
     process::Command,
     sync::{Arc, RwLock},
 };
-use tokio::task::spawn_blocking;
 use util::inline_init;
 
 mod backup;

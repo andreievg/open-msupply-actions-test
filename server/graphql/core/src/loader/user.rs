@@ -16,7 +16,7 @@ impl Loader<String> for UserLoader {
     async fn load(&self, keys: &[String]) -> Result<HashMap<String, Self::Value>, Self::Error> {
         let connection = self.connection_manager.connection()?;
         let keys = keys.to_owned();
-        tokio::task::spawn_blocking(move || {
+        actix_web::rt::spawn(move || {
             let repo = UserRepository::new(&connection);
 
             Ok(repo

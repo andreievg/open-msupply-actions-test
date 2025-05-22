@@ -73,7 +73,7 @@ impl StorageConnection {
         E: Send + 'static,
     {
         let connection = self.raw_connection.clone();
-        tokio::task::spawn_blocking(move || {
+        actix_web::rt::spawn(move || {
             let mut connection = connection.lock().unwrap();
             f(&mut connection)
         })

@@ -16,7 +16,7 @@ impl Loader<String> for NameInsuranceJoinLoader {
     async fn load(&self, ids: &[String]) -> Result<HashMap<String, Self::Value>, Self::Error> {
         let connection = self.connection_manager.connection()?;
         let ids = ids.to_owned();
-        let result = tokio::task::spawn_blocking(move || {
+        let result = actix_web::rt::spawn(move || {
             let repo = NameInsuranceJoinRowRepository::new(&connection);
 
             repo.find_many_by_ids(&ids)
