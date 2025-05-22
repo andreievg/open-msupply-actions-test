@@ -65,7 +65,7 @@ impl UserStoreNode {
         let service_provider = ctx.service_provider_owned();
         let service_context = service_provider.basic_context()?;
 
-        let home_currency = actix_rt::task::spawn_blocking(move || {
+        let home_currency = actix_web::rt::task::spawn_blocking(move || {
             service_provider
                 .currency_service
                 .get_currencies(
@@ -158,7 +158,7 @@ impl UserNode {
         let service_provider = ctx.service_provider().connection_manager.clone();
 
         let user = self.user.user_row.id.clone();
-        let result = actix_rt::task::spawn_blocking(move || match store_id {
+        let result = actix_web::rt::task::spawn_blocking(move || match store_id {
             Some(store_id) => permissions(&service_provider, &user, Some(store_id)),
             None => permissions(&service_provider, &user, None),
         })

@@ -24,7 +24,7 @@ pub async fn me(ctx: &Context<'_>) -> Result<UserResponse> {
 
     let service_provider = ctx.service_provider();
     let service_ctx = service_provider.context("".to_string(), user.user_id.clone())?;
-    let user = actix_rt::task::spawn_blocking(move || {
+    let user = actix_web::rt::task::spawn_blocking(move || {
         let user_service = UserAccountService::new(&service_ctx.connection);
         match user_service.find_user_active_on_this_site(&user.user_id) {
             Ok(Some(user)) => Ok(user),
