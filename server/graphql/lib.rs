@@ -325,14 +325,9 @@ impl GraphqlSchema {
         if *self.is_operational.read().await {
             // auth_data is only available in schema in operational mode
             let user_data = auth_data_from_request(&http_req);
-            let operational_closure = self.operational.clone();
-            tokio::spawn(async move {
-                // Process each socket concurrently.
-                operational_closure.execute(req.data(user_data)).await
-            })
-            .await
-            .unwrap()
-            .into()
+
+            // Process each socket concurrently.
+            self.operational.execute(req.data(user_data)).await.into()
         } else {
             self.initialisation.execute(req).await
         }
