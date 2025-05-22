@@ -1,3 +1,5 @@
+use std::future::Future;
+
 use crate::repository_error::RepositoryError;
 
 pub mod abbreviation;
@@ -272,6 +274,7 @@ pub use temperature_breach_row::*;
 pub use temperature_excursion::*;
 pub use temperature_log::*;
 pub use temperature_log_row::*;
+use tokio::runtime::Handle;
 pub use unit_row::*;
 pub use user::*;
 pub use user_permission::*;
@@ -373,3 +376,20 @@ pub fn raw_query(
 ) -> Result<Vec<JsonRawRow>, RepositoryError> {
     Ok(sql_query(&query).get_results::<JsonRawRow>(connection.lock().connection())?)
 }
+
+// pub fn do_async_blocking<T, F>(f: F) -> T
+// where
+//     F: Future<Output = T> + Send + 'static,
+//     T: Send + 'static,
+// {
+//     let handle = actix_web::rt::Runtime.tokio_runtime().handle();
+//     let (tx, rx) = std::sync::mpsc::channel();
+
+//     handle.spawn(async move {
+//         println!("working");
+//         let result = f.await;
+//         let _ = tx.send(result);
+//     });
+
+//     rx.recv().unwrap()
+// }

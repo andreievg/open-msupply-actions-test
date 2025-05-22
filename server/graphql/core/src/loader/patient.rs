@@ -19,23 +19,29 @@ impl Loader<String> for PatientLoader {
         patient_ids: &[String],
     ) -> Result<HashMap<String, Self::Value>, Self::Error> {
         let service_context = self.service_provider.basic_context()?;
+        let service_provider = self.service_provider.clone();
 
-        let result = self
-            .service_provider
-            .patient_service
-            .get_patients(
-                &service_context,
-                None,
-                Some(PatientFilter::new().id(EqualFilter::equal_any(patient_ids.to_owned()))),
-                None,
-                None,
-            )
-            .map_err(StandardGraphqlError::from_repository_error)?
-            .rows
-            .into_iter()
-            .map(|p| (p.id.clone(), p))
-            .collect();
+        let patient_ids = patient_ids.to_owned();
 
-        Ok(result)
+        actix_web::rt::task::spawn_blocking(move || {
+            let result = service_provider
+                .patient_service
+                .get_patients(
+                    &service_context,
+                    None,
+                    Some(PatientFilter::new().id(EqualFilter::equal_any(patient_ids.to_owned()))),
+                    None,
+                    None,
+                )
+                .map_err(StandardGraphqlError::from_repository_error)?
+                .rows
+                .into_iter()
+                .map(|p| (p.id.clone(), p))
+                .collect();
+
+            Ok(result)
+        })
+        .await
+        .unwrap()
     }
 }

@@ -2,9 +2,10 @@ use std::collections::HashMap;
 
 use actix_web::web::Data;
 use async_graphql::dataloader::*;
+use repository::requisition::requisition;
 use repository::EqualFilter;
 use repository::{Requisition, RequisitionFilter};
-use service::service_provider::ServiceProvider;
+use service::service_provider::{self, ServiceProvider};
 
 use crate::standard_graphql_error::StandardGraphqlError;
 
@@ -21,21 +22,26 @@ impl Loader<String> for RequisitionsByIdLoader {
         requisition_ids: &[String],
     ) -> Result<HashMap<String, Self::Value>, Self::Error> {
         let service_context = self.service_provider.basic_context()?;
+        let service_provider = self.service_provider.clone();
+        let requisition_ids = requisition_ids.to_owned();
 
-        let filter = RequisitionFilter::new().id(EqualFilter::equal_any(
-            requisition_ids.iter().map(String::clone).collect(),
-        ));
+        actix_web::rt::task::spawn_blocking(move || {
+            let filter = RequisitionFilter::new().id(EqualFilter::equal_any(
+                requisition_ids.iter().map(String::clone).collect(),
+            ));
 
-        let requisitions = self
-            .service_provider
-            .requisition_service
-            .get_requisitions(&service_context, None, None, Some(filter), None)
-            .map_err(StandardGraphqlError::from_list_error)?;
+            let requisitions = service_provider
+                .requisition_service
+                .get_requisitions(&service_context, None, None, Some(filter), None)
+                .map_err(StandardGraphqlError::from_list_error)?;
 
-        Ok(requisitions
-            .rows
-            .into_iter()
-            .map(|requisition| (requisition.requisition_row.id.clone(), requisition))
-            .collect())
+            Ok(requisitions
+                .rows
+                .into_iter()
+                .map(|requisition| (requisition.requisition_row.id.clone(), requisition))
+                .collect())
+        })
+        .await
+        .unwrap()
     }
 }

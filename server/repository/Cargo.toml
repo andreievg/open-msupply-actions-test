@@ -40,6 +40,7 @@ anyhow.workspace = true
 pretty_assertions = { workspace = true }
 strum = { workspace = true }
 ts-rs = { workspace = true }
+actix-web = { workspace = true }
 
 [dev-dependencies]
 tokio = { version = "1.38.0", features = ["time", "rt-multi-thread", "macros"] }

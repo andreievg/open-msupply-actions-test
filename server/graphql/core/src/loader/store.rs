@@ -23,7 +23,7 @@ impl Loader<String> for StoreByIdLoader {
 
         let filter = StoreFilter::new().id(EqualFilter::equal_any(store_ids.to_owned()));
         let service_provider = self.service_provider.clone();
-        let stores = actix_web::rt::task::spawn_blocking(move || {
+        let stores = tokio::task::spawn_blocking(move || {
             service_provider
                 .general_service
                 .get_stores(&service_context, None, Some(filter), None)

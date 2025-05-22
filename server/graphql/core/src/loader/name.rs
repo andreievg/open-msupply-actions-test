@@ -35,30 +35,34 @@ impl Loader<NameByIdLoaderInput> for NameByIdLoader {
         ids_with_store_id: &[NameByIdLoaderInput],
     ) -> Result<HashMap<NameByIdLoaderInput, Self::Value>, Self::Error> {
         let service_context = self.service_provider.basic_context()?;
-
-        // store_id -> Vec of name_id
-        let mut store_name_map = HashMap::<String, Vec<String>>::new();
-        for item in ids_with_store_id {
-            let entry = store_name_map.entry(item.primary_id.clone()).or_default();
-            entry.push(item.secondary_id.clone())
-        }
-        let mut output = HashMap::<NameByIdLoaderInput, Self::Value>::new();
-        for (store_id, names) in store_name_map {
-            let names = self
-                .service_provider
-                .name_service
-                .get_names(
-                    &service_context,
-                    &store_id,
-                    None, // TODO this needs to be ALL without limit
-                    Some(NameFilter::new().id(EqualFilter::equal_any(names))),
-                    None,
-                )
-                .map_err(|err| StandardGraphqlError::InternalError(format!("{:?}", err)))?;
-            for name in names.rows {
-                output.insert(NameByIdLoaderInput::new(&store_id, &name.name_row.id), name);
+        let service_provider = self.service_provider.clone();
+        let ids_with_store_id = ids_with_store_id.to_owned();
+        actix_web::rt::task::spawn_blocking(move || {
+            // store_id -> Vec of name_id
+            let mut store_name_map = HashMap::<String, Vec<String>>::new();
+            for item in ids_with_store_id {
+                let entry = store_name_map.entry(item.primary_id.clone()).or_default();
+                entry.push(item.secondary_id.clone())
             }
-        }
-        Ok(output)
+            let mut output = HashMap::<NameByIdLoaderInput, Self::Value>::new();
+            for (store_id, names) in store_name_map {
+                let names = service_provider
+                    .name_service
+                    .get_names(
+                        &service_context,
+                        &store_id,
+                        None, // TODO this needs to be ALL without limit
+                        Some(NameFilter::new().id(EqualFilter::equal_any(names))),
+                        None,
+                    )
+                    .map_err(|err| StandardGraphqlError::InternalError(format!("{:?}", err)))?;
+                for name in names.rows {
+                    output.insert(NameByIdLoaderInput::new(&store_id, &name.name_row.id), name);
+                }
+            }
+            Ok(output)
+        })
+        .await
+        .unwrap()
     }
 }

@@ -1,7 +1,7 @@
 use actix_web::web::Data;
 use async_graphql::dataloader::*;
 use async_graphql::*;
-use repository::{EqualFilter, InvoiceLineRepository};
+use repository::{invoice, EqualFilter, InvoiceLineRepository};
 use repository::{InvoiceLine, InvoiceLineFilter};
 use service::service_provider::ServiceProvider;
 use std::collections::HashMap;
@@ -21,20 +21,26 @@ impl Loader<String> for InvoiceLineByInvoiceIdLoader {
         invoice_ids: &[String],
     ) -> Result<HashMap<String, Self::Value>, Self::Error> {
         let service_context = self.service_provider.basic_context()?;
-        let repo = InvoiceLineRepository::new(&service_context.connection);
 
-        let invoice_lines = repo.query_by_filter(InvoiceLineFilter::new().invoice_id(
-            EqualFilter::equal_any(invoice_ids.iter().map(String::clone).collect()),
-        ))?;
+        let invoice_ids = invoice_ids.to_owned();
 
-        let mut map: HashMap<String, Vec<InvoiceLine>> = HashMap::new();
-        for line in invoice_lines {
-            let list = map
-                .entry(line.invoice_line_row.invoice_id.clone())
-                .or_default();
-            list.push(line);
-        }
-        Ok(map)
+        actix_web::rt::task::spawn_blocking(move || {
+            let repo = InvoiceLineRepository::new(&service_context.connection);
+            let invoice_lines = repo.query_by_filter(InvoiceLineFilter::new().invoice_id(
+                EqualFilter::equal_any(invoice_ids.iter().map(String::clone).collect()),
+            ))?;
+
+            let mut map: HashMap<String, Vec<InvoiceLine>> = HashMap::new();
+            for line in invoice_lines {
+                let list = map
+                    .entry(line.invoice_line_row.invoice_id.clone())
+                    .or_default();
+                list.push(line);
+            }
+            Ok(map)
+        })
+        .await
+        .unwrap()
     }
 }
 

@@ -15,10 +15,13 @@ impl Loader<String> for DiagnosisLoader {
 
     async fn load(&self, ids: &[String]) -> Result<HashMap<String, Self::Value>, Self::Error> {
         let connection = self.connection_manager.connection()?;
-        let repo = DiagnosisRepository::new(&connection);
-
-        let result = repo
-            .query_by_filter(DiagnosisFilter::new().id(EqualFilter::equal_any(ids.to_owned())))?;
+        let ids = ids.to_owned();
+        let result = actix_web::rt::task::spawn_blocking(move || {
+            let repo = DiagnosisRepository::new(&connection);
+            repo.query_by_filter(DiagnosisFilter::new().id(EqualFilter::equal_any(ids.to_owned())))
+        })
+        .await
+        .unwrap()?;
 
         Ok(result
             .into_iter()

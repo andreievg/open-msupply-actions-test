@@ -6,7 +6,7 @@ use repository::{
     Invoice, InvoiceFilter, InvoiceLineRepository, PricingRow, RepositoryError,
     StorageConnectionManager,
 };
-use service::service_provider::ServiceProvider;
+use service::service_provider::{self, ServiceProvider};
 use std::collections::HashMap;
 
 use crate::standard_graphql_error::StandardGraphqlError;
@@ -24,22 +24,27 @@ impl Loader<String> for InvoiceByIdLoader {
         invoice_ids: &[String],
     ) -> Result<HashMap<String, Self::Value>, Self::Error> {
         let service_context = self.service_provider.basic_context()?;
+        let service_provider = self.service_provider.clone();
+        let invoice_ids = invoice_ids.to_owned();
 
-        let filter = InvoiceFilter::new().id(EqualFilter::equal_any(
-            invoice_ids.iter().map(String::clone).collect(),
-        ));
+        actix_web::rt::task::spawn_blocking(move || {
+            let filter = InvoiceFilter::new().id(EqualFilter::equal_any(
+                invoice_ids.iter().map(String::clone).collect(),
+            ));
 
-        let invoices = self
-            .service_provider
-            .invoice_service
-            .get_invoices(&service_context, None, None, Some(filter), None)
-            .map_err(StandardGraphqlError::from_list_error)?;
+            let invoices = service_provider
+                .invoice_service
+                .get_invoices(&service_context, None, None, Some(filter), None)
+                .map_err(StandardGraphqlError::from_list_error)?;
 
-        Ok(invoices
-            .rows
-            .into_iter()
-            .map(|invoice| (invoice.invoice_row.id.clone(), invoice))
-            .collect())
+            Ok(invoices
+                .rows
+                .into_iter()
+                .map(|invoice| (invoice.invoice_row.id.clone(), invoice))
+                .collect())
+        })
+        .await
+        .unwrap()
     }
 }
 
@@ -56,16 +61,21 @@ impl Loader<String> for InvoiceStatsLoader {
         invoice_ids: &[String],
     ) -> Result<HashMap<String, Self::Value>, Self::Error> {
         let connection = self.connection_manager.connection()?;
-        let repo = InvoiceLineRepository::new(&connection);
-        let result = repo
-            .stats(invoice_ids)?
-            .into_iter()
-            .map(|row| {
-                let invoice_id = row.invoice_id.clone();
-                (invoice_id, row)
-            })
-            .collect();
-        Ok(result)
+        let invoice_ids = invoice_ids.to_owned();
+        actix_web::rt::task::spawn_blocking(move || {
+            let repo = InvoiceLineRepository::new(&connection);
+            let result = repo
+                .stats(&invoice_ids)?
+                .into_iter()
+                .map(|row| {
+                    let invoice_id = row.invoice_id.clone();
+                    (invoice_id, row)
+                })
+                .collect();
+            Ok(result)
+        })
+        .await
+        .unwrap()
     }
 }
 

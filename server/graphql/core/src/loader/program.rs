@@ -15,22 +15,29 @@ impl Loader<String> for ProgramByIdLoader {
 
     async fn load(&self, keys: &[String]) -> Result<HashMap<String, Self::Value>, Self::Error> {
         let connection = self.connection_manager.connection()?;
-        let repo = ProgramRepository::new(&connection);
-        let result = repo
-            .query(
-                Pagination {
-                    limit: keys.len() as u32,
-                    offset: 0,
-                },
-                Some(ProgramFilter::new().id(EqualFilter::equal_any(keys.to_vec()))),
-                None,
-            )?
-            .into_iter()
-            .map(|program| {
-                let id = program.id.clone();
-                (id, program)
-            })
-            .collect();
-        Ok(result)
+
+        let keys = keys.to_owned();
+
+        actix_web::rt::task::spawn_blocking(move || {
+            let repo = ProgramRepository::new(&connection);
+            let result = repo
+                .query(
+                    Pagination {
+                        limit: keys.len() as u32,
+                        offset: 0,
+                    },
+                    Some(ProgramFilter::new().id(EqualFilter::equal_any(keys.to_vec()))),
+                    None,
+                )?
+                .into_iter()
+                .map(|program| {
+                    let id = program.id.clone();
+                    (id, program)
+                })
+                .collect();
+            Ok(result)
+        })
+        .await
+        .unwrap()
     }
 }

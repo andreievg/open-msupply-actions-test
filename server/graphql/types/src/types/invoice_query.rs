@@ -343,26 +343,30 @@ impl InvoiceNode {
     }
 
     pub async fn currency(&self, ctx: &Context<'_>) -> Result<Option<CurrencyNode>> {
-        let service_provider = ctx.service_provider();
-        let currency_provider = &service_provider.currency_service;
-        let service_context = &service_provider.basic_context()?;
+        let service_provider = ctx.service_provider_owned();
 
+        let row_id = self.row().id.clone();
         let currency_id = if let Some(currency_id) = &self.row().currency_id {
-            currency_id
+            currency_id.clone()
         } else {
             return Ok(None);
         };
 
-        let currency = currency_provider
-            .get_currency(service_context, currency_id)
-            .map_err(|e| StandardGraphqlError::from_repository_error(e).extend())?
-            .ok_or(StandardGraphqlError::InternalError(format!(
-                "Cannot find currency ({}) linked to invoice ({})",
-                currency_id,
-                &self.row().id
-            )))?;
+        actix_web::rt::task::spawn_blocking(move || {
+            let currency_provider = &service_provider.currency_service;
+            let service_context = &service_provider.basic_context()?;
+            let currency = currency_provider
+                .get_currency(service_context, &currency_id)
+                .map_err(|e| StandardGraphqlError::from_repository_error(e).extend())?
+                .ok_or(StandardGraphqlError::InternalError(format!(
+                    "Cannot find currency ({}) linked to invoice ({})",
+                    currency_id, &row_id
+                )))?;
 
-        Ok(Some(CurrencyNode::from_domain(currency)))
+            Ok(Some(CurrencyNode::from_domain(currency)))
+        })
+        .await
+        .unwrap()
     }
 
     pub async fn currency_rate(&self) -> &f64 {
