@@ -66,21 +66,6 @@ pub struct StorageConnection {
 }
 
 impl StorageConnection {
-    pub async fn with_lock<T, E, F>(&self, f: F) -> Result<T, E>
-    where
-        F: FnOnce(&mut DBConnection) -> Result<T, E> + Send + 'static,
-        T: Send + 'static,
-        E: Send + 'static,
-    {
-        let connection = self.raw_connection.clone();
-        actix_web::rt::spawn(move || {
-            let mut connection = connection.lock().unwrap();
-            f(&mut connection)
-        })
-        .await
-        .unwrap()
-    }
-
     pub fn lock(&self) -> LockedConnection {
         LockedConnection {
             raw_connection: self.raw_connection.lock().unwrap(),

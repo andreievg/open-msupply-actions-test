@@ -25,6 +25,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 http2 = { workspace = true }
 tokio = { workspace = true }
+actix-rt = { workspace = true }
 
 [dev-dependencies]
 actix-rt = { workspace = true }

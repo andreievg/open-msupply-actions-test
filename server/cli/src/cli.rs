@@ -5,7 +5,6 @@ use clap::{ArgAction, Parser};
 use graphql::{Mutations, OperationalSchema, Queries};
 use log::info;
 
-use actix_web::rt::spawn;
 use report_builder::{
     print::{generate_report_inner, Config, ReportGenerateData},
     Format,
@@ -646,7 +645,7 @@ async fn main() -> anyhow::Result<()> {
             };
 
             // spawn blocking used to prevent the following error: "Cannot drop a runtime in a context where blocking is not allowed"
-            spawn_blocking(|| generate_report_inner(report_generate_data))
+            tokio::task::spawn_blocking(|| generate_report_inner(report_generate_data))
                 .await?
                 .map_err(|e| ReportError::FailedToGenerateReport(path, e.into()))?;
 
