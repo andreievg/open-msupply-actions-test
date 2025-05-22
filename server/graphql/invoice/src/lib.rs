@@ -1,7 +1,11 @@
 use async_graphql::*;
 use graphql_core::pagination::PaginationInput;
+use graphql_core::standard_graphql_error::{validate_auth, StandardGraphqlError};
+use graphql_core::ContextExt;
 use graphql_types::types::*;
 use mutations::AddToShipmentFromMasterListInput;
+use repository::PaginationOption;
+use service::auth::{Resource, ResourceAccessRequest};
 
 pub mod invoice_queries;
 use self::invoice_queries::*;
@@ -47,7 +51,37 @@ impl InvoiceQueries {
         #[graphql(desc = "Sort options (only first sort input is evaluated for this endpoint)")]
         sort: Option<Vec<InvoiceSortInput>>,
     ) -> Result<InvoicesResponse> {
-        get_invoices(ctx, store_id, page, filter, sort)
+        let user = validate_auth(
+            ctx,
+            &ResourceAccessRequest {
+                resource: Resource::QueryInvoice,
+                store_id: Some(store_id.clone()),
+            },
+        )?;
+
+        let service_provider = ctx.service_provider_owned();
+        let service_context = service_provider.context(store_id.clone(), user.user_id)?;
+
+        let invoices = actix_web::rt::task::spawn_blocking(move || {
+            service_provider
+                .invoice_service
+                .get_invoices(
+                    &service_context,
+                    Some(&store_id),
+                    page.map(PaginationOption::from),
+                    filter.map(|filter| filter.to_domain()),
+                    // Currently only one sort option is supported, use the first from the list.
+                    sort.and_then(|mut sort_list| sort_list.pop())
+                        .map(|sort| sort.to_domain()),
+                )
+                .map_err(StandardGraphqlError::from_list_error)
+        })
+        .await
+        .unwrap()?;
+
+        Ok(InvoicesResponse::Response(InvoiceConnector::from_domain(
+            invoices,
+        )))
     }
 
     async fn insert_prescription(
