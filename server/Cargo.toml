@@ -9,8 +9,8 @@ actix-web = { version = "4.9.0", default-features = false, features = [
 ] }
 actix-multipart = "0.7.2"
 anymap = "0.12.1"
-async-graphql = { version = "7.0.16", features = ["dataloader", "chrono"] }
-async-graphql-actix-web = "7.0.16"
+async-graphql = {git = "https://github.com/andreievg/async-graphql.git", rev = "7cf3391c172be35b7fea288b5d9b2613773c834e", version = "7.0.16", features = ["dataloader", "chrono"] }
+async-graphql-actix-web = {package = "async-graphql-actix-web", git = "https://github.com/andreievg/async-graphql.git",  version = "7.0.16", rev = "7cf3391c172be35b7fea288b5d9b2613773c834e" }
 async-trait = "0.1.85"
 chrono = { version = "0.4.39", features = ["serde"] }
 clap = { version = "4.5.7", features = ["derive"] }
