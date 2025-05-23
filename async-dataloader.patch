@@ -1,0 +1,84 @@
+diff --git a/server/Cargo.lock b/server/Cargo.lock
+index 77e1ab8b63..6ea935879e 100644
+--- a/server/Cargo.lock
++++ b/server/Cargo.lock
+@@ -918,9 +918,8 @@ dependencies = [
+ 
+ [[package]]
+ name = "async-graphql"
+-version = "7.0.14"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "e0a9916334e00a14428e03b9b1c73a0baf1c834ebe0ff1be146e1247390b31f1"
++version = "7.0.16"
++source = "git+https://github.com/andreievg/async-graphql.git?rev=6c476d50f0f2132860445b5ed5b3c6dd6e8cec92#6c476d50f0f2132860445b5ed5b3c6dd6e8cec92"
+ dependencies = [
+  "async-graphql-derive",
+  "async-graphql-parser",
+@@ -950,13 +949,13 @@ dependencies = [
+  "static_assertions_next",
+  "tempfile",
+  "thiserror 1.0.69",
++ "tokio",
+ ]
+ 
+ [[package]]
+ name = "async-graphql-actix-web"
+-version = "7.0.14"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "75af23eca6e9be23454eed4a453dab4f173a9800694a74e782872fedaafbd7e0"
++version = "7.0.16"
++source = "git+https://github.com/andreievg/async-graphql.git?rev=6c476d50f0f2132860445b5ed5b3c6dd6e8cec92#6c476d50f0f2132860445b5ed5b3c6dd6e8cec92"
+ dependencies = [
+  "actix",
+  "actix-http",
+@@ -973,9 +972,8 @@ dependencies = [
+ 
+ [[package]]
+ name = "async-graphql-derive"
+-version = "7.0.14"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "88d6f3ad293f7b9974aef6297673ac3e9097824f84264a9548cbb87006c94044"
++version = "7.0.16"
++source = "git+https://github.com/andreievg/async-graphql.git?rev=6c476d50f0f2132860445b5ed5b3c6dd6e8cec92#6c476d50f0f2132860445b5ed5b3c6dd6e8cec92"
+ dependencies = [
+  "Inflector",
+  "async-graphql-parser",
+@@ -990,9 +988,8 @@ dependencies = [
+ 
+ [[package]]
+ name = "async-graphql-parser"
+-version = "7.0.14"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "7ca5697e57fcad289d26948e2ab2f11b9cfe7d645503a1f37fa86640c061c772"
++version = "7.0.16"
++source = "git+https://github.com/andreievg/async-graphql.git?rev=6c476d50f0f2132860445b5ed5b3c6dd6e8cec92#6c476d50f0f2132860445b5ed5b3c6dd6e8cec92"
+ dependencies = [
+  "async-graphql-value",
+  "pest",
+@@ -1002,9 +999,8 @@ dependencies = [
+ 
+ [[package]]
+ name = "async-graphql-value"
+-version = "7.0.14"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "6266ea7ab3ce41585e16caa0e1e8d97de37827227950820fdab6b69d9c09a63a"
++version = "7.0.16"
++source = "git+https://github.com/andreievg/async-graphql.git?rev=6c476d50f0f2132860445b5ed5b3c6dd6e8cec92#6c476d50f0f2132860445b5ed5b3c6dd6e8cec92"
+ dependencies = [
+  "bytes",
+  "indexmap",
+diff --git a/server/Cargo.toml b/server/Cargo.toml
+index 5ec12b5f29..b936ccdac9 100644
+--- a/server/Cargo.toml
++++ b/server/Cargo.toml
+@@ -9,8 +9,8 @@ actix-web = { version = "4.9.0", default-features = false, features = [
+ ] }
+ actix-multipart = "0.7.2"
+ anymap = "0.12.1"
+-async-graphql = { version = "7.0.13", features = ["dataloader", "chrono"] }
+-async-graphql-actix-web = "7.0.13"
++async-graphql = {git = "https://github.com/andreievg/async-graphql.git", rev = "6c476d50f0f2132860445b5ed5b3c6dd6e8cec92", version = "7.0.16", features = ["dataloader", "chrono"] }
++async-graphql-actix-web = {package = "async-graphql-actix-web", git = "https://github.com/andreievg/async-graphql.git",  version = "7.0.16", rev = "6c476d50f0f2132860445b5ed5b3c6dd6e8cec92" }
+ async-trait = "0.1.85"
+ chrono = { version = "0.4.39", features = ["serde"] }
+ clap = { version = "4.5.7", features = ["derive"] }

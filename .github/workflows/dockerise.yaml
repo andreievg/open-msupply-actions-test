@@ -50,6 +50,10 @@ jobs:
         with:
           name: client-dist
           path: client/packages/host/dist
+
+      - name: Apply async-dataloader patch
+        run: |
+          git apply async-dataloader.patch
           
       - name: Build server
         run: docker run --rm --user "$(id -u)":"$(id -g)" -v "$PWD":/usr/src/omsupply -w /usr/src/omsupply/server rust:slim cargo build --release --bin remote_server --bin remote_server_cli
