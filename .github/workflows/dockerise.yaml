@@ -107,7 +107,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: dev-client
-          path: client.tar.gz
+          path: .
     
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
