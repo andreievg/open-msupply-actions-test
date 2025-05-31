@@ -6,10 +6,10 @@ on:
    - 'v*'
 
 jobs:
-  dockerise:
-    name: Dockerise
+  build-client:
+    name: Build Client
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,18 +24,91 @@ jobs:
           node-version: "${{ steps.nvm.outputs.NVMRC }}"
 
       - name: Install dependencies
-        run: cd ./client && yarn install --frozen-lockfile
+        run: cd ./client && rm -rf node_modules && yarn install --frozen-lockfile
 
       - name: Build client
         run: NODE_OPTIONS="--max_old_space_size=4096" cd ./client && yarn build
 
+      - name: Save artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-dist
+          path: client/packages/host/dist
+          retention-days: 1
+
+  build-dev-client:
+    name: Build Dev Client
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build dev client
+        run: docker run --rm --user "$(id -u)":"$(id -g)" -v "$PWD":/usr/src/omsupply -w /usr/src/omsupply/client --entrypoint="/bin/bash" msupplyfoundation/omsupply:v2.7.3-dev -c yarn
+          
+      - name: Zip client folder
+        run: tar -czf client.tar.gz client
+
+      - name: Save artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dev-client
+          path: client.tar.gz
+          retention-days: 1
+
+  build-server:
+    name: Dockerise
+    needs: build-client
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load client artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: client-dist
+          path: client/packages/host/dist
+
       - name: Apply async-dataloader patch
         run: |
-          git apply async-dataloader.patch
+          git apply docker/async-dataloader.patch
           
       - name: Build server
         run: docker run --rm --user "$(id -u)":"$(id -g)" -v "$PWD":/usr/src/omsupply -w /usr/src/omsupply/server rust:slim cargo build --release --bin remote_server --bin remote_server_cli
-          
+
+      - name: Save artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-executables
+          path: | 
+            server/target/release/remote_server
+            server/target/release/remote_server_cli
+          retention-days: 1
+
+  dockerise:
+    name: Dockerise
+    needs: [build-server, build-dev-client]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load server artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: server-executables
+          path: server/target/release/
+
+      - name: Load dev client artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dev-client
+          path: client.tar.gz
+    
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -48,9 +121,6 @@ jobs:
       - name: Extract Version from Tag
         id: tag
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-
-      - name: Zip client folder
-        run: tar -czf client.tar.gz client
 
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5

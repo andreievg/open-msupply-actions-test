@@ -52,6 +52,7 @@ RUN apt-get install -y curl
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
 RUN apt-get install -y nodejs
 RUN npm install -g yarn
+RUN apt-get install -y pv
 # Needs this for compilation 
 RUN echo 'export NODE_OPTIONS="--max-old-space-size=4096"' >> ~/.bashrc
 # Copy client
@@ -59,3 +60,7 @@ WORKDIR /usr/src/omsupply
 COPY client.tar.gz .
 COPY docker/extract.sh .
 COPY package.json .
+
+RUN chmod +x extract.sh
+
+EXPOSE 3003
