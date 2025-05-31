@@ -57,6 +57,9 @@ jobs:
           tags: |
             msupplyfoundation/omsupply:${{ env.VERSION }}
 
+      - name: Zip client folder
+        run: tar -czf client.tar.gz client
+
       - name: Build and Push Docker Image Dev
         uses: docker/build-push-action@v5
         with:

@@ -46,4 +46,16 @@ FROM base
 
 # This is a dev build that will include client folder ready for development
 FROM base as dev
-COPY client/ /usr/src/omsupply/client
+# Install tools
+RUN apt-get install -y curl
+# npm
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+RUN apt-get install -y nodejs
+RUN npm install -g yarn
+# Needs this for compilation 
+RUN echo 'export NODE_OPTIONS="--max-old-space-size=4096"' >> ~/.bashrc
+# Copy client
+WORKDIR /usr/src/omsupply
+COPY client.tar.gz .
+COPY docker/extract.sh .
+COPY package.json .
