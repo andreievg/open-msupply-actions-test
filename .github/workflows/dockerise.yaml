@@ -49,6 +49,9 @@ jobs:
         id: tag
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
+      - name: Zip client folder
+        run: tar -czf client.tar.gz client
+
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
@@ -56,9 +59,6 @@ jobs:
           push: true
           tags: |
             msupplyfoundation/omsupply:${{ env.VERSION }}
-
-      - name: Zip client folder
-        run: tar -czf client.tar.gz client
 
       - name: Build and Push Docker Image Dev
         uses: docker/build-push-action@v5
