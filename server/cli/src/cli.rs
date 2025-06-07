@@ -46,8 +46,8 @@ mod backup;
 use backup::*;
 
 use cli::{
-    generate_and_install_plugin_bundle, generate_plugin_bundle, generate_report_data,
-    generate_reports_recursive, generate_typescript_types, install_plugin_bundle,
+    generate_and_install_plugin_bundle, generate_plugin_bundle, generate_plugin_typescript_types,
+    generate_report_data, generate_reports_recursive, install_plugin_bundle,
     GenerateAndInstallPluginBundle, GeneratePluginBundle, InstallPluginBundle,
     RefreshDatesRepository, ReportError,
 };
@@ -68,7 +68,10 @@ struct Args {
 #[derive(clap::Subcommand)]
 enum Action {
     /// Export graphql schema
-    ExportGraphqlSchema,
+    ExportGraphqlSchema {
+        #[clap(short, long)]
+        path: Option<PathBuf>,
+    },
     /// Initialise empty database (existing database will be dropped, and new one created and migrated)
     InitialiseDatabase,
     /// Initialise from running mSupply server (uses configuration/.*yaml for sync credentials), drops existing database, creates new database with latest schema and initialises (syncs) initial data from central server (including users)
@@ -208,8 +211,18 @@ enum Action {
         #[clap(short, long, action = ArgAction::SetTrue, conflicts_with="enable")]
         disable: bool,
     },
-    /// Generate TypeScript Types for backend plugins and format with Prettier
-    GenerateTypeScriptTypes,
+    GeneratePluginTypescriptTypes {
+        /// Optional path to save typescript types, if not provided will save to `../client/packages/plugins/backendCommon/generated`
+        #[clap(
+            short,
+            long,
+            default_value = "../client/packages/plugins/backendCommon/generated"
+        )]
+        path: PathBuf,
+        /// Run prettier on the generated typescript files
+        #[clap(long, default_value = "true")]
+        prettify: bool,
+    },
 }
 
 #[derive(Serialize, Deserialize)]
@@ -290,12 +303,15 @@ async fn main() -> anyhow::Result<()> {
         configuration::get_configuration(args.config_args).expect("Problem loading configurations");
 
     match args.action {
-        Action::ExportGraphqlSchema => {
+        Action::ExportGraphqlSchema { path } => {
             info!("Exporting graphql schema");
             let schema =
                 OperationalSchema::build(Queries::new(), Mutations::new(), EmptySubscription)
                     .finish();
-            fs::write("schema.graphql", schema.sdl())?;
+            fs::write(
+                path.unwrap_or(PathBuf::from("schema.graphql")),
+                schema.sdl(),
+            )?;
             info!("Schema exported in schema.graphql");
         }
         Action::InitialiseDatabase => {
@@ -697,8 +713,8 @@ async fn main() -> anyhow::Result<()> {
                 );
             }
         }
-        Action::GenerateTypeScriptTypes => {
-            generate_typescript_types()?;
+        Action::GeneratePluginTypescriptTypes { path, prettify } => {
+            generate_plugin_typescript_types(path, prettify)?;
         }
     }
 
