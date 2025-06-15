@@ -2406,6 +2406,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "dashboard_ai"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "reqwest",
+ "rust-embed",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "dashmap"
 version = "6.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3693,6 +3705,7 @@ dependencies = [
  "async-graphql-actix-web",
  "async-trait",
  "chrono",
+ "dashboard_ai",
  "graphql_asset",
  "graphql_asset_catalogue",
  "graphql_batch_mutations",
@@ -3929,6 +3942,7 @@ dependencies = [
  "async-graphql-actix-web",
  "async-trait",
  "chrono",
+ "dashboard_ai",
  "graphql_core",
  "graphql_types",
  "http 1.1.0",

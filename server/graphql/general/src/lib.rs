@@ -6,10 +6,11 @@ pub mod types;
 
 pub use self::queries::sync_status::*;
 use self::queries::*;
+use dashboard_ai::create_dashboard::run_gemini_dashboard_generation;
 
 use abbreviation::abbreviations;
 use diagnosis::diagnoses_active;
-use graphql_core::pagination::PaginationInput;
+use graphql_core::{pagination::PaginationInput, standard_graphql_error::StandardGraphqlError};
 use service::sync::CentralServerConfig;
 
 use crate::store_preference::store_preferences;
@@ -483,6 +484,18 @@ pub struct GeneralMutations;
 
 #[Object]
 impl GeneralMutations {
+    pub async fn generate_grafana_dashboard(
+        &self,
+        prompt: String,
+        dashboard_name: String,
+    ) -> Result<String> {
+        run_gemini_dashboard_generation(&prompt, &dashboard_name)
+            .await
+            .map_err(|e| StandardGraphqlError::from_debug(e))?;
+
+        Ok("All done".to_string())
+    }
+
     pub async fn update_sync_settings(
         &self,
         ctx: &Context<'_>,

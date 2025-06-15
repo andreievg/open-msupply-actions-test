@@ -1,0 +1,1858 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": "-- Grafana --",
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "target": {
+                    "limit": 100,
+                    "matchAny": false,
+                    "tags": [],
+                    "type": "dashboard"
+                },
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 103,
+    "iteration": 1749953888420,
+    "links": [
+        {
+            "asDropdown": false,
+            "icon": "external link",
+            "includeVars": true,
+            "tags": [
+                "report-card"
+            ],
+            "type": "dashboards"
+        }
+    ],
+    "liveNow": false,
+    "panels": [
+        {
+            "gridPos": {
+                "h": 6,
+                "w": 2,
+                "x": 0,
+                "y": 0
+            },
+            "id": 56,
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "L8U5hXYHk"
+                    },
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  updated_date AS \"time\",\n  value\nFROM d_msupply_monthly_usage\nWHERE\n  $__timeFilter(updated_date)\nORDER BY 1",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "table": "d_msupply_monthly_usage",
+                    "timeColumn": "updated_date",
+                    "timeColumnType": "timestamp",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "text"
+        },
+        {
+            "gridPos": {
+                "h": 6,
+                "w": 14,
+                "x": 2,
+                "y": 0
+            },
+            "id": 24,
+            "options": {
+                "content": "# Health Supply Chain Performance Report Card\n## New Zealand - National report\n## ${month_name} - ${year}\n         ",
+                "mode": "markdown"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  $__time(time_column),\n  value1\nFROM\n  metric_table\nWHERE\n  $__timeFilter(time_column)\n",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "text"
+        },
+        {
+            "gridPos": {
+                "h": 6,
+                "w": 8,
+                "x": 16,
+                "y": 0
+            },
+            "id": 58,
+            "options": {
+                "folderId": 102,
+                "maxItems": 10,
+                "query": "",
+                "showHeadings": false,
+                "showRecentlyViewed": false,
+                "showSearch": true,
+                "showStarred": false,
+                "tags": [
+                    "dashboard-list"
+                ]
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "L8U5hXYHk"
+                    },
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  updated_date AS \"time\",\n  value\nFROM d_msupply_monthly_usage\nWHERE\n  $__timeFilter(updated_date)\nORDER BY 1",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "table": "d_msupply_monthly_usage",
+                    "timeColumn": "updated_date",
+                    "timeColumnType": "timestamp",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "title": "Dashboards index",
+            "type": "dashlist"
+        },
+        {
+            "description": "This score is out of 10 possible points (average of all facility scores)",
+            "gridPos": {
+                "h": 3,
+                "w": 5,
+                "x": 0,
+                "y": 6
+            },
+            "id": 61,
+            "options": {
+                "content": "<h2 style=\"color: #FFFFFF; background-color: #445c94; font-size: 26px; text-align: center;\">\n<br>\nNational performance\n<br>\n<br>",
+                "mode": "html"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "L8U5hXYHk"
+                    },
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  updated_date AS \"time\",\n  value\nFROM d_msupply_monthly_usage\nWHERE\n  $__timeFilter(updated_date)\nORDER BY 1",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "table": "d_msupply_monthly_usage",
+                    "timeColumn": "updated_date",
+                    "timeColumnType": "timestamp",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "text"
+        },
+        {
+            "description": "This score is out of 10 possible points",
+            "gridPos": {
+                "h": 3,
+                "w": 19,
+                "x": 5,
+                "y": 6
+            },
+            "id": 60,
+            "options": {
+                "content": "<h2 style=\"color: #FFFFFF; background-color: #445c94; font-size: 26px; text-align: center;\">\n<br>\nPerformance summary by facility\n<br>\n<br>",
+                "mode": "html"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "L8U5hXYHk"
+                    },
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  updated_date AS \"time\",\n  value\nFROM d_msupply_monthly_usage\nWHERE\n  $__timeFilter(updated_date)\nORDER BY 1",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "table": "d_msupply_monthly_usage",
+                    "timeColumn": "updated_date",
+                    "timeColumnType": "timestamp",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "text"
+        },
+        {
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "decimals": 0,
+                    "displayName": "",
+                    "mappings": [],
+                    "max": 10,
+                    "min": 0,
+                    "noValue": "NO DATA",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "red",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 5
+                            },
+                            {
+                                "color": "green",
+                                "value": 9
+                            }
+                        ]
+                    },
+                    "unit": "none"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 6,
+                "w": 5,
+                "x": 0,
+                "y": 9
+            },
+            "id": 9,
+            "links": [],
+            "options": {
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true,
+                "text": {}
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "L8U5hXYHk"
+                    },
+                    "format": "table",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": true,
+                    "rawSql": "SELECT SUM(score) / ${countFacility}\nFROM d_msupply_monthly_usage usage\nJOIN store s ON usage.store_id = s.id \nWHERE CONCAT('${year}','${month}') = yearmonth \nAND CASE WHEN name ILIKE '%warehouse%' THEN index <> 7 ELSE index <> 6 END\nAND tags NOT LIKE '%dashboard_exclude%'",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "transformations": [],
+            "type": "gauge"
+        },
+        {
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [],
+                    "max": 10,
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "red",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 5
+                            },
+                            {
+                                "color": "green",
+                                "value": 9
+                            }
+                        ]
+                    },
+                    "unit": "none"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 9,
+                "w": 19,
+                "x": 5,
+                "y": 9
+            },
+            "id": 39,
+            "options": {
+                "displayMode": "basic",
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": true
+                },
+                "showUnfilled": true,
+                "text": {}
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "L8U5hXYHk"
+                    },
+                    "format": "table",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": true,
+                    "rawSql": "WITH summary AS(\n  SELECT s.name AS store_name, SUM(score) AS score FROM d_msupply_monthly_usage usage\n  JOIN store s ON usage.store_id = s.id \n  WHERE CONCAT('${year}','${month}') = yearmonth \n  AND CASE WHEN name ILIKE '%warehouse%' THEN index <> 7 ELSE index <> 6 END \n  AND tags NOT LIKE '%dashboard_exclude%'\n  GROUP BY s.name, s.store_mode \n)\nSELECT * FROM summary \nORDER BY score ${sorting}, store_name ASC",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            },
+                            {
+                                "params": [
+                                    "avg"
+                                ],
+                                "type": "aggregate"
+                            },
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "alias"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "transformations": [],
+            "type": "bargauge"
+        },
+        {
+            "description": "Excellent: 9-10 points\n<br>\nAverage: 5-8 points\n<br>\nNeeds improvement: 0-4 points",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "displayName": "",
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "unit": "locale"
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "metric"
+                        },
+                        "properties": [
+                            {
+                                "id": "unit",
+                                "value": "none"
+                            },
+                            {
+                                "id": "thresholds",
+                                "value": {
+                                    "mode": "absolute",
+                                    "steps": [
+                                        {
+                                            "color": "red",
+                                            "value": null
+                                        },
+                                        {
+                                            "color": "orange",
+                                            "value": 2
+                                        },
+                                        {
+                                            "color": "green",
+                                            "value": 3
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "id": "mappings",
+                                "value": [
+                                    {
+                                        "options": {
+                                            "0": {
+                                                "index": 3,
+                                                "text": "NO DATA"
+                                            },
+                                            "1": {
+                                                "index": 2,
+                                                "text": "Needs improvement"
+                                            },
+                                            "2": {
+                                                "index": 1,
+                                                "text": "Average"
+                                            },
+                                            "3": {
+                                                "index": 0,
+                                                "text": "Excellent"
+                                            }
+                                        },
+                                        "type": "value"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 3,
+                "w": 5,
+                "x": 0,
+                "y": 15
+            },
+            "id": 18,
+            "links": [],
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "/^metric$/",
+                    "values": true
+                },
+                "text": {
+                    "valueSize": 36
+                },
+                "textMode": "value"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "L8U5hXYHk"
+                    },
+                    "format": "table",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": true,
+                    "rawSql": "WITH scoring_criteria AS(\n  SELECT \n  9 AS excellent,\n  5 AS average\n), score AS(\n  SELECT score FROM d_msupply_monthly_usage usage\n  JOIN store s ON usage.store_id = s.id \n  WHERE CONCAT('${year}','${month}') = yearmonth \n  AND CASE WHEN name ILIKE '%warehouse%' THEN index <> 7 ELSE index <> 6 END\n)\nSELECT \n  CASE WHEN SUM(score) IS NULL THEN 0 -- No data\n    WHEN SUM(coalesce(score,0))/ ${countFacility} >= MAX(excellent) THEN 3 --'Excellent' \n    WHEN SUM(coalesce(score,0)) / ${countFacility} >= MAX(average) THEN 2 --'Average' \n    ELSE 1 END AS metric,-- 'Needs improvement'\n  SUM(coalesce(score,0)) AS score \nFROM scoring_criteria, score ",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "transformations": [],
+            "type": "stat"
+        },
+        {
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 18
+            },
+            "id": 63,
+            "options": {
+                "content": "",
+                "mode": "markdown"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "L8U5hXYHk"
+                    },
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  updated_date AS \"time\",\n  value\nFROM d_msupply_monthly_usage\nWHERE\n  $__timeFilter(updated_date)\nORDER BY 1",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "table": "d_msupply_monthly_usage",
+                    "timeColumn": "updated_date",
+                    "timeColumnType": "timestamp",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "transparent": true,
+            "type": "text"
+        },
+        {
+            "description": "Key performance indicators for all facilities",
+            "gridPos": {
+                "h": 3,
+                "w": 24,
+                "x": 0,
+                "y": 19
+            },
+            "id": 64,
+            "options": {
+                "content": "<h2 style=\"color: #FFFFFF; background-color: #445c94; font-size: 26px; text-align: center;\">\n<br>\nSnapshot of key performance indicators\n<br>\n<br>",
+                "mode": "html"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "L8U5hXYHk"
+                    },
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  updated_date AS \"time\",\n  value\nFROM d_msupply_monthly_usage\nWHERE\n  $__timeFilter(updated_date)\nORDER BY 1",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "table": "d_msupply_monthly_usage",
+                    "timeColumn": "updated_date",
+                    "timeColumnType": "timestamp",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "text"
+        },
+        {
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "right",
+                        "displayMode": "auto",
+                        "filterable": true
+                    },
+                    "decimals": 1,
+                    "mappings": [],
+                    "noValue": "N/A",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "unit": "locale"
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Days since last transaction"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.displayMode",
+                                "value": "color-background"
+                            },
+                            {
+                                "id": "custom.align",
+                                "value": "right"
+                            },
+                            {
+                                "id": "thresholds",
+                                "value": {
+                                    "mode": "absolute",
+                                    "steps": [
+                                        {
+                                            "color": "green",
+                                            "value": null
+                                        },
+                                        {
+                                            "color": "orange",
+                                            "value": 8
+                                        },
+                                        {
+                                            "color": "red",
+                                            "value": 15
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "id": "max",
+                                "value": 31
+                            },
+                            {
+                                "id": "custom.width",
+                                "value": 180
+                            },
+                            {
+                                "id": "displayName",
+                                "value": "Last transaction (days)"
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Internal orders placed in past 90 days"
+                        },
+                        "properties": [
+                            {
+                                "id": "unit",
+                                "value": "locale"
+                            },
+                            {
+                                "id": "custom.displayMode",
+                                "value": "color-background"
+                            },
+                            {
+                                "id": "custom.align",
+                                "value": "right"
+                            },
+                            {
+                                "id": "thresholds",
+                                "value": {
+                                    "mode": "absolute",
+                                    "steps": [
+                                        {
+                                            "color": "#67676a",
+                                            "value": null
+                                        },
+                                        {
+                                            "color": "red",
+                                            "value": 0
+                                        },
+                                        {
+                                            "color": "green",
+                                            "value": 1
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "id": "displayName",
+                                "value": "Internal orders (past 90 days)"
+                            },
+                            {
+                                "id": "custom.width",
+                                "value": 218
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Outstanding Supplier invoices"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.align",
+                                "value": "right"
+                            },
+                            {
+                                "id": "color"
+                            },
+                            {
+                                "id": "thresholds",
+                                "value": {
+                                    "mode": "absolute",
+                                    "steps": [
+                                        {
+                                            "color": "green",
+                                            "value": null
+                                        },
+                                        {
+                                            "color": "orange",
+                                            "value": 3
+                                        },
+                                        {
+                                            "color": "red",
+                                            "value": 6
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "id": "custom.displayMode",
+                                "value": "color-background"
+                            },
+                            {
+                                "id": "custom.width",
+                                "value": 200
+                            },
+                            {
+                                "id": "displayName",
+                                "value": "Supplier invoices pending"
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Days since stocktake"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 180
+                            },
+                            {
+                                "id": "color"
+                            },
+                            {
+                                "id": "thresholds",
+                                "value": {
+                                    "mode": "absolute",
+                                    "steps": [
+                                        {
+                                            "color": "green",
+                                            "value": null
+                                        },
+                                        {
+                                            "color": "red",
+                                            "value": 31
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "id": "custom.displayMode",
+                                "value": "color-background"
+                            },
+                            {
+                                "id": "displayName",
+                                "value": "Last stocktake (days)"
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "% of items out of stock"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 180
+                            },
+                            {
+                                "id": "custom.displayMode",
+                                "value": "color-background"
+                            },
+                            {
+                                "id": "color"
+                            },
+                            {
+                                "id": "thresholds",
+                                "value": {
+                                    "mode": "absolute",
+                                    "steps": [
+                                        {
+                                            "color": "green",
+                                            "value": null
+                                        },
+                                        {
+                                            "color": "orange",
+                                            "value": 11
+                                        },
+                                        {
+                                            "color": "red",
+                                            "value": 21
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "id": "unit",
+                                "value": "percent"
+                            },
+                            {
+                                "id": "decimals",
+                                "value": 0
+                            },
+                            {
+                                "id": "displayName",
+                                "value": "Items out of stock"
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Facility name"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 250
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Pending customer invoices"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.displayMode",
+                                "value": "color-background"
+                            },
+                            {
+                                "id": "thresholds",
+                                "value": {
+                                    "mode": "absolute",
+                                    "steps": [
+                                        {
+                                            "color": "green",
+                                            "value": null
+                                        },
+                                        {
+                                            "color": "orange",
+                                            "value": 11
+                                        },
+                                        {
+                                            "color": "red",
+                                            "value": 21
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "id": "custom.width",
+                                "value": 205
+                            },
+                            {
+                                "id": "displayName",
+                                "value": "Customer invoices pending"
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Pending purchase orders"
+                        },
+                        "properties": [
+                            {
+                                "id": "color"
+                            },
+                            {
+                                "id": "custom.displayMode",
+                                "value": "color-background"
+                            },
+                            {
+                                "id": "thresholds",
+                                "value": {
+                                    "mode": "absolute",
+                                    "steps": [
+                                        {
+                                            "color": "#67676a",
+                                            "value": null
+                                        },
+                                        {
+                                            "color": "green",
+                                            "value": 0
+                                        },
+                                        {
+                                            "color": "orange",
+                                            "value": 1
+                                        },
+                                        {
+                                            "color": "red",
+                                            "value": 11
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "id": "custom.width",
+                                "value": 200
+                            },
+                            {
+                                "id": "displayName",
+                                "value": "Purchase orders pending"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 11,
+                "w": 22,
+                "x": 0,
+                "y": 22
+            },
+            "id": 45,
+            "links": [],
+            "options": {
+                "footer": {
+                    "fields": "",
+                    "reducer": [
+                        "sum"
+                    ],
+                    "show": false
+                },
+                "showHeader": true,
+                "sortBy": [
+                    {
+                        "desc": true,
+                        "displayName": "Supplier invoices pending"
+                    }
+                ]
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "L8U5hXYHk"
+                    },
+                    "format": "table",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": true,
+                    "rawSql": "WITH usage_list AS(\n  SELECT s.name, usage.* FROM d_msupply_monthly_usage usage\n  JOIN store s ON usage.store_id = s.id \n  WHERE CONCAT('${year}','${month}') = yearmonth \n  AND CASE WHEN name ILIKE '%warehouse%' THEN index <> 7 ELSE index <> 6 END\n  AND tags NOT LIKE '%dashboard_exclude%'\n), kpi AS(\nSELECT \n    store.code,\n    sync_id_remote_site,\n    store.name,\n    SUM(score) AS score,\n    SUM(CASE  WHEN index = 1 THEN value ELSE 0 END) AS \"% of items out of stock\",\n    SUM(CASE  WHEN index = 2 THEN value ELSE 0 END) AS \"Days since last transaction\",\n    SUM(CASE  WHEN index = 3 THEN value ELSE 0 END) AS \"Days since stocktake\",\n    SUM(CASE  WHEN index = 4 THEN value ELSE 0 END) AS \"Pending customer invoices\",\n    SUM(CASE  WHEN index = 5 THEN value ELSE 0 END) AS \"Outstanding Supplier invoices\",\n    SUM(CASE  WHEN index = 6 THEN value ELSE null END) AS \"Pending purchase orders\",\n    SUM(CASE  WHEN index = 7 THEN value ELSE null END) AS \"Internal orders placed in past 90 days\"\nFROM usage_list AS usage_list \nJOIN store ON usage_list.store_id = store.id \nGROUP BY store.name, store.code, sync_id_remote_site\n)\n\nSELECT \n  kpi.name AS \"Facility name\",\n  -- CASE WHEN app_name = null THEN null WHEN app_name  LIKE 'mSupply%' THEN app_name ELSE INITCAP(app_name) END AS \"mSupply type\",\n  score AS \"Performance score\",\n  \"% of items out of stock\",\n  \"Days since last transaction\",\n  \"Days since stocktake\",\n  \"Pending customer invoices\",\n  \"Outstanding Supplier invoices\",\n  \"Pending purchase orders\",\n  \"Internal orders placed in past 90 days\"\nFROM kpi \nJOIN store_categories sc ON kpi.code = sc.code \nLEFT JOIN site ON kpi.sync_id_remote_site = site.site_id\nORDER BY score ${sorting}, kpi.name ASC",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "title": " ",
+            "transformations": [
+                {
+                    "id": "merge",
+                    "options": {
+                        "reducers": []
+                    }
+                }
+            ],
+            "type": "table"
+        },
+        {
+            "gridPos": {
+                "h": 11,
+                "w": 2,
+                "x": 22,
+                "y": 22
+            },
+            "id": 49,
+            "options": {
+                "content": "<br>\n<br>\n<br>\n<p></p>\n<table>\n  <tr>\n    <td style=\"background-color:rgb(115 191 105)\"> </td>\n    <td>Excellent</td>\n  </tr>\n    <tr>\n    <td style=\"background-color:orange\"> </td>\n    <td>Average</td>\n  </tr>\n    <tr>\n    <td style=\"background-color:rgb(242 73 92)\"> </td>\n    <td>Needs<br>improvement</td>\n  </tr>\n</table>",
+                "mode": "html"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  $__time(time_column),\n  value1\nFROM\n  metric_table\nWHERE\n  $__timeFilter(time_column)\n",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "text"
+        },
+        {
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 33
+            },
+            "id": 65,
+            "options": {
+                "content": "",
+                "mode": "markdown"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "L8U5hXYHk"
+                    },
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  updated_date AS \"time\",\n  value\nFROM d_msupply_monthly_usage\nWHERE\n  $__timeFilter(updated_date)\nORDER BY 1",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "table": "d_msupply_monthly_usage",
+                    "timeColumn": "updated_date",
+                    "timeColumnType": "timestamp",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "transparent": true,
+            "type": "text"
+        },
+        {
+            "description": "Days since last sync: days since a remote site synced to the central server",
+            "gridPos": {
+                "h": 3,
+                "w": 24,
+                "x": 0,
+                "y": 34
+            },
+            "id": 70,
+            "options": {
+                "content": "<h2 style=\"color: #FFFFFF; background-color: #445c94; font-size: 26px; text-align: center;\">\n<br>\nTechnical statistics\n<br>\n<br>",
+                "mode": "html"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "L8U5hXYHk"
+                    },
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  updated_date AS \"time\",\n  value\nFROM d_msupply_monthly_usage\nWHERE\n  $__timeFilter(updated_date)\nORDER BY 1",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "table": "d_msupply_monthly_usage",
+                    "timeColumn": "updated_date",
+                    "timeColumnType": "timestamp",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "text"
+        },
+        {
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "right",
+                        "displayMode": "auto",
+                        "filterable": true
+                    },
+                    "mappings": [],
+                    "noValue": "N/A",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "unit": "locale"
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Days sice last SYNC"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.align",
+                                "value": "right"
+                            },
+                            {
+                                "id": "color"
+                            },
+                            {
+                                "id": "thresholds",
+                                "value": {
+                                    "mode": "absolute",
+                                    "steps": [
+                                        {
+                                            "color": "green",
+                                            "value": null
+                                        },
+                                        {
+                                            "color": "orange",
+                                            "value": 6
+                                        },
+                                        {
+                                            "color": "red",
+                                            "value": 11
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "id": "custom.displayMode",
+                                "value": "color-background"
+                            },
+                            {
+                                "id": "custom.width",
+                                "value": 213
+                            },
+                            {
+                                "id": "unit",
+                                "value": "none"
+                            },
+                            {
+                                "id": "displayName",
+                                "value": "Days since last sync"
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Last sync date"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 152
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "% of items out of stock"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 162
+                            },
+                            {
+                                "id": "custom.displayMode",
+                                "value": "color-background"
+                            },
+                            {
+                                "id": "color"
+                            },
+                            {
+                                "id": "thresholds",
+                                "value": {
+                                    "mode": "absolute",
+                                    "steps": [
+                                        {
+                                            "color": "green",
+                                            "value": null
+                                        },
+                                        {
+                                            "color": "orange",
+                                            "value": 11
+                                        },
+                                        {
+                                            "color": "red",
+                                            "value": 21
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "id": "unit",
+                                "value": "percent"
+                            },
+                            {
+                                "id": "decimals",
+                                "value": 0
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Facility name"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 355
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Pending customer invoices"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.displayMode",
+                                "value": "color-background"
+                            },
+                            {
+                                "id": "thresholds",
+                                "value": {
+                                    "mode": "absolute",
+                                    "steps": [
+                                        {
+                                            "color": "green",
+                                            "value": null
+                                        },
+                                        {
+                                            "color": "orange",
+                                            "value": 11
+                                        },
+                                        {
+                                            "color": "red",
+                                            "value": 21
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "id": "custom.width",
+                                "value": 194
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Pending purchase orders"
+                        },
+                        "properties": [
+                            {
+                                "id": "color"
+                            },
+                            {
+                                "id": "custom.displayMode",
+                                "value": "color-background"
+                            },
+                            {
+                                "id": "thresholds",
+                                "value": {
+                                    "mode": "absolute",
+                                    "steps": [
+                                        {
+                                            "color": "#67676a",
+                                            "value": null
+                                        },
+                                        {
+                                            "color": "green",
+                                            "value": 0
+                                        },
+                                        {
+                                            "color": "orange",
+                                            "value": 1
+                                        },
+                                        {
+                                            "color": "red",
+                                            "value": 11
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "id": "custom.width",
+                                "value": 175
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Store name"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 311
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 10,
+                "w": 24,
+                "x": 0,
+                "y": 37
+            },
+            "id": 52,
+            "links": [],
+            "options": {
+                "footer": {
+                    "fields": "",
+                    "reducer": [
+                        "sum"
+                    ],
+                    "show": false
+                },
+                "showHeader": true,
+                "sortBy": [
+                    {
+                        "desc": true,
+                        "displayName": "Days sice last SYNC"
+                    }
+                ]
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "L8U5hXYHk"
+                    },
+                    "format": "table",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": true,
+                    "rawSql": "SELECT \n  s.name AS \"Store name\",\n  (sl.end_date::date - sl.last_sync_date::date) AS \"Days sice last SYNC\",\n  TO_CHAR(sl.last_sync_date, 'DD/MM/YYYY') AS \"Last sync date\",\n  CASE st.app_name  WHEN 'standalone' THEN 'Desktop' WHEN 'mobile' THEN 'Mobile' ELSE st.app_name END AS \"Site type\",\n  st.app_version::TEXT AS \"Version\",\n  st.site_id AS \"Site ID\"\nFROM site st \nJOIN store s ON st.site_id = s.sync_id_remote_site AND store_mode IN ('store','dispensary') AND s.disabled = false AND tags NOT LIKE '%dashboard_exclude%'\nLEFT JOIN (\n  SELECT \n    site_id, \n    CASE WHEN '${month_name}' = 'This month so far' THEN current_date - interval '1 day'\n    ELSE CONCAT('${year}','${month}','01')::date + interval '1 month' + '- 1 day' END AS end_date, \n    MAX(date) AS last_sync_date \n  FROM site_log \n  WHERE date <= CASE WHEN '${month_name}' = 'This month so far' THEN current_date - interval '1 day'\n  ELSE CONCAT('${year}','${month}','01')::date + interval '1 month' + '- 1 day' END\n  GROUP BY site_id\n)sl ON st.site_id = sl.site_id \nORDER BY s.name ASC",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "title": " ",
+            "transformations": [
+                {
+                    "id": "merge",
+                    "options": {
+                        "reducers": []
+                    }
+                }
+            ],
+            "type": "table"
+        },
+        {
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 2,
+                "w": 17,
+                "x": 3,
+                "y": 47
+            },
+            "id": 54,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "/^concat$/",
+                    "values": false
+                },
+                "textMode": "value"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "L8U5hXYHk"
+                    },
+                    "format": "table",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": true,
+                    "rawSql": "select concat ('Data updated ', TO_CHAR(MAX(updated_date)::timestamptz, 'YYYY-MM-DD HH24:MI'))\nfrom d_msupply_monthly_usage",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "table": "d_msupply_monthly_usage",
+                    "timeColumn": "updated_date",
+                    "timeColumnType": "timestamp",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "transparent": true,
+            "type": "stat"
+        }
+    ],
+    "refresh": "",
+    "schemaVersion": 35,
+    "style": "dark",
+    "tags": [
+        "report-card",
+        "dashboard-list"
+    ],
+    "templating": {
+        "list": [
+            {
+                "current": {
+                    "selected": false,
+                    "text": "2024",
+                    "value": "2024"
+                },
+                "datasource": {
+                    "type": "postgres",
+                    "uid": "L8U5hXYHk"
+                },
+                "definition": "WITH month AS(\n SELECT distinct LEFT(yearmonth, 4) AS mon\n FROM d_msupply_monthly_usage  \n UNION SELECT CASE WHEN MAX(LEFT(yearmonth,4)) <> TO_CHAR(CURRENT_DATE, 'YYYY') THEN TO_CHAR(CURRENT_DATE, 'YYYY') ELSE '' END \n FROM d_msupply_monthly_usage \n -- UNION SELECT '2021'\n) \nSELECT DISTINCT mon FROM month WHERE mon <> ''  \nORDER BY mon DESC",
+                "hide": 0,
+                "includeAll": false,
+                "label": "Year",
+                "multi": false,
+                "name": "year",
+                "options": [],
+                "query": "WITH month AS(\n SELECT distinct LEFT(yearmonth, 4) AS mon\n FROM d_msupply_monthly_usage  \n UNION SELECT CASE WHEN MAX(LEFT(yearmonth,4)) <> TO_CHAR(CURRENT_DATE, 'YYYY') THEN TO_CHAR(CURRENT_DATE, 'YYYY') ELSE '' END \n FROM d_msupply_monthly_usage \n -- UNION SELECT '2021'\n) \nSELECT DISTINCT mon FROM month WHERE mon <> ''  \nORDER BY mon DESC",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "tagValuesQuery": "",
+                "tagsQuery": "",
+                "type": "query",
+                "useTags": false
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "06",
+                    "value": "06"
+                },
+                "datasource": {
+                    "type": "postgres",
+                    "uid": "L8U5hXYHk"
+                },
+                "definition": "SELECT CASE WHEN '${month_name}' = 'This month so far' THEN TO_CHAR(current_date, 'MM')  \n ELSE TO_CHAR(TO_DATE('01 ${month_name} ${year}', 'DD Month YYYY'), 'MM') END ",
+                "hide": 2,
+                "includeAll": false,
+                "label": "Month",
+                "multi": false,
+                "name": "month",
+                "options": [],
+                "query": "SELECT CASE WHEN '${month_name}' = 'This month so far' THEN TO_CHAR(current_date, 'MM')  \n ELSE TO_CHAR(TO_DATE('01 ${month_name} ${year}', 'DD Month YYYY'), 'MM') END ",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "tagValuesQuery": "",
+                "tagsQuery": "",
+                "type": "query",
+                "useTags": false
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "15",
+                    "value": "15"
+                },
+                "datasource": {
+                    "type": "postgres",
+                    "uid": "L8U5hXYHk"
+                },
+                "definition": "SELECT count(id) FROM store \nWHERE store_mode IN ('store', 'dispensary')  AND tags NOT LIKE '%dashboard_exclude%'",
+                "hide": 2,
+                "includeAll": false,
+                "multi": false,
+                "name": "countFacility",
+                "options": [],
+                "query": "SELECT count(id) FROM store \nWHERE store_mode IN ('store', 'dispensary')  AND tags NOT LIKE '%dashboard_exclude%'",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "tagValuesQuery": "",
+                "tagsQuery": "",
+                "type": "query",
+                "useTags": false
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "This month so far",
+                    "value": "This month so far"
+                },
+                "datasource": {
+                    "type": "postgres",
+                    "uid": "L8U5hXYHk"
+                },
+                "definition": "SELECT CASE  WHEN m = current_date THEN 'This month so far' ELSE TO_CHAR(m,'Month') END AS month \nFROM generate_series(current_date - interval '11 months', current_date, '1 month'::interval) m \nORDER BY m DESC",
+                "hide": 0,
+                "includeAll": false,
+                "label": "Month",
+                "multi": false,
+                "name": "month_name",
+                "options": [],
+                "query": "SELECT CASE  WHEN m = current_date THEN 'This month so far' ELSE TO_CHAR(m,'Month') END AS month \nFROM generate_series(current_date - interval '11 months', current_date, '1 month'::interval) m \nORDER BY m DESC",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "type": "query"
+            },
+            {
+                "current": {
+                    "selected": true,
+                    "text": "Descending",
+                    "value": "DESC"
+                },
+                "hide": 0,
+                "includeAll": false,
+                "label": "Sort in order by score",
+                "multi": false,
+                "name": "sorting",
+                "options": [
+                    {
+                        "selected": true,
+                        "text": "Descending",
+                        "value": "DESC"
+                    },
+                    {
+                        "selected": false,
+                        "text": "Ascending",
+                        "value": "ASC"
+                    }
+                ],
+                "query": "Descending : DESC, Ascending : ASC",
+                "queryValue": "",
+                "skipUrlSync": false,
+                "type": "custom"
+            }
+        ]
+    },
+    "time": {
+        "from": "now-1y",
+        "to": "now"
+    },
+    "timepicker": {
+        "hidden": true,
+        "refresh_intervals": [
+            "10s",
+            "30s",
+            "1m",
+            "5m",
+            "15m",
+            "30m",
+            "1h",
+            "2h",
+            "1d"
+        ],
+        "time_options": [
+            "5m",
+            "15m",
+            "1h",
+            "6h",
+            "12h",
+            "24h",
+            "2d",
+            "7d",
+            "30d"
+        ]
+    },
+    "timezone": "browser",
+    "title": "National Report Card",
+    "uid": "EY127sip5",
+    "version": 12,
+    "weekStart": ""
+}

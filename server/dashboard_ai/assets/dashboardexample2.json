@@ -1,0 +1,1123 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": "-- Grafana --",
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "target": {
+                    "limit": 100,
+                    "matchAny": false,
+                    "tags": [],
+                    "type": "dashboard"
+                },
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 107,
+    "iteration": 1749954330824,
+    "links": [
+        {
+            "asDropdown": true,
+            "icon": "external link",
+            "includeVars": false,
+            "keepTime": false,
+            "tags": [
+                "stock-management"
+            ],
+            "targetBlank": false,
+            "title": "Stock Management",
+            "tooltip": "",
+            "type": "dashboards",
+            "url": ""
+        }
+    ],
+    "liveNow": false,
+    "panels": [
+        {
+            "datasource": {
+                "type": "postgres",
+                "uid": "L8U5hXYHk"
+            },
+            "description": "Expired stock, incl. any stock that will expire within the next 3 months",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "currencyUSD"
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byType",
+                            "options": "number"
+                        },
+                        "properties": [
+                            {
+                                "id": "unit",
+                                "value": "short"
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Expiring rate"
+                        },
+                        "properties": [
+                            {
+                                "id": "unit",
+                                "value": "percent"
+                            },
+                            {
+                                "id": "thresholds",
+                                "value": {
+                                    "mode": "percentage",
+                                    "steps": [
+                                        {
+                                            "color": "green",
+                                            "value": null
+                                        },
+                                        {
+                                            "color": "#EAB839",
+                                            "value": 5
+                                        },
+                                        {
+                                            "color": "red",
+                                            "value": 10
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "id": "min",
+                                "value": 0
+                            },
+                            {
+                                "id": "max",
+                                "value": 100
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Price expiring"
+                        },
+                        "properties": [
+                            {
+                                "id": "displayName",
+                                "value": "Expiring stock"
+                            },
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "red",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Price total"
+                        },
+                        "properties": [
+                            {
+                                "id": "displayName",
+                                "value": "Total stock"
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Expiring rate"
+                        },
+                        "properties": [
+                            {
+                                "id": "displayName",
+                                "value": "Percent expiring"
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Price total"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "green",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 13,
+                "w": 4,
+                "x": 0,
+                "y": 0
+            },
+            "id": 11,
+            "options": {
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "showThresholdLabels": false,
+                "showThresholdMarkers": true
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "L8U5hXYHk"
+                    },
+                    "format": "table",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": true,
+                    "rawSql": "WITH expiry as(\nSELECT \n    item.code, \n    item.item_name as \"item_name\", \n    item_line.pack_size as \"pack\",\n    item_line.cost_price,\n    CASE WHEN expiry_date <= (now() + interval '${monthsUpto} months') THEN SUM(item_line.available * item_line.cost_price) ELSE 0 END AS \"expiring_value\",\n    CASE WHEN expiry_date is null or expiry_date > now() + interval '${monthsUpto} months' THEN SUM(item_line.available * item_line.cost_price) ELSE 0 END AS \"normal_value\"\n    FROM item\n    JOIN item_line ON item_line.item_ID = item.ID\n    JOIN store ON item_line.store_ID = store.ID\n    WHERE store.name IN (${store:sqlstring}) \n    AND item_name IN (${item_name:sqlstring}) \n    AND available > 0 \n    GROUP BY 1,2,3,4,expiry_date\n)\n\nSELECT\n  sum(expiring_value) as \"Price expiring\", \n  sum(normal_value + expiring_value) as \"Price total\",\n  sum(expiring_value)/ sum(normal_value + expiring_value + 0.01) * 100 as \"Expiring rate\"\nFROM expiry\n",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "table": "d_msupply_monthly_usage",
+                    "timeColumn": "updated_date",
+                    "timeColumnType": "timestamp",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "title": "Value of Expiring Stock",
+            "type": "gauge"
+        },
+        {
+            "description": "Stock statistics",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "auto",
+                        "displayMode": "auto",
+                        "filterable": true
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "red",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 3
+                            },
+                            {
+                                "color": "green",
+                                "value": 9
+                            },
+                            {
+                                "color": "purple",
+                                "value": 15
+                            }
+                        ]
+                    },
+                    "unit": "short"
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "MOS"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.displayMode",
+                                "value": "color-background"
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Pref.pack"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 89
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Item"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 203
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "On order"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 134
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 13,
+                "w": 20,
+                "x": 4,
+                "y": 0
+            },
+            "id": 13,
+            "options": {
+                "footer": {
+                    "fields": "",
+                    "reducer": [
+                        "sum"
+                    ],
+                    "show": false
+                },
+                "showHeader": true,
+                "sortBy": []
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "L8U5hXYHk"
+                    },
+                    "format": "table",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": true,
+                    "rawSql": "WITH stock_on_hand AS\n(\n\tSELECT store.id as store_id, item.id as item_id, item.code, item.default_pack_size, store.name as store_name, item.item_name, \n\t\tSUM(stock_on_hand_tot) as stock_on_hand, string_agg( case when stock_on_hand_tot > 0 then expiry_date::text else null end, ',' ORDER BY expiry_date ASC) as expiry\n\tFROM\n\tstore JOIN item_store_join ON store.id = item_store_join.store_id\n\tJOIN item ON item_store_join.item_id = item.id\n\tJOIN item_line ON item_line.store_id = store.id AND item_line.item_id = item.id\n\tJoin name on name.id = store.name_id \n-- \tjoin store_categories ON store.code = store_categories.code\n\twhere store.name IN (${store:sqlstring}) \n\tand item.item_name IN  (${item_name:sqlstring}) \n\t-- and category2 IN (${nameCategory2}) \n\t-- and case when ven_category = '' then 'NONE' else ven_category end IN (${venCategory})\n\tGROUP BY 1,2,3,4\n), \namc AS (\n\tSELECT storeid, itemid, value as amc\n\tFROM aggregator\n\tWHERE dataelement = 'AMC'\n),\nmos AS (\n\tSELECT storeid, itemid, value as mos\n\tFROM aggregator\n\tWHERE dataelement = 'currentMOS'\n)\nSELECT stock_on_hand.store_name, stock_on_hand.item_name as item_name, stock_on_hand.default_pack_size, stock_on_hand, amc, \nmos, COALESCE(soo.stock_on_order,0) as SOO, expiry\nFROM stock_on_hand LEFT JOIN amc ON stock_on_hand.store_id = amc.storeid AND stock_on_hand.item_id = amc.itemid\nLEFT JOIN mos ON stock_on_hand.store_id = mos.storeid AND stock_on_hand.item_id = mos.itemid\nLEFT JOIN vw_stock_on_order soo ON soo.store_id = stock_on_hand.store_id AND soo.item_id = stock_on_hand.item_id\nORDER BY 1, 2",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "table": "d_msupply_monthly_usage",
+                    "timeColumn": "updated_date",
+                    "timeColumnType": "timestamp",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "title": "Stock Levels & Item Expiry",
+            "transformations": [
+                {
+                    "id": "organize",
+                    "options": {
+                        "excludeByName": {},
+                        "indexByName": {},
+                        "renameByName": {
+                            "amc": "AMC",
+                            "default_pack_size": "Pref.pack",
+                            "expiry": "Expiry Dates",
+                            "item_name": "Item",
+                            "mos": "MOS",
+                            "soo": "On order",
+                            "stock_on_hand": "SOH",
+                            "store_name": "Store"
+                        }
+                    }
+                }
+            ],
+            "type": "table"
+        },
+        {
+            "description": "This table displays expired stock that was removed via inventory adjustment or stocktake within the set timeframe. It can display all expired items removed from the store or use the inventory adjustment filter to display expired items removed based on the inventory category selected. This table displays items expiring before the set timeframe",
+            "gridPos": {
+                "h": 2,
+                "w": 24,
+                "x": 0,
+                "y": 13
+            },
+            "id": 7,
+            "options": {
+                "content": "<br>\n\n\n ## <p style=\"text-align: center;\">Expired and soon expiring items</p>",
+                "mode": "markdown"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  $__time(time_column),\n  value1\nFROM\n  metric_table\nWHERE\n  $__timeFilter(time_column)\n",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "text"
+        },
+        {
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "auto",
+                        "displayMode": "auto"
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Item Name"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 138
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Unit"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 61
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Total Expiring Quantity"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 132
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Value of Expiring Stock"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 173
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "% of total stock quantity"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 180
+                            },
+                            {
+                                "id": "unit",
+                                "value": "percent"
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Months of stock expiring"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 181
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Expiry date"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 92
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Location"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 179
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Store"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 273
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Months of stock expiring"
+                        },
+                        "properties": [
+                            {
+                                "id": "thresholds",
+                                "value": {
+                                    "mode": "absolute",
+                                    "steps": [
+                                        {
+                                            "color": "#d9d9d9",
+                                            "value": null
+                                        },
+                                        {
+                                            "color": "#EAB839",
+                                            "value": 3
+                                        },
+                                        {
+                                            "color": "orange",
+                                            "value": 9
+                                        },
+                                        {
+                                            "color": "red",
+                                            "value": 15
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "% of total stock quantity"
+                        },
+                        "properties": [
+                            {
+                                "id": "decimals",
+                                "value": 1
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Months of stock expiring"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.displayMode",
+                                "value": "color-background"
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Months of stock expiring"
+                        },
+                        "properties": [
+                            {
+                                "id": "decimals",
+                                "value": 1
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Value of Expiring Stock"
+                        },
+                        "properties": [
+                            {
+                                "id": "unit",
+                                "value": "currencyUSD"
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "% of total stock quantity"
+                        },
+                        "properties": [
+                            {
+                                "id": "thresholds",
+                                "value": {
+                                    "mode": "absolute",
+                                    "steps": [
+                                        {
+                                            "color": "#d9d9d9",
+                                            "value": null
+                                        },
+                                        {
+                                            "color": "#EAB839",
+                                            "value": 25
+                                        },
+                                        {
+                                            "color": "orange",
+                                            "value": 50
+                                        },
+                                        {
+                                            "color": "red",
+                                            "value": 75
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "% of total stock quantity"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.displayMode",
+                                "value": "color-background"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 20,
+                "w": 24,
+                "x": 0,
+                "y": 15
+            },
+            "id": 15,
+            "options": {
+                "footer": {
+                    "fields": "",
+                    "reducer": [
+                        "sum"
+                    ],
+                    "show": true
+                },
+                "showHeader": true,
+                "sortBy": []
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "L8U5hXYHk"
+                    },
+                    "format": "table",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": true,
+                    "rawSql": "with expiryStock as (\n  select \n    i.id, i.code, i.item_name, u.units,\n    sum(il.quantity*il.pack_size) AS total_expiring_quantity ,il.expiry_date, il.batch,\n    sum(il.quantity*il.cost_price)::float AS value_expiring_stock, agg.value AS amc_value,\n    coalesce(l.description, '-') AS location, s.name AS store_name\n  from item_line il\n  join item i on i.id = il.item_id\n  left join unit u on u.id = i.unit_ID\n  left join aggregator agg on agg.itemID = i.id\n  left join location l on l.id = il.location_id\n  left join store s on s.id = il.store_id\n  where il.expiry_date <= current_date + interval '($monthsUpto) months' \n  --and il.expiry_date >= current_date \n  and il.Quantity>0 and agg.dataElement = 'AMC' and agg.storeID = il.store_id\n  and s.name IN (${store:sqlstring})\n  and i.item_name IN (${item_name:sqlstring}) \n  group by i.id, i.code, i.item_name, u.units, il.expiry_date, agg.value, il.batch, l.description,s.name\n),getStockOnHand as (\n    select sum(il.stock_on_hand_tot) AS total_soh, il.item_id from item_line il \n  join item i on i.id = il.item_id\n  where  i.item_name IN (${item_name:sqlstring})\n  and il.store_id in (select id from store s where s.name IN (${store:sqlstring})) group by il.item_id\n)\nselect\n  item_name AS \"Item Name\",\n  units AS \"Unit\",\n  store_name AS \"Store\",\n  total_expiring_quantity AS \"Total Expiring Quantity\",\n  value_expiring_stock AS \"Value of Expiring Stock\", \n  CASE\n    WHEN (total_expiring_quantity * 100)/ total_soh >= 0 THEN (total_expiring_quantity * 100)/ total_soh\n    ELSE 0\n  END AS \"% of total stock quantity\",\n  total_expiring_quantity/amc_value * 1 AS \"Months of stock expiring\",\n  expiry_Date::Text AS \"Expiry date\", \n  location AS \"Location\"\nfrom expiryStock\njoin getStockOnHand on getStockOnHand.item_id = expiryStock.id\norder by item_name asc, expiry_Date asc, total_expiring_quantity desc",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "table": "d_msupply_monthly_usage",
+                    "timeColumn": "updated_date",
+                    "timeColumnType": "timestamp",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "title": " ",
+            "type": "table"
+        },
+        {
+            "description": "",
+            "gridPos": {
+                "h": 2,
+                "w": 2,
+                "x": 22,
+                "y": 35
+            },
+            "id": 9,
+            "options": {
+                "content": "",
+                "mode": "markdown"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "L8U5hXYHk"
+                    },
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  updated_date AS \"time\",\n  value\nFROM d_msupply_monthly_usage\nWHERE\n  $__timeFilter(updated_date)\nORDER BY 1",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "table": "d_msupply_monthly_usage",
+                    "timeColumn": "updated_date",
+                    "timeColumnType": "timestamp",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "title": " ",
+            "transparent": true,
+            "type": "text"
+        }
+    ],
+    "refresh": "",
+    "schemaVersion": 35,
+    "style": "dark",
+    "tags": [
+        "dashboard-list",
+        "stock-management"
+    ],
+    "templating": {
+        "list": [
+            {
+                "current": {
+                    "selected": false,
+                    "text": "All",
+                    "value": "$__all"
+                },
+                "datasource": {
+                    "type": "postgres",
+                    "uid": "L8U5hXYHk"
+                },
+                "definition": "select name from store  where name<>'Supervisor- All stores'  and name<>'Registration'  and  name<>'Hospital Info System' and disabled = 'false' AND tags NOT LIKE '%dashboard_exclude%'",
+                "hide": 0,
+                "includeAll": true,
+                "label": "Store",
+                "multi": true,
+                "name": "store",
+                "options": [],
+                "query": "select name from store  where name<>'Supervisor- All stores'  and name<>'Registration'  and  name<>'Hospital Info System' and disabled = 'false' AND tags NOT LIKE '%dashboard_exclude%'",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 1,
+                "type": "query"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "All",
+                    "value": "$__all"
+                },
+                "datasource": {
+                    "type": "postgres",
+                    "uid": "L8U5hXYHk"
+                },
+                "definition": "SELECT item_name FROM item i \nJOIN item_store_join isj ON i.id = isj.item_id \nWHERE isj.store_id IN (SELECT id FROM store WHERE name IN (${store:sqlstring})) \nAND i.essential_drug_list::text IN (${essential_drug_list:sqlstring}) \nAND i.user_field_1 = 'Y'\nORDER BY item_name ASC",
+                "hide": 0,
+                "includeAll": true,
+                "label": "Item",
+                "multi": true,
+                "name": "item_name",
+                "options": [],
+                "query": "SELECT item_name FROM item i \nJOIN item_store_join isj ON i.id = isj.item_id \nWHERE isj.store_id IN (SELECT id FROM store WHERE name IN (${store:sqlstring})) \nAND i.essential_drug_list::text IN (${essential_drug_list:sqlstring}) \nAND i.user_field_1 = 'Y'\nORDER BY item_name ASC",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "type": "query"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "1",
+                    "value": "1"
+                },
+                "description": "",
+                "hide": 0,
+                "includeAll": false,
+                "label": "Expiry date in Months",
+                "multi": false,
+                "name": "monthsUpto",
+                "options": [
+                    {
+                        "selected": false,
+                        "text": "Today",
+                        "value": "0"
+                    },
+                    {
+                        "selected": true,
+                        "text": "1",
+                        "value": "1"
+                    },
+                    {
+                        "selected": false,
+                        "text": "2",
+                        "value": "2"
+                    },
+                    {
+                        "selected": false,
+                        "text": "3",
+                        "value": "3"
+                    },
+                    {
+                        "selected": false,
+                        "text": "4",
+                        "value": "4"
+                    },
+                    {
+                        "selected": false,
+                        "text": "5",
+                        "value": "5"
+                    },
+                    {
+                        "selected": false,
+                        "text": "6",
+                        "value": "6"
+                    },
+                    {
+                        "selected": false,
+                        "text": "7",
+                        "value": "7"
+                    },
+                    {
+                        "selected": false,
+                        "text": "8",
+                        "value": "8"
+                    },
+                    {
+                        "selected": false,
+                        "text": "9",
+                        "value": "9"
+                    },
+                    {
+                        "selected": false,
+                        "text": "10",
+                        "value": "10"
+                    },
+                    {
+                        "selected": false,
+                        "text": "11",
+                        "value": "11"
+                    },
+                    {
+                        "selected": false,
+                        "text": "12",
+                        "value": "12"
+                    },
+                    {
+                        "selected": false,
+                        "text": "24",
+                        "value": "24"
+                    },
+                    {
+                        "selected": false,
+                        "text": "36",
+                        "value": "36"
+                    }
+                ],
+                "query": "Today : 0, 1,2,3,4,5,6,7,8,9,10,11,12,24,36",
+                "queryValue": "",
+                "skipUrlSync": false,
+                "type": "custom"
+            },
+            {
+                "current": {
+                    "selected": true,
+                    "text": "All",
+                    "value": "$__all"
+                },
+                "hide": 0,
+                "includeAll": true,
+                "label": "On essential drug list",
+                "multi": false,
+                "name": "essential_drug_list",
+                "options": [
+                    {
+                        "selected": true,
+                        "text": "All",
+                        "value": "$__all"
+                    },
+                    {
+                        "selected": false,
+                        "text": "true",
+                        "value": "true"
+                    },
+                    {
+                        "selected": false,
+                        "text": "false",
+                        "value": "false"
+                    }
+                ],
+                "query": "true, false",
+                "queryValue": "",
+                "skipUrlSync": false,
+                "type": "custom"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "true",
+                    "value": "true"
+                },
+                "hide": 0,
+                "includeAll": true,
+                "label": "Critical Stock",
+                "multi": false,
+                "name": "critical_stock",
+                "options": [
+                    {
+                        "selected": false,
+                        "text": "All",
+                        "value": "$__all"
+                    },
+                    {
+                        "selected": true,
+                        "text": "true",
+                        "value": "true"
+                    },
+                    {
+                        "selected": false,
+                        "text": "false",
+                        "value": "false"
+                    }
+                ],
+                "query": "true, false",
+                "queryValue": "",
+                "skipUrlSync": false,
+                "type": "custom"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "All",
+                    "value": "$__all"
+                },
+                "datasource": {
+                    "type": "postgres",
+                    "uid": "L8U5hXYHk"
+                },
+                "definition": "SELECT trim(description)  AS description FROM item_category \nUNION SELECT 'NONE' \nORDER BY 1 ASC",
+                "hide": 0,
+                "includeAll": true,
+                "label": "Item category 1",
+                "multi": true,
+                "name": "item_cat_1",
+                "options": [],
+                "query": "SELECT trim(description)  AS description FROM item_category \nUNION SELECT 'NONE' \nORDER BY 1 ASC",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "type": "query"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "All",
+                    "value": "$__all"
+                },
+                "datasource": {
+                    "type": "postgres",
+                    "uid": "L8U5hXYHk"
+                },
+                "definition": "SELECT trim(description) FROM item_category2\nUNION SELECT 'NONE' \nORDER BY 1 ASC",
+                "hide": 0,
+                "includeAll": true,
+                "label": "Item category 2",
+                "multi": true,
+                "name": "item_cat_2",
+                "options": [],
+                "query": "SELECT trim(description) FROM item_category2\nUNION SELECT 'NONE' \nORDER BY 1 ASC",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "type": "query"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "All",
+                    "value": "$__all"
+                },
+                "datasource": {
+                    "type": "postgres",
+                    "uid": "L8U5hXYHk"
+                },
+                "definition": "SELECT trim(category) FROM transaction_category WHERE type = 'in' \nUNION SELECT 'NONE' \nORDER BY 1 ASC ",
+                "hide": 0,
+                "includeAll": true,
+                "label": "Invad Categories",
+                "multi": true,
+                "name": "trans_master_cat",
+                "options": [],
+                "query": "SELECT trim(category) FROM transaction_category WHERE type = 'in' \nUNION SELECT 'NONE' \nORDER BY 1 ASC ",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "type": "query"
+            }
+        ]
+    },
+    "time": {
+        "from": "now-1y/y",
+        "to": "now-1y/y"
+    },
+    "timepicker": {
+        "hidden": false
+    },
+    "timezone": "",
+    "title": "Expiring Stock",
+    "uid": "WsTax_UJK",
+    "version": 23,
+    "weekStart": ""
+}

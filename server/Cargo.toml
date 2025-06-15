@@ -93,6 +93,7 @@ members = [
   "graphql/stocktake_line",
   "graphql/types",
   "graphql/vaccine_course",
+  "dashboard_ai",
   "cli",
   "windows"
 ]

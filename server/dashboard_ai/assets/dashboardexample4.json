@@ -1,0 +1,1302 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": "-- Grafana --",
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "target": {
+                    "limit": 100,
+                    "matchAny": false,
+                    "tags": [],
+                    "type": "dashboard"
+                },
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 110,
+    "iteration": 1749958487888,
+    "links": [
+        {
+            "asDropdown": true,
+            "icon": "external link",
+            "includeVars": false,
+            "keepTime": false,
+            "tags": [
+                "warehouse-orders"
+            ],
+            "targetBlank": false,
+            "title": "Warehouse Orders",
+            "tooltip": "",
+            "type": "dashboards",
+            "url": ""
+        }
+    ],
+    "liveNow": false,
+    "panels": [
+        {
+            "description": "Number of purchase order lines with no estimated delivery date and outstanding order quantities greater than zero",
+            "gridPos": {
+                "h": 2,
+                "w": 10,
+                "x": 0,
+                "y": 0
+            },
+            "id": 17,
+            "options": {
+                "content": "<br>\n\n\n ## <p style=\"text-align: center;\">Items on order without estimated delivery dates</p>",
+                "mode": "markdown"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  $__time(time_column),\n  value1\nFROM\n  metric_table\nWHERE\n  $__timeFilter(time_column)\n",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "text"
+        },
+        {
+            "description": "The number of confirmed or finalised purchase orders in each purchase order category per financial year. Financial year is between July 1st to June 30th.",
+            "gridPos": {
+                "h": 2,
+                "w": 13,
+                "x": 10,
+                "y": 0
+            },
+            "id": 18,
+            "options": {
+                "content": "<br>\n\n\n ## <p style=\"text-align: center;\">Purchase order category</p>",
+                "mode": "markdown"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  $__time(time_column),\n  value1\nFROM\n  metric_table\nWHERE\n  $__timeFilter(time_column)\n",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "text"
+        },
+        {
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "#4b7bc8",
+                                "value": null
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 10,
+                "x": 0,
+                "y": 2
+            },
+            "id": 6,
+            "options": {
+                "colorMode": "background",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "count"
+                    ],
+                    "fields": "/^id$/",
+                    "values": false
+                },
+                "textMode": "auto"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "q3awFTGHk"
+                    },
+                    "format": "table",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": true,
+                    "rawSql": "SELECT \n  DISTINCT pol.id AS id\nFROM purchase_order po \nJOIN purchase_order_line pol ON po.id = pol.purchase_order_id \nJOIN store s ON po.store_id = s.id \nJOIN name n ON po.name_id = n.id  \nJOIN item i ON i.id = pol.item_id\nWHERE po.status IN ('cn', 'fn')\nAND s.name IN (${store_name:sqlstring}) \nAND i.item_name IN (${item_name:sqlstring}) \nAND (pol.quan_adjusted_order - pol.quan_rec_to_date) > 0\nAND pol.delivery_date_expected IS NULL ",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "title": " ",
+            "type": "stat"
+        },
+        {
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "fixedColor": "light-green",
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "axisLabel": "Number of purchase orders",
+                        "axisPlacement": "left",
+                        "axisSoftMin": 0,
+                        "fillOpacity": 80,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "lineWidth": 1,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        }
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "No category"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "text",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Tender"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "green",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "RFQ"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "#5794F2",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 15,
+                "w": 13,
+                "x": 10,
+                "y": 2
+            },
+            "id": 27,
+            "options": {
+                "barRadius": 0,
+                "barWidth": 0.97,
+                "groupWidth": 0.9,
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "list",
+                    "placement": "bottom"
+                },
+                "orientation": "auto",
+                "showValue": "always",
+                "stacking": "none",
+                "text": {},
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "none"
+                },
+                "xField": "Year",
+                "xTickLabelRotation": 0,
+                "xTickLabelSpacing": 100
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "q3awFTGHk"
+                    },
+                    "format": "table",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": true,
+                    "rawSql": "SELECT *\nFROM crosstab (\n    $$ SELECT \n        f_year AS year, \n        COALESCE(poc.description, 'No category') AS po_category, \n        COUNT(DISTINCT po.id) AS num \n    FROM purchase_order po \n    JOIN (\n      SELECT \n         CASE WHEN TO_CHAR(date,'MM')::integer > 6 \n        THEN CONCAT('1st July ', TO_CHAR(date,'YYYY'), ' - 30 June ',  TO_CHAR(date + interval '1 year','YYYY'))\n        ELSE CONCAT('1st July ', TO_CHAR(date - interval '1 year','YYYY'),' - 30 June ',  TO_CHAR(date,'YYYY')) END AS f_year, \n      TO_CHAR(date, 'YYYY/MM') yearmonth  \n      FROM (SELECT generate_series(CONCAT(TO_CHAR(current_date - interval '3 year', 'YYYY'),'07','01')::date , current_date, '1 month'::interval) AS date) years \n    ) fy ON fy.yearmonth = TO_CHAR(confirm_date, 'YYYY/MM') \n    JOIN store s ON po.store_id = s.id\n    JOIN purchase_order_line pol ON po.id = pol.purchase_order_id \n    LEFT JOIN purchase_order_category poc ON po.category_id = poc.id \n    WHERE pol.item_name IN (${item_name:sqlstring}) \n    AND s.name IN (${store_name:sqlstring}) \n    AND po.status IN ('cn', 'fn') \n    --AND $__timeFilter(confirm_date)\n    AND confirm_date > date_trunc('year', current_date - interval '3 years') \n    GROUP BY f_year, poc.description \n    ORDER BY f_year, poc.description $$ , \n    $$ SELECT description FROM purchase_order_category UNION SELECT 'No category' $$\n   ) AS t (\n        \"Year\" text,                   \n        \"RFQ\" int, \n        \"Tender\" int, \n        \"No category\" int\n    );",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "barchart"
+        },
+        {
+            "description": "The number of confirmed purchase orders with outstanding order quantities greater than zero",
+            "gridPos": {
+                "h": 3,
+                "w": 5,
+                "x": 0,
+                "y": 6
+            },
+            "id": 20,
+            "options": {
+                "content": "<br>\n\n\n ## <p style=\"text-align: center;\">Outstanding purchase orders</p>",
+                "mode": "markdown"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  $__time(time_column),\n  value1\nFROM\n  metric_table\nWHERE\n  $__timeFilter(time_column)\n",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "text"
+        },
+        {
+            "description": "The number of supplier invoices in new (nw) status.",
+            "gridPos": {
+                "h": 3,
+                "w": 5,
+                "x": 5,
+                "y": 6
+            },
+            "id": 21,
+            "options": {
+                "content": "<br>\n\n\n ## <p style=\"text-align: center;\">Unconfirmed supplier invoices</p>",
+                "mode": "markdown"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  $__time(time_column),\n  value1\nFROM\n  metric_table\nWHERE\n  $__timeFilter(time_column)\n",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "text"
+        },
+        {
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [],
+                    "max": 100,
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 15
+                            },
+                            {
+                                "color": "red",
+                                "value": 50
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 5,
+                "x": 0,
+                "y": 9
+            },
+            "id": 2,
+            "options": {
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "count"
+                    ],
+                    "fields": "/^PO number$/",
+                    "values": false
+                },
+                "showThresholdLabels": true,
+                "showThresholdMarkers": true,
+                "text": {}
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "q3awFTGHk"
+                    },
+                    "format": "table",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": true,
+                    "rawSql": "SELECT \n  DISTINCT s.name AS \"Store\", \n  po.serial_number AS \"PO number\"\nFROM purchase_order po \nJOIN purchase_order_line pol ON po.id = pol.purchase_order_id \nJOIN store s ON po.store_id = s.id \nJOIN name n ON po.name_id = n.id  \nJOIN item i ON i.id = pol.item_id\nWHERE (pol.quan_adjusted_order - pol.quan_rec_to_date) > 0\nAND po.status = 'cn'\nAND s.name IN (${store_name:sqlstring}) \nAND i.item_name IN (${item_name:sqlstring}) ",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "gauge"
+        },
+        {
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [],
+                    "max": 10,
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "#EAB839",
+                                "value": 3
+                            },
+                            {
+                                "color": "red",
+                                "value": 5
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 5,
+                "x": 5,
+                "y": 9
+            },
+            "id": 4,
+            "options": {
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "count"
+                    ],
+                    "fields": "/^invoice_num$/",
+                    "values": false
+                },
+                "showThresholdLabels": true,
+                "showThresholdMarkers": true
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "q3awFTGHk"
+                    },
+                    "format": "table",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": true,
+                    "rawSql": "SELECT DISTINCT t.invoice_num  \nFROM transact t \nJOIN trans_line tl ON t.id = tl.transaction_id \nJOIN store s ON t.store_id = s.id \nJOIN name n ON t.name_id = n.id \nWHERE t.type = 'si' \nAND n.code <> 'invad' \nAND s.name IN (${store_name:sqlstring})\nAND tl.item_name IN (${item_name:sqlstring})\nAND t.status = 'nw'",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "gauge"
+        },
+        {
+            "gridPos": {
+                "h": 2,
+                "w": 17,
+                "x": 0,
+                "y": 17
+            },
+            "id": 25,
+            "options": {
+                "content": "",
+                "mode": "markdown"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "q3awFTGHk"
+                    },
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  updated_date AS \"time\",\n  value\nFROM d_msupply_monthly_usage\nWHERE\n  $__timeFilter(updated_date)\nORDER BY 1",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "table": "d_msupply_monthly_usage",
+                    "timeColumn": "updated_date",
+                    "timeColumnType": "timestamp",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "transparent": true,
+            "type": "text"
+        },
+        {
+            "description": "Deliveries expected within the next 2 weeks, according to Estimated Delivery Date entered on confirmed Purchase Orders",
+            "gridPos": {
+                "h": 2,
+                "w": 23,
+                "x": 0,
+                "y": 19
+            },
+            "id": 22,
+            "options": {
+                "content": "<br>\n\n\n ## <p style=\"text-align: center;\">Upcoming deliveries</p>",
+                "mode": "markdown"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  $__time(time_column),\n  value1\nFROM\n  metric_table\nWHERE\n  $__timeFilter(time_column)\n",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "text"
+        },
+        {
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "auto",
+                        "displayMode": "auto",
+                        "filterable": true
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Item name"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 471
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Store"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 270
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Item code"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 115
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Unit"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 128
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Outstanding quantity"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 180
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Supplier"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 283
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Days to estimated delivery date"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 236
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Estimated delivery date"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 195
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "PO number"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 248
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 11,
+                "w": 23,
+                "x": 0,
+                "y": 21
+            },
+            "id": 7,
+            "options": {
+                "footer": {
+                    "fields": "",
+                    "reducer": [
+                        "sum"
+                    ],
+                    "show": false
+                },
+                "showHeader": true,
+                "sortBy": [
+                    {
+                        "desc": false,
+                        "displayName": "Estimated delivery date"
+                    }
+                ]
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "q3awFTGHk"
+                    },
+                    "format": "table",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": true,
+                    "rawSql": "SELECT \n  s.name AS \"Store\", \n  i.item_name AS \"Item name\", \n  (pol.quan_adjusted_order - pol.quan_rec_to_date) AS \"Outstanding quantity\", \n  pack_units AS \"Unit\", \n  TO_CHAR(pol.delivery_date_expected, 'YYYY-MM-DD') AS \"Estimated delivery date\", \n  pol.delivery_date_expected - current_date AS \"Days to estimated delivery date\", \n  n.name AS \"Supplier\", \n  po.serial_number AS \"PO number\"\nFROM purchase_order po \nJOIN purchase_order_line pol ON po.id = pol.purchase_order_id \nJOIN store s ON po.store_id = s.id \nJOIN name n ON po.name_id = n.id  \nJOIN item i ON i.id = pol.item_id\nWHERE po.status = 'cn'\n-- AND $__timeFilter(creation_date) \nAND s.name IN (${store_name:sqlstring}) \nAND i.item_name IN (${item_name:sqlstring}) \nAND (pol.quan_adjusted_order - pol.quan_rec_to_date) > 0\nAND pol.delivery_date_expected > current_date + interval '1 day'\n-- AND current_date + interval '2 weeks' \nORDER BY s.name, i.code, i.item_name, pol.delivery_date_expected ASC",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "title": " ",
+            "type": "table"
+        },
+        {
+            "gridPos": {
+                "h": 2,
+                "w": 23,
+                "x": 0,
+                "y": 32
+            },
+            "id": 26,
+            "options": {
+                "content": "",
+                "mode": "markdown"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "q3awFTGHk"
+                    },
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  updated_date AS \"time\",\n  value\nFROM d_msupply_monthly_usage\nWHERE\n  $__timeFilter(updated_date)\nORDER BY 1",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "table": "d_msupply_monthly_usage",
+                    "timeColumn": "updated_date",
+                    "timeColumnType": "timestamp",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "transparent": true,
+            "type": "text"
+        },
+        {
+            "description": "Items on purchase orders that are past their estimated delivery date",
+            "gridPos": {
+                "h": 2,
+                "w": 23,
+                "x": 0,
+                "y": 34
+            },
+            "id": 23,
+            "options": {
+                "content": "<br>\n\n\n ## <p style=\"text-align: center;\">Overdue deliveries</p>",
+                "mode": "markdown"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  $__time(time_column),\n  value1\nFROM\n  metric_table\nWHERE\n  $__timeFilter(time_column)\n",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "text"
+        },
+        {
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "auto",
+                        "displayMode": "auto",
+                        "filterable": true
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Item name"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 468
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Store"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 271
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Item code"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 115
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Unit"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 88
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Outstanding quantity"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 176
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Days since purchase order was placed"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 282
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Estimated delivery date"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 181
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Days overdue"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 121
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Supplier"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 194
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "PO number"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 209
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 11,
+                "w": 23,
+                "x": 0,
+                "y": 36
+            },
+            "id": 5,
+            "options": {
+                "footer": {
+                    "fields": "",
+                    "reducer": [
+                        "sum"
+                    ],
+                    "show": false
+                },
+                "showHeader": true,
+                "sortBy": [
+                    {
+                        "desc": false,
+                        "displayName": "Item name"
+                    }
+                ]
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "q3awFTGHk"
+                    },
+                    "format": "table",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": true,
+                    "rawSql": "SELECT \n  s.name AS \"Store\", \n  i.item_name AS \"Item name\", \n  (pol.quan_adjusted_order - pol.quan_rec_to_date) AS \"Outstanding quantity\", \n  pack_units AS \"Unit\", \n  current_date - po.confirm_date AS \"Days since purchase order was placed\", \n  TO_CHAR(pol.delivery_date_expected, 'YYYY-MM-DD') AS \"Estimated delivery date\", \n  current_date- pol.delivery_date_expected AS \"Days overdue\", \n  n.name AS \"Supplier\", \n  po.serial_number AS \"PO number\"\nFROM purchase_order po \nJOIN purchase_order_line pol ON po.id = pol.purchase_order_id \nJOIN store s ON po.store_id = s.id \nJOIN name n ON po.name_id = n.id  \nJOIN item i ON i.id = pol.item_id\nWHERE po.status = 'cn'\n--AND $__timeFilter(creation_date) \nAND s.name IN (${store_name:sqlstring}) \nAND i.item_name IN (${item_name:sqlstring}) \nAND pol.delivery_date_expected <= current_date \nAND (pol.quan_adjusted_order - pol.quan_rec_to_date) > 0 \nORDER BY s.name, i.code, i.item_name, pol.delivery_date_expected ASC",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "title": " ",
+            "type": "table"
+        }
+    ],
+    "refresh": "",
+    "schemaVersion": 35,
+    "style": "dark",
+    "tags": [
+        "dashboard-list",
+        "warehouse-orders"
+    ],
+    "templating": {
+        "list": [
+            {
+                "current": {
+                    "selected": false,
+                    "text": "All",
+                    "value": "$__all"
+                },
+                "datasource": {
+                    "type": "postgres",
+                    "uid": "q3awFTGHk"
+                },
+                "definition": "select name from store  where name<>'Supervisor- All stores'  and name<>'Registration'  and  name<>'Hospital Info System' and disabled = 'false' AND tags NOT LIKE '%dashboard_exclude%'",
+                "hide": 0,
+                "includeAll": true,
+                "label": "Store",
+                "multi": true,
+                "name": "store_name",
+                "options": [],
+                "query": "select name from store  where name<>'Supervisor- All stores'  and name<>'Registration'  and  name<>'Hospital Info System' and disabled = 'false' AND tags NOT LIKE '%dashboard_exclude%'",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "type": "query"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "All",
+                    "value": "$__all"
+                },
+                "datasource": {
+                    "type": "postgres",
+                    "uid": "q3awFTGHk"
+                },
+                "definition": "SELECT category2 FROM item_categories ORDER BY category2 ASC",
+                "hide": 0,
+                "includeAll": true,
+                "label": "Item category2",
+                "multi": true,
+                "name": "item_category2",
+                "options": [],
+                "query": "SELECT category2 FROM item_categories ORDER BY category2 ASC",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "type": "query"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "All",
+                    "value": "$__all"
+                },
+                "datasource": {
+                    "type": "postgres",
+                    "uid": "q3awFTGHk"
+                },
+                "definition": "WITH items AS (\nSELECT item.item_name \nFROM item \nJOIN item_store_join isj ON item.id = isj.item_id \nJOIN store s ON s.id = isj.store_id \nJOIN item_categories ic ON ic.id = item.id\nWHERE s.name IN (${store_name:sqlstring}) \nAND ic.category2 IN (${item_category2})\nAND inactive = false \nAND user_field_1 = 'Y'\nUNION SELECT '-- No item --'\n)\nSELECT item_name FROM items  \nWHERE CASE WHEN 1 = ( select count(*) from items ) THEN item_name = '-- No item --'\nELSE item_name <> '-- No item --' END \nORDER BY item_name ASC",
+                "hide": 0,
+                "includeAll": true,
+                "label": "Item name",
+                "multi": true,
+                "name": "item_name",
+                "options": [],
+                "query": "WITH items AS (\nSELECT item.item_name \nFROM item \nJOIN item_store_join isj ON item.id = isj.item_id \nJOIN store s ON s.id = isj.store_id \nJOIN item_categories ic ON ic.id = item.id\nWHERE s.name IN (${store_name:sqlstring}) \nAND ic.category2 IN (${item_category2})\nAND inactive = false \nAND user_field_1 = 'Y'\nUNION SELECT '-- No item --'\n)\nSELECT item_name FROM items  \nWHERE CASE WHEN 1 = ( select count(*) from items ) THEN item_name = '-- No item --'\nELSE item_name <> '-- No item --' END \nORDER BY item_name ASC",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "type": "query"
+            }
+        ]
+    },
+    "time": {
+        "from": "now-90d",
+        "to": "now"
+    },
+    "timepicker": {
+        "hidden": true
+    },
+    "timezone": "",
+    "title": "Warehouse Orders Delivery Tracking",
+    "uid": "sSe1Hr3nk",
+    "version": 14,
+    "weekStart": ""
+}

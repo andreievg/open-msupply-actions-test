@@ -4857,6 +4857,7 @@ export type Mutations = {
   deleteStocktakeLine: DeleteStocktakeLineResponse;
   deleteSupplierReturn: DeleteSupplierReturnResponse;
   finaliseRnrForm: FinaliseRnRFormResponse;
+  generateGrafanaDashboard: Scalars['String']['output'];
   initialiseSite: InitialiseSiteResponse;
   insertAsset: InsertAssetResponse;
   insertAssetLog: InsertAssetLogResponse;
@@ -5130,6 +5131,11 @@ export type MutationsDeleteSupplierReturnArgs = {
 export type MutationsFinaliseRnrFormArgs = {
   input: FinaliseRnRFormInput;
   storeId: Scalars['String']['input'];
+};
+
+export type MutationsGenerateGrafanaDashboardArgs = {
+  dashboardName: Scalars['String']['input'];
+  prompt: Scalars['String']['input'];
 };
 
 export type MutationsInitialiseSiteArgs = {

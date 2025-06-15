@@ -1,0 +1,3 @@
+mutation GenerateGrafanaDashboard($name: String!, $description: String!) {
+  generateGrafanaDashboard(dashboardName: $name, prompt: $description)
+}

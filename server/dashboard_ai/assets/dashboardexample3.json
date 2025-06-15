@@ -1,0 +1,2191 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": "-- Grafana --",
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "target": {
+                    "limit": 100,
+                    "matchAny": false,
+                    "tags": [],
+                    "type": "dashboard"
+                },
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 106,
+    "iteration": 1749958303624,
+    "links": [
+        {
+            "asDropdown": true,
+            "icon": "external link",
+            "includeVars": false,
+            "keepTime": false,
+            "tags": [
+                "stock-management"
+            ],
+            "targetBlank": false,
+            "title": "Stock Management",
+            "tooltip": "",
+            "type": "dashboards",
+            "url": ""
+        }
+    ],
+    "liveNow": false,
+    "panels": [
+        {
+            "description": "This shows the months of stock on hand at your store. This calculation is based on your current stock levels and previous consumption. ",
+            "gridPos": {
+                "h": 3,
+                "w": 24,
+                "x": 0,
+                "y": 0
+            },
+            "id": 19,
+            "options": {
+                "content": "<h2 style=\"color: #FFFFFF; background-color: #445c94; font-size: 26px; text-align: center;\">\n<br>\nMonths of stock\n<br>\n<br>",
+                "mode": "html"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "q3awFTGHk"
+                    },
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  updated_date AS \"time\",\n  value\nFROM d_msupply_monthly_usage\nWHERE\n  $__timeFilter(updated_date)\nORDER BY 1",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "table": "d_msupply_monthly_usage",
+                    "timeColumn": "updated_date",
+                    "timeColumnType": "timestamp",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "text"
+        },
+        {
+            "datasource": {
+                "type": "postgres",
+                "uid": "q3awFTGHk"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "red",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 1
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 3
+                            },
+                            {
+                                "color": "green",
+                                "value": 9
+                            },
+                            {
+                                "color": "purple",
+                                "value": 15
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 15,
+                "w": 16,
+                "x": 0,
+                "y": 3
+            },
+            "id": 28,
+            "options": {
+                "centre": "-41,173",
+                "decimals": 1,
+                "initialZoom": 5,
+                "labelTemplate": "${name}: ${value} MOS (average)",
+                "latitudeField": "latitude",
+                "linkedVariable": "store_name",
+                "longitudeField": "longitude",
+                "maxCircleSize": 3,
+                "metricField": "Average Months of Stock",
+                "minCircleSize": 3,
+                "mouseWheelZoom": false,
+                "nameField": "Store",
+                "showLegend": true
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "q3awFTGHk"
+                    },
+                    "format": "table",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": true,
+                    "rawSql": "WITH current_amc AS (\n\tSELECT item.item_name, value, store.name AS store_name\n\tFROM aggregator\n\tJOIN store ON store.id = aggregator.storeid\n\tJOIN item ON item.id = aggregator.itemid\n\tWHERE CASE WHEN ${amc_lookback} = 12 THEN dataelement = 'AMC' ELSE dataelement = '' END\n\tAND store.name  IN  (${store_name:sqlstring}) \n\tAND item_name IN (${item_name:sqlstring})\n), \ncurrent_stock AS (\n\tSELECT store.name AS store_name, item.code AS item_code, unit.units, item.item_name, \n\tSUM(CASE WHEN ${expired_stock:sqlstring} = 'Exclude' AND expiry_date < current_date THEN 0 ELSE available * pack_size END) AS value\n\tFROM item \n\tJOIN item_store_join isj ON item.id = isj.item_id AND isj.inactive = false \n\tJOIN store ON isj.store_id = store.id \n\tLEFT JOIN unit ON unit.id = item.unit_id \n\tJOIN item_line il ON il.item_id = isj.item_id AND isj.store_id = il.store_id \n\tWHERE store.name  IN  (${store_name:sqlstring}) \n\tAND item_name IN (${item_name:sqlstring})\n\tGROUP BY item.item_name, item.code, store.name, unit.units \n), \namc_by_monthly_consumption AS (\n\tSELECT item.item_name, AVG(value) AS value, store.name AS store_name \n\tFROM aggregator\n\tJOIN store ON store.id = aggregator.storeid\n\tJOIN item ON item.id = aggregator.itemid\n\tWHERE dataElement = 'monthlyConsumption'\n\tAND store.name  IN  (${store_name:sqlstring}) \n\tAND item_name IN (${item_name:sqlstring}) \n\tAND CASE WHEN ${amc_lookback} = 12 THEN monthyear = '' ELSE monthyear::integer >= (TO_CHAR(current_date - CAST('${amc_lookback}' || ' month' AS interval), 'YYYYMM')::integer) END\n\tGROUP BY item.item_name, store.name\n), \namc AS (\n\tSELECT * FROM current_amc \n\tUNION \n\tSELECT * FROM amc_by_monthly_consumption\n), \nstock_with_amc AS (\n\tSELECT \n\t\tcurrent_stock.store_name, \n\t\tcurrent_stock.item_name, \n\t\tcurrent_stock.value AS stock_quantity, \n\t\tCOALESCE(amc.value, 0) AS avg_monthly_consumption, \n\t\tCASE \n\t\t\tWHEN (current_stock.value = 0 AND amc.value = 0) THEN -1 \n\t\t\tWHEN amc.value IS NULL THEN -1 \n\t\t\tELSE (current_stock.value / amc.value) \n\t\tEND AS months_of_stock \n\tFROM current_stock \n\tLEFT JOIN amc \n\tON current_stock.store_name = amc.store_name \n\tAND current_stock.item_name = amc.item_name\n)\nSELECT \n\tswa.store_name AS \"Store\", \n\tn.latitude, \n\tn.longitude, \n\tAVG(CASE WHEN swa.months_of_stock >= 0 THEN swa.months_of_stock ELSE NULL END) AS \"Average Months of Stock\"\nFROM stock_with_amc swa\nJOIN name n ON swa.store_name = n.name\nGROUP BY swa.store_name, n.latitude, n.longitude\nORDER BY swa.store_name ASC;",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "table": "d_msupply_monthly_usage",
+                    "timeColumn": "updated_date",
+                    "timeColumnType": "timestamp",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "title": "Average Months of Stock per Facility (all items with usage)",
+            "type": "m-supply-foundation-msupply-worldmap"
+        },
+        {
+            "description": "This chart displays the number of items (and percentage) in each month of stock category",
+            "gridPos": {
+                "h": 2,
+                "w": 8,
+                "x": 16,
+                "y": 3
+            },
+            "id": 23,
+            "options": {
+                "content": "<br>\n\n\n ## <p style=\"text-align: center;\">Months of stock (MOS) summary</p>",
+                "mode": "markdown"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "q3awFTGHk"
+                    },
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  updated_date AS \"time\",\n  value\nFROM d_msupply_monthly_usage\nWHERE\n  $__timeFilter(updated_date)\nORDER BY 1",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "table": "d_msupply_monthly_usage",
+                    "timeColumn": "updated_date",
+                    "timeColumnType": "timestamp",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "text"
+        },
+        {
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        }
+                    },
+                    "mappings": []
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "No usage data"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "#a7a7a7",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "0 MOS"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "red",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": ">9-15 MOS"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "green",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": ">0-3 MOS"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "orange",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": ">3-9 MOS"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "yellow",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": ">15 MOS"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "purple",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 13,
+                "w": 8,
+                "x": 16,
+                "y": 5
+            },
+            "id": 21,
+            "options": {
+                "legend": {
+                    "displayMode": "table",
+                    "placement": "bottom",
+                    "values": [
+                        "value",
+                        "percent"
+                    ]
+                },
+                "pieType": "pie",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "/.*/",
+                    "values": true
+                },
+                "tooltip": {
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "q3awFTGHk"
+                    },
+                    "format": "table",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": true,
+                    "rawSql": "WITH current_amc AS (\n\tSELECT item.item_name, value, store.name AS store_name\n\tFROM aggregator\n\tJOIN store ON store.id = aggregator.storeid\n\tJOIN item ON item.id = aggregator.itemid\n  WHERE CASE WHEN ${amc_lookback} = 12 THEN dataelement = 'AMC' ELSE dataelement = '' END\n\tAND store.name  IN  (${store_name:sqlstring}) \n\tAND item_name IN (${item_name:sqlstring})\n), current_stock AS (\n\tSELECT store.name AS store_name, item.code AS item_code, unit.units, item.item_name, \n\tSUM(CASE WHEN ${expired_stock:sqlstring} = 'Exclude' AND expiry_date < current_date THEN 0 ELSE available * pack_size END) AS value\n\tFROM item \n  JOIN item_store_join isj ON item.id = isj.item_id AND isj.inactive = false \n  JOIN store ON isj.store_id = store.id \n  LEFT JOIN unit ON unit.id = item.unit_id \n  LEFT JOIN item_line il ON il.item_id = isj.item_id AND isj.store_id = il.store_id \n  WHERE store.name  IN  (${store_name:sqlstring}) \n\tAND item_name IN (${item_name:sqlstring})\n\t--AND CASE WHEN ${expired_stock:sqlstring} = 'Exclude' THEN (expiry_date IS NULL OR expiry_date >= current_date) ELSE item_name <> '' END\n\tGROUP BY item.item_name, item.code, store.name, unit.units \n), amc_by_monthly_consumption AS (\n  SELECT item.item_name, AVG(value) AS value, store.name AS store_name \n\tFROM aggregator\n\tJOIN store ON store.id = aggregator.storeid\n\tJOIN item ON item.id = aggregator.itemid\n\tWHERE dataElement = 'monthlyConsumption'\n\tAND store.name  IN  (${store_name:sqlstring}) \n\tAND item_name IN (${item_name:sqlstring}) \n\tAND CASE WHEN ${amc_lookback} = 12 THEN monthyear = '' ELSE monthyear::integer >= (TO_CHAR(current_date - CAST('${amc_lookback}' || ' month' AS interval), 'YYYYMM')::integer) END\n\tGROUP BY item.item_name, store.name\n), amc AS(\n  SELECT * FROM current_amc \n  UNION SELECT * FROM amc_by_monthly_consumption\n), items AS(\n  SELECT \n    current_stock.store_name, \n    item_code, \n    current_stock.item_name, \n    CASE WHEN (current_stock.value = 0 AND amc.value = 0) THEN -1 WHEN amc.value IS NULL THEN -1 ELSE \n    (case when amc.value>0 then (current_stock.value/amc.value) else 0 end) END AS month_of_stock\n  FROM current_stock \n  LEFT JOIN amc ON current_stock.store_name = amc.store_name AND current_stock.item_name = amc.item_name\n)\nSELECT \nSUM(CASE WHEN month_of_stock < 0 THEN 1 ELSE 0 END) AS \"No usage data\",\nSUM(CASE WHEN month_of_stock = 0 THEN 1 ELSE 0 END) AS \"0 MOS\", \nSUM(CASE WHEN month_of_stock > 0  AND month_of_stock < 3 THEN 1 ELSE 0 END) AS \">0-3 MOS\",\nSUM(CASE WHEN month_of_stock > 3  AND month_of_stock < 9 THEN 1 ELSE 0 END) AS \">3-9 MOS\",\nSUM(CASE WHEN month_of_stock > 9  AND month_of_stock < 15 THEN 1 ELSE 0 END) AS \">9-15 MOS\", \nSUM(CASE WHEN month_of_stock > 15 THEN 1 ELSE 0 END) AS \">15 MOS\" FROM items ",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "table": "d_msupply_monthly_usage",
+                    "timeColumn": "updated_date",
+                    "timeColumnType": "timestamp",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "piechart"
+        },
+        {
+            "description": "This table displays individual items' month of stock data",
+            "gridPos": {
+                "h": 2,
+                "w": 24,
+                "x": 0,
+                "y": 18
+            },
+            "id": 24,
+            "options": {
+                "content": "<br>\n\n\n ## <p style=\"text-align: center;\">Months of stock (MOS) detailed</p>",
+                "mode": "markdown"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "q3awFTGHk"
+                    },
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  updated_date AS \"time\",\n  value\nFROM d_msupply_monthly_usage\nWHERE\n  $__timeFilter(updated_date)\nORDER BY 1",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "table": "d_msupply_monthly_usage",
+                    "timeColumn": "updated_date",
+                    "timeColumnType": "timestamp",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "text"
+        },
+        {
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "auto",
+                        "displayMode": "auto",
+                        "filterable": true
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "red",
+                                "value": null
+                            }
+                        ]
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Store"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 277
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Months of Stock"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.displayMode",
+                                "value": "color-background"
+                            },
+                            {
+                                "id": "thresholds",
+                                "value": {
+                                    "mode": "absolute",
+                                    "steps": [
+                                        {
+                                            "color": "#d9d9d9",
+                                            "value": null
+                                        },
+                                        {
+                                            "color": "red",
+                                            "value": -15
+                                        },
+                                        {
+                                            "color": "orange",
+                                            "value": 1
+                                        },
+                                        {
+                                            "color": "yellow",
+                                            "value": 3
+                                        },
+                                        {
+                                            "color": "green",
+                                            "value": 9
+                                        },
+                                        {
+                                            "color": "purple",
+                                            "value": 15
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "id": "unit",
+                                "value": "short"
+                            },
+                            {
+                                "id": "decimals",
+                                "value": 1
+                            },
+                            {
+                                "id": "noValue",
+                                "value": "0"
+                            },
+                            {
+                                "id": "mappings",
+                                "value": [
+                                    {
+                                        "options": {
+                                            "-1": {
+                                                "index": 0,
+                                                "text": "0"
+                                            }
+                                        },
+                                        "type": "value"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Item"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 354
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Average monthly consumption"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 234
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Item name"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 382
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Unit"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 82
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Quantity"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 98
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Item code"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 138
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 17,
+                "w": 24,
+                "x": 0,
+                "y": 20
+            },
+            "id": 2,
+            "options": {
+                "footer": {
+                    "fields": "",
+                    "reducer": [
+                        "sum"
+                    ],
+                    "show": false
+                },
+                "showHeader": true,
+                "sortBy": []
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "q3awFTGHk"
+                    },
+                    "format": "table",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": true,
+                    "rawSql": "WITH current_amc AS (\n\tSELECT item.item_name, value, store.name AS store_name\n\tFROM aggregator\n\tJOIN store ON store.id = aggregator.storeid\n\tJOIN item ON item.id = aggregator.itemid\n  WHERE CASE WHEN ${amc_lookback} = 12 THEN dataelement = 'AMC' ELSE dataelement = '' END\n\tAND store.name  IN  (${store_name:sqlstring}) \n\tAND item_name IN (${item_name:sqlstring})\n), current_stock AS (\n\tSELECT store.name AS store_name, item.code AS item_code, unit.units, item.item_name, \n\tSUM(CASE WHEN ${expired_stock:sqlstring} = 'Exclude' AND expiry_date < current_date THEN 0 ELSE available * pack_size END) AS value\n\tFROM item \n  JOIN item_store_join isj ON item.id = isj.item_id AND isj.inactive = false \n  JOIN store ON isj.store_id = store.id \n  LEFT JOIN unit ON unit.id = item.unit_id \n  JOIN item_line il ON il.item_id = isj.item_id AND isj.store_id = il.store_id \n  WHERE store.name  IN  (${store_name:sqlstring}) \n\tAND item_name IN (${item_name:sqlstring})\n\t--AND CASE WHEN ${expired_stock:sqlstring} = 'Exclude' THEN (expiry_date IS NULL OR expiry_date >= current_date) ELSE item_name <> '' END\n\tGROUP BY item.item_name, item.code, store.name, unit.units \n), amc_by_monthly_consumption AS (\n  SELECT item.item_name, AVG(value) AS value, store.name AS store_name \n\tFROM aggregator\n\tJOIN store ON store.id = aggregator.storeid\n\tJOIN item ON item.id = aggregator.itemid\n\tWHERE dataElement = 'monthlyConsumption'\n\tAND store.name  IN  (${store_name:sqlstring}) \n\tAND item_name IN (${item_name:sqlstring}) \n\tAND CASE WHEN ${amc_lookback} = 12 THEN monthyear = '' ELSE monthyear::integer >= (TO_CHAR(current_date - CAST('${amc_lookback}' || ' month' AS interval), 'YYYYMM')::integer) END\n\tGROUP BY item.item_name, store.name\n), amc AS(\n  SELECT * FROM current_amc \n  UNION SELECT * FROM amc_by_monthly_consumption\n)\nSELECT \n  current_stock.store_name AS \"Store\", \n  current_stock.item_name AS \"Item name\", \n  units AS \"Unit\", \n  current_stock.value AS \"Quantity\", \n  COALESCE(amc.value,0) as \"Average monthly consumption\", \n  CASE WHEN (current_stock.value = 0 AND amc.value = 0) THEN -1 WHEN amc.value IS NULL THEN -1 ELSE (current_stock.value/amc.value) END AS \"Months of Stock\" \nFROM current_stock \nLEFT JOIN amc ON current_stock.store_name = amc.store_name AND current_stock.item_name = amc.item_name\nORDER BY current_stock.store_name ASC, current_stock.item_name ASC",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "title": " ",
+            "type": "table"
+        },
+        {
+            "description": "The % of critical items available at a facility each month",
+            "gridPos": {
+                "h": 3,
+                "w": 24,
+                "x": 0,
+                "y": 37
+            },
+            "id": 26,
+            "options": {
+                "content": "<h2 style=\"color: #FFFFFF; background-color: #445c94; font-size: 26px; text-align: center;\">\n<br>\nCritical items availability\n<br>\n<br>",
+                "mode": "html"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "q3awFTGHk"
+                    },
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  updated_date AS \"time\",\n  value\nFROM d_msupply_monthly_usage\nWHERE\n  $__timeFilter(updated_date)\nORDER BY 1",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "table": "d_msupply_monthly_usage",
+                    "timeColumn": "updated_date",
+                    "timeColumnType": "timestamp",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "text"
+        },
+        {
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisLabel": "Critical items availability (%)",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "lineInterpolation": "linear",
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "auto",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "line"
+                        }
+                    },
+                    "decimals": 0,
+                    "mappings": [],
+                    "max": 100,
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "transparent",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 90
+                            }
+                        ]
+                    },
+                    "unit": "percent"
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Leulumoega District Hospital"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "super-light-purple",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Tupua Tamasese Meaole (TTM) Hospital (Moto'otua)"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "super-light-yellow",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "National average"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.lineStyle",
+                                "value": {
+                                    "dash": [
+                                        10,
+                                        10
+                                    ],
+                                    "fill": "dash"
+                                }
+                            },
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "red",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Vaipouli Clinic"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "super-light-blue",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 17,
+                "w": 24,
+                "x": 0,
+                "y": 40
+            },
+            "id": 4,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "table",
+                    "placement": "right"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "asc"
+                }
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "q3awFTGHk"
+                    },
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": true,
+                    "rawSql": "WITH item_active_store_join AS (\n\tSELECT yearmonth monthyear, COALESCE(value,0) AS value, s.name store_name\n\tFROM d_msupply_monthly_usage usage \n\tJOIN store s ON usage.store_id = s.id \n\tWHERE index = 1\n\tORDER BY monthyear, store_name\n)\nSELECT \n  CASE WHEN monthyear = TO_CHAR(current_date, 'YYYYMM') THEN current_date - interval '1 day' \n  ELSE CONCAT(monthyear,'01')::date + interval '1 month' END AS time,  \n  'National average' AS metric, \n  --100-(sum(value)/count(store_name))\n  (100 - round((sum(value)/count(store_name))::numeric/100,2)*100)\nFROM item_active_store_join  \nGROUP BY monthyear\nORDER BY time ASC",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                },
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "q3awFTGHk"
+                    },
+                    "format": "time_series",
+                    "group": [],
+                    "hide": false,
+                    "metricColumn": "none",
+                    "rawQuery": true,
+                    "rawSql": "WITH item_active_store_join AS (\n\tSELECT yearmonth monthyear, COALESCE(value,0) AS value, s.name store_name\n\tFROM d_msupply_monthly_usage usage \n\tJOIN store s ON usage.store_id = s.id \n\tWHERE index = 1 and s.name in (${store_name:sqlstring}) \n\tORDER BY monthyear, store_name\n)\nSELECT \n  CASE WHEN monthyear = TO_CHAR(current_date, 'YYYYMM') THEN current_date - interval '1 day' ELSE CONCAT(monthyear,'01')::date + interval '1 month' END AS time,  \n  store_name AS metric, (100 - round(value::numeric/100,2)*100)\nFROM item_active_store_join \n-- GROUP BY monthyear, store_name \nORDER BY time ASC\n",
+                    "refId": "B",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "title": " ",
+            "type": "timeseries"
+        },
+        {
+            "description": "This table shows you items that were previously out of stock, which have been received within the last month. ",
+            "gridPos": {
+                "h": 3,
+                "w": 24,
+                "x": 0,
+                "y": 57
+            },
+            "id": 11,
+            "options": {
+                "content": "<h2 style=\"color: #FFFFFF; background-color: #445c94; font-size: 26px; text-align: center;\">\n<br>\nBack in stock\n<br>\n<br>",
+                "mode": "html"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "q3awFTGHk"
+                    },
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  updated_date AS \"time\",\n  value\nFROM d_msupply_monthly_usage\nWHERE\n  $__timeFilter(updated_date)\nORDER BY 1",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "table": "d_msupply_monthly_usage",
+                    "timeColumn": "updated_date",
+                    "timeColumnType": "timestamp",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "text"
+        },
+        {
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "left",
+                        "displayMode": "auto",
+                        "filterable": true
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "itemid"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 340
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "value"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 152
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "item_name"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 346
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "ItemID"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 291
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Code"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 193
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Item Name"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 589
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Store"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 345
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Date out of stock"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width"
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Date back in stock"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 249
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Days out of stock"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 145
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 16,
+                "w": 24,
+                "x": 0,
+                "y": 60
+            },
+            "id": 6,
+            "options": {
+                "footer": {
+                    "fields": "",
+                    "reducer": [
+                        "sum"
+                    ],
+                    "show": false
+                },
+                "showHeader": true,
+                "sortBy": [
+                    {
+                        "desc": false,
+                        "displayName": "Date out of stock"
+                    }
+                ]
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "q3awFTGHk"
+                    },
+                    "format": "table",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": true,
+                    "rawSql": "with getOOSPreviousMonth as (\n  select i.id AS item_id, i.code, i.item_name, s.name AS store_name, s.id AS store_id, fulldate, value, RANK() OVER(PARTITION BY i.id, s.id ORDER BY fullDate desc) AS ranking \n  from item i \n  join item_store_join isj on i.id = isj.item_id AND isj.inactive = false  -- include all visible items\n  join store s on s.id = isj.store_id AND s.name in (${store_name:sqlstring})\n  LEFT JOIN aggregator agg on agg.storeid = s.id AND agg.itemID = i.id and agg.dataElement = 'stockHistory' and fullDate<= current_date - interval '1' month \n  where i.item_name IN (${item_name:sqlstring}) \n), getZeroStockPM AS(\n  -- items have never stocks is not included here even though item is visible in the store\n  select item_id, code, item_name, fulldate AS \"Date out of stock\", value AS previousValue, store_id, store_name from getOOSPreviousMonth WHERE ranking = 1 AND COALESCE(value, 0) =0\n)/*, getLastStockOut AS(\n  -- some items has the older date than stock history because of the lookback is 12 months\n  SELECT t.store_id, tl.item_id, MAX(t.confirm_date) AS date_out_of_stock\n  FROM getZeroStockPM pm \n  JOIN transact t ON t.store_id = pm.store_id \n  JOIN trans_line tl ON tl.transaction_id = t.id AND tl.item_id = pm.item_id AND tl.type = 'stock_out'\n  JOIN name n ON t.name_id = n.id \n  WHERE CASE WHEN n.type = 'invad' THEN t.status IN ('sg', 'cn', 'fn') AND entry_date<=current_date - interval '1' month\n    ELSE t.status NOT IN ('sg', 'nw') AND confirm_date<=current_date - interval '1' month END \n  GROUP BY t.store_id, tl.item_id\n)*/,getDateBackInStock AS(\n  -- only items that have 0 stock in the last month, but currently have stock\n  -- the first date that stock > 0 after stock out\n  select item_id, code, item_name, store_id, store_name,  \"Date out of stock\", fulldate AS \"Date back in stock\", value, RANK() OVER(PARTITION BY itemid, storeid ORDER BY fullDate ASC) AS ranking \n  from aggregator agg \n  join getZeroStockPM gzpm on gzpm.item_id = agg.itemid and gzpm.store_id = agg.storeid\n  where agg.dataElement = 'stockHistory' and value > 0 and (fullDate<=current_date and fullDate>=current_date - interval '1' month) \n)\nSELECT \n  store_name AS \"Store\",\n  item_name AS \"Item name\",\n  \"Date out of stock\"::TEXT, \n  --COALESCE(date_out_of_stock, \"Date out of stock\")::TEXT AS \"Date out of stock\",\n  \"Date back in stock\"::TEXT,\n  CASE WHEN COALESCE(\"Date out of stock\"::TEXT, '') = '' THEN 999 ELSE DATE_PART('day', \"Date back in stock\"::timestamp - \"Date out of stock\"::timestamp) END \"Days out of stock\",\n  --CASE WHEN COALESCE(\"Date out of stock\"::TEXT, '') = '' THEN 999 ELSE DATE_PART('day', \"Date back in stock\"::timestamp - COALESCE(date_out_of_stock, \"Date out of stock\")::timestamp) END \"Days out of stock\",\n  COALESCE(SUM(il.stock_on_hand_tot), 0) AS \"Current stock on hand\"\nFROM getDateBackInStock bis \n--LEFT JOIN getLastStockOut lso ON lso.item_id = bis.item_id AND lso.store_id = bis.store_id \nLEFT JOIN item_line il on il.item_id = bis.item_id AND il.store_id = bis.store_id AND quantity > 0 \nWHERE ranking = 1 \nGROUP BY store_name, code, item_name, \"Date out of stock\", /*date_out_of_stock, */\"Date back in stock\"\n",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "title": " ",
+            "type": "table"
+        },
+        {
+            "description": "This table shows you all items with zero stock on hand and whether the item is on order. The Purchase order date, quantity and EDD is based on the most recently placed PO. ",
+            "gridPos": {
+                "h": 3,
+                "w": 24,
+                "x": 0,
+                "y": 76
+            },
+            "id": 14,
+            "options": {
+                "content": "<h2 style=\"color: #FFFFFF; background-color: #445c94; font-size: 26px; text-align: center;\">\n<br>\nOut of stock\n<br>\n<br>",
+                "mode": "html"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "q3awFTGHk"
+                    },
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  updated_date AS \"time\",\n  value\nFROM d_msupply_monthly_usage\nWHERE\n  $__timeFilter(updated_date)\nORDER BY 1",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "table": "d_msupply_monthly_usage",
+                    "timeColumn": "updated_date",
+                    "timeColumnType": "timestamp",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "text"
+        },
+        {
+            "datasource": {
+                "type": "postgres",
+                "uid": "q3awFTGHk"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "auto",
+                        "displayMode": "auto",
+                        "filterable": true
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "itemid"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 340
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "value"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 152
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "item_name"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 346
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "ItemID"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 291
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Code"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 103
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Item Name"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 341
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Item name"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 355
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Store"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 312
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Average monthly consumption"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 212
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "AMC"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 96
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "PO quantity"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 106
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Estimated delivery date"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 195
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Unit"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 85
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Item code"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 160
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "PO placed"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 107
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "item_id"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 316
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "store_id"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 308
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 15,
+                "w": 24,
+                "x": 0,
+                "y": 79
+            },
+            "id": 25,
+            "options": {
+                "footer": {
+                    "fields": "",
+                    "reducer": [
+                        "sum"
+                    ],
+                    "show": false
+                },
+                "showHeader": true,
+                "sortBy": []
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "q3awFTGHk"
+                    },
+                    "format": "table",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": true,
+                    "rawSql": "WITH current_amc as (\n\tSELECT agg.storeid, agg.itemid, value \n\tFROM aggregator agg\n  WHERE CASE WHEN ${amc_lookback} = 12 THEN dataelement = 'AMC' ELSE dataelement = '' END\n\tAND storeid IN (SELECT id FROM store WHERE name IN (${store_name:sqlstring}))\n\tAND itemid IN (SELECT id FROM item WHERE item_name IN (${item_name:sqlstring}))\n), amc_by_monthly_consumption AS (\n  SELECT agg.storeid, agg.itemid, AVG(value) AS value\n\tFROM aggregator agg\n\tWHERE dataElement = 'monthlyConsumption'\n\tAND storeid IN (SELECT id FROM store WHERE name IN (${store_name:sqlstring}))\n\tAND itemid IN (SELECT id FROM item WHERE item_name IN (${item_name:sqlstring}))\n\tAND CASE WHEN ${amc_lookback} = 12 THEN monthyear = '' ELSE monthyear::integer >= (TO_CHAR(current_date - CAST('${amc_lookback}' || ' month' AS interval), 'YYYYMM')::integer) END\n\tGROUP BY agg.storeid, agg.itemid\n), amc AS(\n  SELECT * FROM current_amc \n  UNION SELECT * FROM amc_by_monthly_consumption\n), item_lines AS(\n  SELECT \n    isj.store_id, \n    s.name AS store_name,\n    isj.item_id,\n    i.code,\n    i.item_name,\n    i.unit_id,\n    pack_size * quantity, \n    CASE WHEN (expiry_date < current_date AND stock_on_hand_tot > 0) THEN true ELSE false END AS expired,  \n    expiry_date, \n    stock_on_hand_tot,\n    CASE WHEN (expiry_date < current_date AND stock_on_hand_tot > 0) THEN 0 ELSE COALESCE(stock_on_hand_tot,0) END AS real_soh  \n  FROM item i \n  JOIN item_store_join isj ON i.id = isj.item_id AND isj.inactive = false \n  JOIN store s ON isj.store_id = s.id \n  LEFT JOIN item_line il ON il.item_id = isj.item_id AND isj.store_id = il.store_id \n  WHERE s.name IN (${store_name:sqlstring}) \n  AND i.item_name IN (${item_name:sqlstring})\n  AND CASE WHEN ${expired_stock:sqlstring} = 'Exclude' \n    THEN -- All out of stock including expired stock whose soh is not 0\n      true  \n    ELSE -- Just out of stock = 0 only \n      (expiry_date >= current_date) OR (expiry_date IS NULL) OR (expiry_date < current_date AND stock_on_hand_tot <= 0) END \n), zero_current_stock AS (\n\tSELECT \n\t  store_id, store_name, item_id, item_name, code, unit_id, MAX(CASE WHEN expired = true THEN expiry_date ELSE NULL END) AS expiry_date, FLOOR(SUM(real_soh)) AS soh \n  FROM item_lines  \n  GROUP BY store_id, store_name, item_id, item_name, code, unit_id  \n  HAVING FLOOR(SUM(real_soh)) <= 0\n), stock_history AS(\n  SELECT agg.storeid, agg.itemid, MAX(agg.fulldate) AS fulldate \n  FROM d_aggregator_monthly_soh agg \n  JOIN zero_current_stock zcs ON agg.storeid = zcs.store_id AND agg.itemid = zcs.item_id \n  WHERE monthyear = TO_CHAR(CURRENT_DATE, 'YYYYMM') \n  GROUP BY agg.storeid, agg.itemid\n), po AS(\n  SELECT \n    po.id,\n    po.store_id,\n    pol.item_id,\n    po.serial_number,\n    po.confirm_date,\n    pol.delivery_date_expected,\n    RANK() OVER (PARTITION BY po.store_id, pol.item_id ORDER BY po.confirm_date DESC, po.serial_number ASC) AS ranking,\n    pol.quan_adjusted_order-pol.quan_rec_to_date AS po_outstanding \n  FROM purchase_order po \n  JOIN purchase_order_line pol ON po.id = pol.purchase_order_id \n  JOIN zero_current_stock zcs ON po.store_id = zcs.store_id AND pol.item_id = zcs.item_id \n  WHERE po.status IN ('cn') \n  AND pol.quan_adjusted_order-pol.quan_rec_to_date > 0\n)\nSELECT \n  cs.store_name AS \"Store\",\n  cs.item_name AS \"Item name\",\n  units AS \"Unit\",\n  amc.value AS \"AMC\",\n  po.confirm_date::text AS \"PO placed\",\n  po.po_outstanding AS \"PO quantity\",\n  po.delivery_date_expected::text AS \"Estimated delivery date\",\n  --cs.expiry_date,\n  --stock_history.fulldate,\n  CASE WHEN cs.expiry_date IS NULL AND stock_history.fulldate IS NULL THEN NULL \n  WHEN cs.expiry_date IS NULL AND stock_history.fulldate IS NOT NULL THEN current_date - stock_history.fulldate \n  ELSE CASE WHEN cs.expiry_date - stock_history.fulldate > 0 THEN current_date - cs.expiry_date ELSE current_date - stock_history.fulldate END END  AS \"Days of out of stock\"--, \n  --current_date - COALESCE(cs.expiry_date, current_date) AS \"Days of out of stock expiry\",\n  --current_date - stock_history.fulldate AS \"Days of out of stock full\" \nFROM zero_current_stock cs  \nJOIN unit ON unit.id = cs.unit_id \nLEFT JOIN stock_history ON stock_history.storeid = cs.store_id AND stock_history.itemid = cs.item_id\nLEFT JOIN amc ON amc.storeid = cs.store_id and amc.itemid = cs.item_id \nLEFT JOIN po ON po.store_id = cs.store_id AND po.item_id = cs.item_id and ranking = 1 \nORDER BY cs.item_name ASC, \"Days of out of stock\" DESC NULLS LAST",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "title": " ",
+            "type": "table"
+        },
+        {
+            "description": "This table shows you items with less than 3 months stock on hand.",
+            "gridPos": {
+                "h": 3,
+                "w": 24,
+                "x": 0,
+                "y": 94
+            },
+            "id": 18,
+            "options": {
+                "content": "<h2 style=\"color: #FFFFFF; background-color: #445c94; font-size: 26px; text-align: center;\">\n<br>\nLow stock\n<br>\n<br>",
+                "mode": "html"
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "q3awFTGHk"
+                    },
+                    "format": "time_series",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": false,
+                    "rawSql": "SELECT\n  updated_date AS \"time\",\n  value\nFROM d_msupply_monthly_usage\nWHERE\n  $__timeFilter(updated_date)\nORDER BY 1",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "table": "d_msupply_monthly_usage",
+                    "timeColumn": "updated_date",
+                    "timeColumnType": "timestamp",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "type": "text"
+        },
+        {
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "auto",
+                        "displayMode": "auto",
+                        "filterable": true
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Months of stock remaining"
+                        },
+                        "properties": [
+                            {
+                                "id": "unit",
+                                "value": "string"
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "PO placed"
+                        },
+                        "properties": [
+                            {
+                                "id": "noValue"
+                            },
+                            {
+                                "id": "custom.width",
+                                "value": 110
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "item_name"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 346
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "ItemID"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 291
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Code"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 103
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Item Name"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 341
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Item name"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 373
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Store"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 269
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Average monthly consumption"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 212
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "AMC"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 67
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "PO quantity"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 106
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Estimated delivery date"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 182
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Unit"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 65
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Item code"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 165
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "SOH"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.width",
+                                "value": 69
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 16,
+                "w": 24,
+                "x": 0,
+                "y": 97
+            },
+            "id": 7,
+            "options": {
+                "footer": {
+                    "fields": "",
+                    "reducer": [
+                        "sum"
+                    ],
+                    "show": false
+                },
+                "showHeader": true,
+                "sortBy": []
+            },
+            "pluginVersion": "8.5.0",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "postgres",
+                        "uid": "q3awFTGHk"
+                    },
+                    "format": "table",
+                    "group": [],
+                    "metricColumn": "none",
+                    "rawQuery": true,
+                    "rawSql": "WITH current_amc as (\n\tSELECT agg.storeid, agg.itemid, value \n\tFROM aggregator agg\n  WHERE CASE WHEN ${amc_lookback} = 12 THEN dataelement = 'AMC' ELSE dataelement = '' END\n\tAND storeid IN (SELECT id FROM store WHERE name IN (${store_name:sqlstring}))\n\tAND itemid IN (SELECT id FROM item WHERE item_name IN (${item_name:sqlstring}))\n), amc_by_monthly_consumption AS (\n  SELECT agg.storeid, agg.itemid, AVG(value) AS value\n\tFROM aggregator agg\n\tWHERE dataElement = 'monthlyConsumption'\n\tAND storeid IN (SELECT id FROM store WHERE name IN (${store_name:sqlstring}))\n\tAND itemid IN (SELECT id FROM item WHERE item_name IN (${item_name:sqlstring}))\n\tAND CASE WHEN ${amc_lookback} = 12 THEN monthyear = '' ELSE monthyear::integer >= (TO_CHAR(current_date - CAST('${amc_lookback}' || ' month' AS interval), 'YYYYMM')::integer) END\n\tGROUP BY agg.storeid, agg.itemid\n), amc AS(\n  SELECT * FROM current_amc \n  UNION SELECT * FROM amc_by_monthly_consumption\n), current_stock AS (\n\tSELECT \n\t  store_id, \n\t  item_id, \n\t  SUM(quantity * pack_size) AS value \n\tFROM item_line \n\tWHERE store_id IN (SELECT id FROM store WHERE name IN (${store_name:sqlstring}))\n\tAND item_id IN (SELECT id FROM item WHERE item_name IN (${item_name:sqlstring}))\n\tAND CASE WHEN ${expired_stock:sqlstring} = 'Exclude' THEN (expiry_date IS NULL OR expiry_date >= current_date) ELSE item_id <> '' END\n\tGROUP BY store_id, item_id \n\tHAVING SUM(quantity * pack_size) > 0\n), po AS(\n  SELECT \n    po.id,\n    po.store_id,\n    pol.item_id,\n    po.confirm_date,\n    pol.delivery_date_expected,\n    RANK() OVER (PARTITION BY po.store_id, pol.item_id ORDER BY po.confirm_date DESC) AS ranking,\n    pol.quan_adjusted_order-pol.quan_rec_to_date AS po_outstanding \n  FROM purchase_order po \n  JOIN purchase_order_line pol ON po.id = pol.purchase_order_id \n  JOIN current_stock zcs ON po.store_id = zcs.store_id AND pol.item_id = zcs.item_id \n  WHERE po.status IN ('cn') \n  AND pol.quan_adjusted_order-pol.quan_rec_to_date > 0\n) \nSELECT \n  store.name AS \"Store\",\n  item.item_name AS \"Item name\",\n  units AS \"Unit\",\n  cs.value AS \"SOH\",\n  amc.value AS \"AMC\",\n  po.confirm_date::text AS \"PO placed\",\n  po.po_outstanding AS \"PO quantity\",\n  po.delivery_date_expected::text AS \"Estimated delivery date\",\n  ROUND(CAST(cs.value/amc.value AS numeric),1)::float AS \"Months of stock remaining\" \nFROM item \nJOIN item_store_join isj ON isj.item_id = item.id AND item.item_name IN (${item_name:sqlstring})\nJOIN store ON isj.store_id = store.id AND store.name IN (${store_name:sqlstring}) \nJOIN current_stock cs ON item.id = cs.item_id AND store.id = cs.store_id \nJOIN unit ON unit.id = item.unit_id \nLEFT JOIN amc ON amc.storeid = store.id and amc.itemid = item.id \nLEFT JOIN po ON po.store_id = store.id AND po.item_id = item.id and ranking = 1\nWHERE cs.value/amc.value <= 6\nORDER BY item_name ASC ",
+                    "refId": "A",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "column"
+                            }
+                        ]
+                    ],
+                    "timeColumn": "time",
+                    "where": [
+                        {
+                            "name": "$__timeFilter",
+                            "params": [],
+                            "type": "macro"
+                        }
+                    ]
+                }
+            ],
+            "title": " ",
+            "type": "table"
+        }
+    ],
+    "refresh": "",
+    "schemaVersion": 35,
+    "style": "dark",
+    "tags": [
+        "dashboard-list",
+        "stock-management"
+    ],
+    "templating": {
+        "list": [
+            {
+                "current": {
+                    "selected": false,
+                    "text": "All",
+                    "value": "$__all"
+                },
+                "datasource": {
+                    "type": "postgres",
+                    "uid": "q3awFTGHk"
+                },
+                "definition": "select name from store  where name<>'Supervisor- All stores'  and name<>'Registration'  and  name<>'Hospital Info System' and disabled = 'false' AND tags NOT LIKE '%dashboard_exclude%'",
+                "hide": 0,
+                "includeAll": true,
+                "label": "Store",
+                "multi": true,
+                "name": "store_name",
+                "options": [],
+                "query": "select name from store  where name<>'Supervisor- All stores'  and name<>'Registration'  and  name<>'Hospital Info System' and disabled = 'false' AND tags NOT LIKE '%dashboard_exclude%'",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "type": "query"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "All",
+                    "value": "$__all"
+                },
+                "datasource": {
+                    "type": "postgres",
+                    "uid": "q3awFTGHk"
+                },
+                "definition": "SELECT description FROM item_category\nUNION SELECT 'NONE' \nORDER BY 1",
+                "hide": 0,
+                "includeAll": true,
+                "label": "Item Category 1",
+                "multi": false,
+                "name": "item_category1",
+                "options": [],
+                "query": "SELECT description FROM item_category\nUNION SELECT 'NONE' \nORDER BY 1",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "type": "query"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "All",
+                    "value": "$__all"
+                },
+                "datasource": {
+                    "type": "postgres",
+                    "uid": "q3awFTGHk"
+                },
+                "definition": "SELECT description FROM item_category2 \nUNION SELECT 'NONE' \nORDER BY 1",
+                "hide": 0,
+                "includeAll": true,
+                "label": "Item category2",
+                "multi": false,
+                "name": "item_category2",
+                "options": [],
+                "query": "SELECT description FROM item_category2 \nUNION SELECT 'NONE' \nORDER BY 1",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "type": "query"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "All",
+                    "value": "$__all"
+                },
+                "datasource": {
+                    "type": "postgres",
+                    "uid": "q3awFTGHk"
+                },
+                "definition": "WITH item_list AS(\nSELECT i.item_name  \nFROM list_master_line lml \nJOIN item i ON lml.item_id = i.id\nLEFT JOIN item_category2 ic2 ON i.category2_id = ic2.id \nLEFT JOIN item_category ic1 ON i.category_id = ic1.id\nWHERE i.critical_stock::text IN (${critical_stock:sqlstring}) \nAND i.essential_drug_list::text IN (${essential_drug_list:sqlstring}) \nAND COALESCE(ic2.description,'NONE') IN (${item_category2:sqlstring})\nAND COALESCE(ic1.description,'NONE') IN (${item_category1:sqlstring})\nAND i.user_field_1 = 'Y'\nUNION SELECT '-- No item--'\n)\nSELECT item_name FROM item_list  \nWHERE CASE WHEN 1 = ( select count(*) from item_list ) THEN item_name = '-- No item--'\nELSE item_name <> '-- No item--' END \nORDER BY 1 ASC ",
+                "hide": 0,
+                "includeAll": true,
+                "label": "Item",
+                "multi": true,
+                "name": "item_name",
+                "options": [],
+                "query": "WITH item_list AS(\nSELECT i.item_name  \nFROM list_master_line lml \nJOIN item i ON lml.item_id = i.id\nLEFT JOIN item_category2 ic2 ON i.category2_id = ic2.id \nLEFT JOIN item_category ic1 ON i.category_id = ic1.id\nWHERE i.critical_stock::text IN (${critical_stock:sqlstring}) \nAND i.essential_drug_list::text IN (${essential_drug_list:sqlstring}) \nAND COALESCE(ic2.description,'NONE') IN (${item_category2:sqlstring})\nAND COALESCE(ic1.description,'NONE') IN (${item_category1:sqlstring})\nAND i.user_field_1 = 'Y'\nUNION SELECT '-- No item--'\n)\nSELECT item_name FROM item_list  \nWHERE CASE WHEN 1 = ( select count(*) from item_list ) THEN item_name = '-- No item--'\nELSE item_name <> '-- No item--' END \nORDER BY 1 ASC ",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "type": "query"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "All",
+                    "value": "$__all"
+                },
+                "hide": 0,
+                "includeAll": true,
+                "label": "Critical stock",
+                "multi": false,
+                "name": "critical_stock",
+                "options": [
+                    {
+                        "selected": true,
+                        "text": "All",
+                        "value": "$__all"
+                    },
+                    {
+                        "selected": false,
+                        "text": "true",
+                        "value": "true"
+                    },
+                    {
+                        "selected": false,
+                        "text": "false",
+                        "value": "false"
+                    }
+                ],
+                "query": "true, false",
+                "queryValue": "",
+                "skipUrlSync": false,
+                "type": "custom"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "All",
+                    "value": "$__all"
+                },
+                "hide": 0,
+                "includeAll": true,
+                "label": "On essential drug list",
+                "multi": false,
+                "name": "essential_drug_list",
+                "options": [
+                    {
+                        "selected": true,
+                        "text": "All",
+                        "value": "$__all"
+                    },
+                    {
+                        "selected": false,
+                        "text": "true",
+                        "value": "true"
+                    },
+                    {
+                        "selected": false,
+                        "text": "false",
+                        "value": "false"
+                    }
+                ],
+                "query": "true, false",
+                "queryValue": "",
+                "skipUrlSync": false,
+                "type": "custom"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "12",
+                    "value": "12"
+                },
+                "description": "Default is the last 12 months of data",
+                "hide": 0,
+                "includeAll": false,
+                "label": "AMC look back (Month)",
+                "multi": false,
+                "name": "amc_lookback",
+                "options": [
+                    {
+                        "selected": true,
+                        "text": "12",
+                        "value": "12"
+                    },
+                    {
+                        "selected": false,
+                        "text": "2",
+                        "value": "2"
+                    },
+                    {
+                        "selected": false,
+                        "text": "3",
+                        "value": "3"
+                    },
+                    {
+                        "selected": false,
+                        "text": "4",
+                        "value": "4"
+                    },
+                    {
+                        "selected": false,
+                        "text": "5",
+                        "value": "5"
+                    },
+                    {
+                        "selected": false,
+                        "text": "6",
+                        "value": "6"
+                    },
+                    {
+                        "selected": false,
+                        "text": "7",
+                        "value": "7"
+                    },
+                    {
+                        "selected": false,
+                        "text": "8",
+                        "value": "8"
+                    },
+                    {
+                        "selected": false,
+                        "text": "9",
+                        "value": "9"
+                    },
+                    {
+                        "selected": false,
+                        "text": "10",
+                        "value": "10"
+                    },
+                    {
+                        "selected": false,
+                        "text": "11",
+                        "value": "11"
+                    }
+                ],
+                "query": "12, 2 ,3, 4, 5, 6, 7, 8, 9, 10, 11",
+                "queryValue": "",
+                "skipUrlSync": false,
+                "type": "custom"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "Exclude",
+                    "value": "Exclude"
+                },
+                "description": "Default is Include which shows all ",
+                "hide": 0,
+                "includeAll": false,
+                "label": "Expired Stock",
+                "multi": false,
+                "name": "expired_stock",
+                "options": [
+                    {
+                        "selected": false,
+                        "text": "Include",
+                        "value": "Include"
+                    },
+                    {
+                        "selected": true,
+                        "text": "Exclude",
+                        "value": "Exclude"
+                    }
+                ],
+                "query": "Include, Exclude",
+                "queryValue": "",
+                "skipUrlSync": false,
+                "type": "custom"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "All",
+                    "value": "$__all"
+                },
+                "datasource": {
+                    "type": "postgres",
+                    "uid": "q3awFTGHk"
+                },
+                "definition": "select il.id from item_line il\nwhere il.store_id IN (SELECT id FROM store WHERE name IN (${store_name:sqlstring}))\nAND il.item_id IN (SELECT id FROM item WHERE item_name IN (${item_name:sqlstring}))\nand CASE WHEN ${expired_stock:sqlstring} = 'Exclude' THEN (expiry_date >= current_date) ELSE il.quantity>0 END",
+                "hide": 2,
+                "includeAll": true,
+                "label": "itemLineID",
+                "multi": false,
+                "name": "itemLineID",
+                "options": [],
+                "query": "select il.id from item_line il\nwhere il.store_id IN (SELECT id FROM store WHERE name IN (${store_name:sqlstring}))\nAND il.item_id IN (SELECT id FROM item WHERE item_name IN (${item_name:sqlstring}))\nand CASE WHEN ${expired_stock:sqlstring} = 'Exclude' THEN (expiry_date >= current_date) ELSE il.quantity>0 END",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 0,
+                "type": "query"
+            }
+        ]
+    },
+    "time": {
+        "from": "now-1y",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "Stock Availability",
+    "uid": "I0V-Q9S4k-2024",
+    "version": 23,
+    "weekStart": ""
+}
