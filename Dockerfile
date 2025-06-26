@@ -60,7 +60,6 @@ COPY package.json .
 
 WORKDIR /usr/src/omsupply/client
 # Rebuild node_modules
-RUN find node_modules/.bin -type f -exec chmod +x {} \;
 RUN find node_modules/*/bin -type f -exec chmod +x {} \; 2>/dev/null || true
 RUN npm rebuild
 
