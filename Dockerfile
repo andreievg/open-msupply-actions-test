@@ -58,6 +58,12 @@ WORKDIR /usr/src/omsupply
 COPY client client
 COPY package.json .
 
+WORKDIR /usr/src/omsupply/client
+# Rebuild node_modules
+RUN find node_modules/.bin -type f -exec chmod +x {} \;
+RUN find node_modules/*/bin -type f -exec chmod +x {} \; 2>/dev/null || true
+RUN npm rebuild
+
 # Needs this for yarn to work properly
 RUN echo 'export NODE_OPTIONS="--max-old-space-size=4096"' >> ~/.bashrc
 
