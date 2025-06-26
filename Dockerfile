@@ -58,6 +58,11 @@ WORKDIR /usr/src/omsupply
 COPY client client
 COPY package.json .
 
+WORKDIR /usr/src/omsupply/client
+# Rebuild node_modules, this is because .bin directory is wiped when copied
+# TODO should really just save package cache not just node_modules, this would speed up this step by about 5 minutes
+RUN yarn
+
 # Needs this for yarn to work properly
 RUN echo 'export NODE_OPTIONS="--max-old-space-size=4096"' >> ~/.bashrc
 
