@@ -1,7 +1,7 @@
 use crate::sync::{
     test::TestSyncIncomingRecord,
     translations::invoice::{
-        LegacyTransactRow, LegacyTransactStatus, LegacyTransactType, TransactMode,
+        LegacyOmStatus, LegacyTransactRow, LegacyTransactStatus, LegacyTransactType, TransactMode,
     },
 };
 use chrono::{Duration, NaiveDate, NaiveTime};
@@ -35,7 +35,7 @@ const TRANSACT_1: (&str, &str) = (
       "currency_rate": 1.32,
       "custom_data": null,
       "diagnosis_ID": "",
-      "donor_default_id": "",
+      "donor_default_id": "donor_a",
       "encounter_id": "",
       "entry_date": "2021-07-30",
       "entry_time": 47046,
@@ -108,7 +108,7 @@ fn transact_1_pull_row() -> InvoiceRow {
         name_store_id: Some("store_a".to_string()),
         invoice_number: 1,
         r#type: InvoiceType::InboundShipment,
-        status: InvoiceStatus::Delivered,
+        status: InvoiceStatus::Received,
         on_hold: false,
         comment: None,
         their_reference: None,
@@ -122,6 +122,13 @@ fn transact_1_pull_row() -> InvoiceRow {
         picked_datetime: None,
         shipped_datetime: None,
         delivered_datetime: Some(
+            NaiveDate::from_ymd_opt(2021, 7, 30)
+                .unwrap()
+                .and_hms_opt(0, 0, 0)
+                .unwrap()
+                + Duration::seconds(47046),
+        ),
+        received_datetime: Some(
             NaiveDate::from_ymd_opt(2021, 7, 30)
                 .unwrap()
                 .and_hms_opt(0, 0, 0)
@@ -146,6 +153,7 @@ fn transact_1_pull_row() -> InvoiceRow {
         insurance_discount_percentage: Some(2.5),
         is_cancellation: false,
         expected_delivery_date: None,
+        default_donor_link_id: Some("donor_a".to_string()),
     }
 }
 
@@ -184,6 +192,13 @@ fn transact_1_push_legacy_row() -> LegacyTransactRow {
         allocated_datetime: None,
         picked_datetime: None,
         shipped_datetime: None,
+        // received_datetime: Some(
+        //     NaiveDate::from_ymd_opt(2021, 7, 30)
+        //         .unwrap()
+        //         .and_hms_opt(0, 0, 0)
+        //         .unwrap()
+        //         + Duration::seconds(47046),
+        // ),
         delivered_datetime: Some(
             NaiveDate::from_ymd_opt(2021, 7, 30)
                 .unwrap()
@@ -193,7 +208,7 @@ fn transact_1_push_legacy_row() -> LegacyTransactRow {
         ),
         verified_datetime: None,
         cancelled_datetime: None,
-        om_status: Some(InvoiceStatus::Delivered),
+        om_status: Some(LegacyOmStatus::Delivered),
         om_type: Some(InvoiceType::InboundShipment),
         om_colour: None,
         tax_percentage: Some(0.0),
@@ -209,6 +224,7 @@ fn transact_1_push_legacy_row() -> LegacyTransactRow {
         insurance_discount_percentage: Some(2.5),
         is_cancellation: false,
         expected_delivery_date: None,
+        default_donor_id: Some("donor_a".to_string()),
     }
 }
 
@@ -326,6 +342,7 @@ fn transact_2_pull_record() -> TestSyncIncomingRecord {
             picked_datetime: None,
             shipped_datetime: None,
             delivered_datetime: None,
+            received_datetime: None,
             verified_datetime: None,
             cancelled_datetime: None,
             colour: None,
@@ -344,6 +361,7 @@ fn transact_2_pull_record() -> TestSyncIncomingRecord {
             insurance_discount_percentage: None,
             is_cancellation: false,
             expected_delivery_date: None,
+            default_donor_link_id: None,
         },
     )
 }
@@ -383,9 +401,10 @@ fn transact_2_push_record() -> TestSyncOutgoingRecord {
             picked_datetime: None,
             shipped_datetime: None,
             delivered_datetime: None,
+            // received_datetime: None
             verified_datetime: None,
             cancelled_datetime: None,
-            om_status: Some(InvoiceStatus::Shipped),
+            om_status: Some(LegacyOmStatus::Shipped),
             om_type: Some(InvoiceType::OutboundShipment),
             om_colour: None,
             tax_percentage: Some(0.0),
@@ -401,6 +420,7 @@ fn transact_2_push_record() -> TestSyncOutgoingRecord {
             insurance_discount_percentage: None,
             is_cancellation: false,
             expected_delivery_date: None,
+            default_donor_id: None,
         }),
     }
 }
@@ -485,6 +505,7 @@ const TRANSACT_OM_FIELDS: (&str, &str) = (
         "om_allocated_datetime": "2022-08-25T10:33:00",
         "om_picked_datetime": "2022-08-26T11:33:00",
         "om_shipped_datetime": "2022-08-27T12:33:00",
+        "om_received_datetime": "2022-08-28T13:33:00",
         "om_delivered_datetime": "2022-08-28T13:33:00",
         "om_verified_datetime": "2022-08-29T14:33:00",
         "om_status": "SHIPPED",
@@ -539,6 +560,12 @@ fn transact_om_fields_pull_record() -> TestSyncIncomingRecord {
                     .and_hms_opt(13, 33, 0)
                     .unwrap(),
             ),
+            received_datetime: Some(
+                NaiveDate::from_ymd_opt(2022, 8, 28)
+                    .unwrap()
+                    .and_hms_opt(13, 33, 0)
+                    .unwrap(),
+            ),
             verified_datetime: Some(
                 NaiveDate::from_ymd_opt(2022, 8, 29)
                     .unwrap()
@@ -562,6 +589,7 @@ fn transact_om_fields_pull_record() -> TestSyncIncomingRecord {
             insurance_discount_percentage: None,
             is_cancellation: false,
             expected_delivery_date: None,
+            default_donor_link_id: None,
         },
     )
 }
@@ -590,7 +618,6 @@ fn transact_om_fields_push_record() -> TestSyncOutgoingRecord {
             confirm_date: Some(NaiveDate::from_ymd_opt(2022, 8, 29).unwrap()),
             confirm_time: NaiveTime::from_hms_opt(14, 33, 0).unwrap(),
             mode: TransactMode::Store,
-
             created_datetime: Some(
                 NaiveDate::from_ymd_opt(2022, 8, 24)
                     .unwrap()
@@ -615,6 +642,12 @@ fn transact_om_fields_push_record() -> TestSyncOutgoingRecord {
                     .and_hms_opt(12, 33, 0)
                     .unwrap()
             ),
+            // received_datetime: Some(
+            //     NaiveDate::from_ymd_opt(2022, 8, 28)
+            //         .unwrap()
+            //         .and_hms_opt(13, 33, 0)
+            //         .unwrap()
+            // ),
             delivered_datetime: Some(
                 NaiveDate::from_ymd_opt(2022, 8, 28)
                     .unwrap()
@@ -628,7 +661,7 @@ fn transact_om_fields_push_record() -> TestSyncOutgoingRecord {
                     .unwrap()
             ),
             cancelled_datetime: None,
-            om_status: Some(InvoiceStatus::Shipped),
+            om_status: Some(LegacyOmStatus::Shipped),
             om_type: Some(InvoiceType::InventoryAddition),
             om_colour: Some("SomeColour".to_string()),
             tax_percentage: Some(0.0),
@@ -644,6 +677,7 @@ fn transact_om_fields_push_record() -> TestSyncOutgoingRecord {
             insurance_discount_percentage: None,
             is_cancellation: false,
             expected_delivery_date: None,
+            default_donor_id: None,
         }),
     }
 }
@@ -771,6 +805,7 @@ fn inventory_addition_pull_record() -> TestSyncIncomingRecord {
             picked_datetime: None,
             shipped_datetime: None,
             delivered_datetime: None,
+            received_datetime: None,
             cancelled_datetime: None,
             requisition_id: None,
             linked_invoice_id: None,
@@ -787,6 +822,7 @@ fn inventory_addition_pull_record() -> TestSyncIncomingRecord {
             insurance_discount_percentage: None,
             is_cancellation: false,
             expected_delivery_date: None,
+            default_donor_link_id: None,
         },
     )
 }
@@ -804,7 +840,7 @@ fn inventory_addition_push_record() -> TestSyncOutgoingRecord {
             _type: LegacyTransactType::Si,
             status: LegacyTransactStatus::Fn,
             tax_percentage: Some(0.0),
-            om_status: Some(InvoiceStatus::Verified),
+            om_status: Some(LegacyOmStatus::Verified),
             om_type: Some(InvoiceType::InventoryAddition),
             entry_date: NaiveDate::from_ymd_opt(2023, 1, 16).unwrap(),
             entry_time: NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
@@ -831,6 +867,7 @@ fn inventory_addition_push_record() -> TestSyncOutgoingRecord {
             picked_datetime: None,
             shipped_datetime: None,
             delivered_datetime: None,
+            // received_datetime: None
             om_colour: None,
             ship_date: None,
             hold: false,
@@ -850,6 +887,7 @@ fn inventory_addition_push_record() -> TestSyncOutgoingRecord {
             insurance_discount_percentage: None,
             is_cancellation: false,
             expected_delivery_date: None,
+            default_donor_id: None,
         }),
     }
 }
@@ -977,6 +1015,7 @@ fn inventory_reduction_pull_record() -> TestSyncIncomingRecord {
             picked_datetime: None,
             shipped_datetime: None,
             delivered_datetime: None,
+            received_datetime: None,
             requisition_id: None,
             cancelled_datetime: None,
             linked_invoice_id: None,
@@ -993,6 +1032,7 @@ fn inventory_reduction_pull_record() -> TestSyncIncomingRecord {
             insurance_discount_percentage: None,
             is_cancellation: false,
             expected_delivery_date: None,
+            default_donor_link_id: None,
         },
     )
 }
@@ -1010,7 +1050,7 @@ fn inventory_reduction_push_record() -> TestSyncOutgoingRecord {
             _type: LegacyTransactType::Sc,
             status: LegacyTransactStatus::Fn,
             tax_percentage: Some(0.0),
-            om_status: Some(InvoiceStatus::Verified),
+            om_status: Some(LegacyOmStatus::Verified),
             om_type: Some(InvoiceType::InventoryReduction),
             entry_date: NaiveDate::from_ymd_opt(2023, 1, 16).unwrap(),
             entry_time: NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
@@ -1036,6 +1076,7 @@ fn inventory_reduction_push_record() -> TestSyncOutgoingRecord {
             picked_datetime: None,
             shipped_datetime: None,
             delivered_datetime: None,
+            // received_datetime: None
             om_colour: None,
             ship_date: None,
             hold: false,
@@ -1055,6 +1096,7 @@ fn inventory_reduction_push_record() -> TestSyncOutgoingRecord {
             insurance_discount_percentage: None,
             is_cancellation: false,
             expected_delivery_date: None,
+            default_donor_id: None,
         }),
     }
 }
@@ -1176,6 +1218,7 @@ fn prescription_1_pull_record() -> TestSyncIncomingRecord {
             ),
             shipped_datetime: None,
             delivered_datetime: None,
+            received_datetime: None,
             verified_datetime: None,
             cancelled_datetime: None,
             colour: None,
@@ -1194,6 +1237,7 @@ fn prescription_1_pull_record() -> TestSyncIncomingRecord {
             insurance_discount_percentage: None,
             is_cancellation: false,
             expected_delivery_date: None,
+            default_donor_link_id: None,
         },
     )
 }
@@ -1238,9 +1282,10 @@ fn prescription_1_push_record() -> TestSyncOutgoingRecord {
             ),
             shipped_datetime: None,
             delivered_datetime: None,
+            // received_datetime: None
             verified_datetime: None,
             cancelled_datetime: None,
-            om_status: Some(InvoiceStatus::Picked),
+            om_status: Some(LegacyOmStatus::Picked),
             om_type: Some(InvoiceType::Prescription),
             om_colour: None,
             tax_percentage: Some(0.0),
@@ -1256,6 +1301,7 @@ fn prescription_1_push_record() -> TestSyncOutgoingRecord {
             insurance_discount_percentage: None,
             is_cancellation: false,
             expected_delivery_date: None,
+            default_donor_id: None,
         }),
     }
 }
@@ -1378,6 +1424,7 @@ fn cancelled_prescription_pull_record() -> TestSyncIncomingRecord {
             ),
             shipped_datetime: None,
             delivered_datetime: None,
+            received_datetime: None,
             verified_datetime: None,
             cancelled_datetime: Some(
                 NaiveDate::from_ymd_opt(2022, 8, 24)
@@ -1401,6 +1448,7 @@ fn cancelled_prescription_pull_record() -> TestSyncIncomingRecord {
             insurance_discount_percentage: None,
             is_cancellation: false,
             expected_delivery_date: NaiveDate::from_ymd_opt(2021, 7, 30),
+            default_donor_link_id: None,
         },
     )
 }
@@ -1445,6 +1493,7 @@ fn cancelled_prescription_push_record() -> TestSyncOutgoingRecord {
             ),
             shipped_datetime: None,
             delivered_datetime: None,
+            // received_datetime: None
             verified_datetime: None,
             cancelled_datetime: Some(
                 NaiveDate::from_ymd_opt(2022, 8, 24)
@@ -1452,7 +1501,7 @@ fn cancelled_prescription_push_record() -> TestSyncOutgoingRecord {
                     .and_hms_opt(9, 33, 0)
                     .unwrap(),
             ),
-            om_status: Some(InvoiceStatus::Picked),
+            om_status: Some(LegacyOmStatus::Picked),
             om_type: Some(InvoiceType::Prescription),
             om_colour: None,
             tax_percentage: Some(0.0),
@@ -1468,6 +1517,7 @@ fn cancelled_prescription_push_record() -> TestSyncOutgoingRecord {
             insurance_discount_percentage: None,
             is_cancellation: false,
             expected_delivery_date: NaiveDate::from_ymd_opt(2021, 7, 30),
+            default_donor_id: None,
         }),
     }
 }
@@ -1498,8 +1548,9 @@ fn transact_migrate_og_si_to_shipped_pull() -> TestSyncIncomingRecord {
             id: TRANSACT_MIGRATE_OG_SI_STATUS_ID.to_string(),
             status: InvoiceStatus::Shipped,
 
-            shipped_datetime: transact_1_pull_row().delivered_datetime,
+            shipped_datetime: transact_1_pull_row().received_datetime,
             delivered_datetime: None,
+            received_datetime: None,
             ..transact_1_pull_row()
         },
     )
@@ -1512,12 +1563,13 @@ fn transact_migrate_og_si_to_shipped_push() -> TestSyncOutgoingRecord {
         push_data: json!(LegacyTransactRow {
             ID: TRANSACT_MIGRATE_OG_SI_STATUS_ID.to_string(),
             status: LegacyTransactStatus::Nw,
-            om_status: Some(InvoiceStatus::Shipped),
+            om_status: Some(LegacyOmStatus::Shipped),
             arrival_date_actual: None,
             confirm_date: None,
             confirm_time: NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
             shipped_datetime: transact_1_push_legacy_row().delivered_datetime,
             delivered_datetime: None,
+            // received_datetime: None
             ship_date: Some(transact_1_push_legacy_row().entry_date),
             ..transact_1_push_legacy_row()
         }),

@@ -10,7 +10,6 @@ import {
   DeleteStocktakeLineInput,
   StocktakeNodeStatus,
   UpdateStocktakeStatusInput,
-  InsertStocktakeInput,
   setNullableInput,
   FilterByWithBoolean,
   StocktakeLineSortFieldInput,
@@ -61,7 +60,7 @@ const stocktakeParser = {
     toUpdate: (line: DraftStocktakeLine): UpdateStocktakeLineInput => ({
       location: setNullableInput('id', line.location),
       batch: line.batch ?? '',
-      packSize: line.packSize ?? 1,
+      packSize: line.packSize ?? line.item.defaultPackSize,
       costPricePerPack: line.costPricePerPack,
       countedNumberOfPacks: line.countedNumberOfPacks,
       sellPricePerPack: line.sellPricePerPack,
@@ -70,13 +69,14 @@ const stocktakeParser = {
         ? Formatter.naiveDate(new Date(line.expiryDate))
         : undefined,
       comment: line.comment ?? '',
-      inventoryAdjustmentReasonId: line.inventoryAdjustmentReason?.id,
       itemVariantId: setNullableInput('itemVariantId', line),
+      donorId: setNullableInput('donorId', line),
+      reasonOptionId: line.reasonOption?.id,
     }),
     toInsert: (line: DraftStocktakeLine): InsertStocktakeLineInput => ({
       location: setNullableInput('id', line.location),
       batch: line.batch ?? '',
-      packSize: line.packSize ?? 1,
+      packSize: line.packSize ?? line.item.defaultPackSize,
       costPricePerPack: line.costPricePerPack,
       countedNumberOfPacks: line.countedNumberOfPacks,
       id: line.id,
@@ -88,8 +88,9 @@ const stocktakeParser = {
         ? Formatter.naiveDate(new Date(line.expiryDate))
         : undefined,
       comment: line.comment ?? '',
-      inventoryAdjustmentReasonId: line.inventoryAdjustmentReason?.id,
       itemVariantId: line.itemVariantId,
+      donorId: line.donorId,
+      reasonOptionId: line.reasonOption?.id,
     }),
   },
 };
@@ -211,21 +212,6 @@ export const getStocktakeQueries = (sdk: Sdk, storeId: string) => ({
     const result = await sdk.upsertStocktakeLines(input);
     return result;
   },
-  insertStocktake: async (input: InsertStocktakeInput) => {
-    const result =
-      (await sdk.insertStocktake({
-        input,
-        storeId,
-      })) || {};
-
-    const { insertStocktake } = result;
-
-    if (insertStocktake?.__typename === 'StocktakeNode') {
-      return insertStocktake;
-    }
-
-    throw new Error('Could not create stocktake');
-  },
   insertStocktakeWithItems: async ({
     description,
     items,
@@ -237,6 +223,7 @@ export const getStocktakeQueries = (sdk: Sdk, storeId: string) => ({
       (await sdk.insertStocktake({
         input: {
           id: FnUtils.generateUUID(),
+          isInitialStocktake: false,
         },
         storeId,
       })) || {};

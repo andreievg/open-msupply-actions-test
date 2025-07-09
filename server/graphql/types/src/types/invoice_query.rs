@@ -10,15 +10,18 @@ use dataloader::DataLoader;
 
 use graphql_core::loader::{
     ClinicianLoader, ClinicianLoaderInput, DiagnosisLoader, InvoiceByIdLoader,
-    InvoiceLineByInvoiceIdLoader, NameByIdLoaderInput, NameInsuranceJoinLoader, PatientLoader,
-    ProgramByIdLoader, StoreByIdLoader, UserLoader,
+    InvoiceLineByInvoiceIdLoader, NameByIdLoaderInput, NameByNameLinkIdLoader,
+    NameByNameLinkIdLoaderInput, NameInsuranceJoinLoader, PatientLoader, ProgramByIdLoader,
+    StoreByIdLoader, UserLoader,
 };
 use graphql_core::{
     loader::{InvoiceStatsLoader, NameByIdLoader, RequisitionsByIdLoader},
     standard_graphql_error::StandardGraphqlError,
     ContextExt,
 };
-use repository::{ClinicianRow, InvoiceRow, InvoiceStatus, InvoiceType, Name, NameRow, PricingRow};
+use repository::{
+    ClinicianRow, InvoiceRow, InvoiceStatus, InvoiceType, Name, NameLinkRow, NameRow, PricingRow,
+};
 
 use repository::Invoice;
 use serde::Serialize;
@@ -61,12 +64,16 @@ pub enum InvoiceNodeStatus {
     /// Outbound Shipment: Becomes not editable
     /// Inbound Shipment: For inter store stock transfers an inbound Shipment
     /// becomes editable when this status is set as a result of corresponding
-    /// outbound Shipment being chagned to shipped (this is similar to New status)
+    /// outbound Shipment being changed to shipped (this is similar to New status)
     Shipped,
     /// General description: Inbound Shipment was received
     /// Outbound Shipment: Status is updated based on corresponding inbound Shipment
     /// Inbound Shipment: Stock is introduced and can be issued
     Delivered,
+    /// General description: Received inbound Shipment has arrived, not counted or verified yet
+    /// Outbound Shipment: Status is updated based on corresponding inbound Shipment
+    /// Inbound Shipment: Status update, doesn't affect stock levels or restrict access to edit
+    Received,
     /// General description: Received inbound Shipment was counted and verified
     /// Outbound Shipment: Status is updated based on corresponding inbound Shipment
     /// Inbound Shipment: Becomes not editable
@@ -178,6 +185,12 @@ impl InvoiceNode {
             .map(|v| DateTime::<Utc>::from_naive_utc_and_offset(v, Utc))
     }
 
+    pub async fn received_datetime(&self) -> Option<DateTime<Utc>> {
+        self.row()
+            .received_datetime
+            .map(|v| DateTime::<Utc>::from_naive_utc_and_offset(v, Utc))
+    }
+
     pub async fn verified_datetime(&self) -> Option<DateTime<Utc>> {
         self.row()
             .verified_datetime
@@ -282,11 +295,18 @@ impl InvoiceNode {
             None => patient_loader
                 .load_one(self.name_row().id.clone())
                 .await?
-                .map(|name_row| Name {
-                    name_row,
-                    name_store_join_row: None,
-                    store_row: None,
-                    properties: None,
+                .map(|name_row| {
+                    let name_id = name_row.id.clone();
+                    Name {
+                        name_row,
+                        name_link_row: NameLinkRow {
+                            id: name_id.clone(),
+                            name_id,
+                        },
+                        name_store_join_row: None,
+                        store_row: None,
+                        properties: None,
+                    }
                 }),
         };
 
@@ -455,6 +475,23 @@ impl InvoiceNode {
     pub async fn expected_delivery_date(&self) -> &Option<NaiveDate> {
         &self.row().expected_delivery_date
     }
+
+    pub async fn default_donor(
+        &self,
+        ctx: &Context<'_>,
+        store_id: String,
+    ) -> Result<Option<NameNode>> {
+        let donor_link_id = match &self.row().default_donor_link_id {
+            None => return Ok(None),
+            Some(donor_link_id) => donor_link_id,
+        };
+        let loader = ctx.get_loader::<DataLoader<NameByNameLinkIdLoader>>();
+        let result = loader
+            .load_one(NameByNameLinkIdLoaderInput::new(&store_id, donor_link_id))
+            .await?;
+
+        Ok(result.map(NameNode::from_domain))
+    }
 }
 
 impl InvoiceNode {
@@ -579,6 +616,7 @@ impl InvoiceNodeStatus {
             Picked => InvoiceStatus::Picked,
             Shipped => InvoiceStatus::Shipped,
             Delivered => InvoiceStatus::Delivered,
+            Received => InvoiceStatus::Received,
             Verified => InvoiceStatus::Verified,
             Cancelled => InvoiceStatus::Cancelled,
         }
@@ -592,6 +630,7 @@ impl InvoiceNodeStatus {
             Picked => InvoiceNodeStatus::Picked,
             Shipped => InvoiceNodeStatus::Shipped,
             Delivered => InvoiceNodeStatus::Delivered,
+            Received => InvoiceNodeStatus::Received,
             Verified => InvoiceNodeStatus::Verified,
             Cancelled => InvoiceNodeStatus::Cancelled,
         }

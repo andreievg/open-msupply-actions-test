@@ -31,6 +31,7 @@ pub enum ActivityLogNodeType {
     InvoiceStatusPicked,
     InvoiceStatusShipped,
     InvoiceStatusDelivered,
+    InvoiceStatusReceived,
     InvoiceStatusVerified,
     InventoryAdjustment,
     StocktakeCreated,
@@ -81,6 +82,14 @@ pub enum ActivityLogNodeType {
     DemographicProjectionCreated,
     DemographicProjectionUpdated,
     InvoiceStatusCancelled,
+    ItemVariantCreated,
+    ItemVariantDeleted,
+    ItemVariantUpdatedName,
+    ItemVariantUpdateColdStorageType,
+    ItemVariantUpdateManufacturer,
+    ItemVariantUpdateDosePerUnit,
+    ItemVariantUpdateVVMType,
+    VVMStatusLogUpdated,
 }
 
 #[Object]
@@ -217,6 +226,15 @@ impl ActivityLogNodeType {
             from::DemographicProjectionUpdated => to::DemographicProjectionUpdated,
             from::InvoiceStatusCancelled => to::InvoiceStatusCancelled,
             from::PrescriptionStatusCancelled => to::PrescriptionStatusCancelled,
+            from::ItemVariantCreated => to::ItemVariantCreated,
+            from::ItemVariantDeleted => to::ItemVariantDeleted,
+            from::ItemVariantUpdatedName => to::ItemVariantUpdatedName,
+            from::ItemVariantUpdateColdStorageType => to::ItemVariantUpdateColdStorageType,
+            from::ItemVariantUpdateManufacturer => to::ItemVariantUpdateManufacturer,
+            from::ItemVariantUpdateDosePerUnit => to::ItemVariantUpdateDosePerUnit,
+            from::ItemVariantUpdateVVMType => to::ItemVariantUpdateVVMType,
+            from::VVMStatusLogUpdated => to::VVMStatusLogUpdated,
+            from::InvoiceStatusReceived => to::InvoiceStatusReceived,
         }
     }
 
@@ -232,6 +250,7 @@ impl ActivityLogNodeType {
             from::InvoiceStatusPicked => to::InvoiceStatusPicked,
             from::InvoiceStatusShipped => to::InvoiceStatusShipped,
             from::InvoiceStatusDelivered => to::InvoiceStatusDelivered,
+            from::InvoiceStatusReceived => to::InvoiceStatusReceived,
             from::InvoiceStatusVerified => to::InvoiceStatusVerified,
             from::InventoryAdjustment => to::InventoryAdjustment,
             from::StocktakeCreated => to::StocktakeCreated,
@@ -283,6 +302,14 @@ impl ActivityLogNodeType {
             from::DemographicProjectionUpdated => to::DemographicProjectionUpdated,
             from::PrescriptionStatusCancelled => to::PrescriptionStatusCancelled,
             from::InvoiceStatusCancelled => to::InvoiceStatusCancelled,
+            from::ItemVariantCreated => to::ItemVariantCreated,
+            from::ItemVariantDeleted => to::ItemVariantDeleted,
+            from::ItemVariantUpdatedName => to::ItemVariantUpdatedName,
+            from::ItemVariantUpdateColdStorageType => to::ItemVariantUpdateColdStorageType,
+            from::ItemVariantUpdateManufacturer => to::ItemVariantUpdateManufacturer,
+            from::ItemVariantUpdateDosePerUnit => to::ItemVariantUpdateDosePerUnit,
+            from::ItemVariantUpdateVVMType => to::ItemVariantUpdateVVMType,
+            from::VVMStatusLogUpdated => to::VVMStatusLogUpdated,
         }
     }
 }

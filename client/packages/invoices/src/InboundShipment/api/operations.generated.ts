@@ -21,6 +21,14 @@ export type InboundLineFragment = {
   foreignCurrencyPriceBeforeTax?: number | null;
   itemName: string;
   itemVariantId?: string | null;
+  vvmStatusId?: string | null;
+  donor?: { __typename: 'NameNode'; id: string; name: string } | null;
+  campaign?: { __typename: 'CampaignNode'; id: string; name: string } | null;
+  itemVariant?: {
+    __typename: 'ItemVariantNode';
+    id: string;
+    dosesPerUnit: number;
+  } | null;
   item: {
     __typename: 'ItemNode';
     id: string;
@@ -28,6 +36,8 @@ export type InboundLineFragment = {
     code: string;
     unitName?: string | null;
     defaultPackSize: number;
+    isVaccine: boolean;
+    doses: number;
   };
   location?: {
     __typename: 'LocationNode';
@@ -50,6 +60,7 @@ export type InboundLineFragment = {
     totalNumberOfPacks: number;
     onHold: boolean;
     note?: string | null;
+    vvmStatusId?: string | null;
   } | null;
 };
 
@@ -60,6 +71,7 @@ export type InboundFragment = {
   createdDatetime: string;
   allocatedDatetime?: string | null;
   deliveredDatetime?: string | null;
+  receivedDatetime?: string | null;
   pickedDatetime?: string | null;
   shippedDatetime?: string | null;
   verifiedDatetime?: string | null;
@@ -75,6 +87,7 @@ export type InboundFragment = {
   taxPercentage?: number | null;
   expectedDeliveryDate?: string | null;
   currencyRate: number;
+  defaultDonor?: { __typename: 'NameNode'; id: string; name: string } | null;
   linkedShipment?: { __typename: 'InvoiceNode'; id: string } | null;
   user?: {
     __typename: 'UserNode';
@@ -109,6 +122,18 @@ export type InboundFragment = {
       foreignCurrencyPriceBeforeTax?: number | null;
       itemName: string;
       itemVariantId?: string | null;
+      vvmStatusId?: string | null;
+      donor?: { __typename: 'NameNode'; id: string; name: string } | null;
+      campaign?: {
+        __typename: 'CampaignNode';
+        id: string;
+        name: string;
+      } | null;
+      itemVariant?: {
+        __typename: 'ItemVariantNode';
+        id: string;
+        dosesPerUnit: number;
+      } | null;
       item: {
         __typename: 'ItemNode';
         id: string;
@@ -116,6 +141,8 @@ export type InboundFragment = {
         code: string;
         unitName?: string | null;
         defaultPackSize: number;
+        isVaccine: boolean;
+        doses: number;
       };
       location?: {
         __typename: 'LocationNode';
@@ -138,6 +165,7 @@ export type InboundFragment = {
         totalNumberOfPacks: number;
         onHold: boolean;
         note?: string | null;
+        vvmStatusId?: string | null;
       } | null;
     }>;
   };
@@ -176,6 +204,7 @@ export type InboundRowFragment = {
   comment?: string | null;
   createdDatetime: string;
   deliveredDatetime?: string | null;
+  receivedDatetime?: string | null;
   id: string;
   invoiceNumber: number;
   otherPartyName: string;
@@ -220,6 +249,7 @@ export type InvoicesQuery = {
       comment?: string | null;
       createdDatetime: string;
       deliveredDatetime?: string | null;
+      receivedDatetime?: string | null;
       id: string;
       invoiceNumber: number;
       otherPartyName: string;
@@ -262,6 +292,7 @@ export type InvoiceQuery = {
         createdDatetime: string;
         allocatedDatetime?: string | null;
         deliveredDatetime?: string | null;
+        receivedDatetime?: string | null;
         pickedDatetime?: string | null;
         shippedDatetime?: string | null;
         verifiedDatetime?: string | null;
@@ -277,6 +308,11 @@ export type InvoiceQuery = {
         taxPercentage?: number | null;
         expectedDeliveryDate?: string | null;
         currencyRate: number;
+        defaultDonor?: {
+          __typename: 'NameNode';
+          id: string;
+          name: string;
+        } | null;
         linkedShipment?: { __typename: 'InvoiceNode'; id: string } | null;
         user?: {
           __typename: 'UserNode';
@@ -311,6 +347,18 @@ export type InvoiceQuery = {
             foreignCurrencyPriceBeforeTax?: number | null;
             itemName: string;
             itemVariantId?: string | null;
+            vvmStatusId?: string | null;
+            donor?: { __typename: 'NameNode'; id: string; name: string } | null;
+            campaign?: {
+              __typename: 'CampaignNode';
+              id: string;
+              name: string;
+            } | null;
+            itemVariant?: {
+              __typename: 'ItemVariantNode';
+              id: string;
+              dosesPerUnit: number;
+            } | null;
             item: {
               __typename: 'ItemNode';
               id: string;
@@ -318,6 +366,8 @@ export type InvoiceQuery = {
               code: string;
               unitName?: string | null;
               defaultPackSize: number;
+              isVaccine: boolean;
+              doses: number;
             };
             location?: {
               __typename: 'LocationNode';
@@ -340,6 +390,7 @@ export type InvoiceQuery = {
               totalNumberOfPacks: number;
               onHold: boolean;
               note?: string | null;
+              vvmStatusId?: string | null;
             } | null;
           }>;
         };
@@ -399,6 +450,7 @@ export type InboundByNumberQuery = {
         createdDatetime: string;
         allocatedDatetime?: string | null;
         deliveredDatetime?: string | null;
+        receivedDatetime?: string | null;
         pickedDatetime?: string | null;
         shippedDatetime?: string | null;
         verifiedDatetime?: string | null;
@@ -414,6 +466,11 @@ export type InboundByNumberQuery = {
         taxPercentage?: number | null;
         expectedDeliveryDate?: string | null;
         currencyRate: number;
+        defaultDonor?: {
+          __typename: 'NameNode';
+          id: string;
+          name: string;
+        } | null;
         linkedShipment?: { __typename: 'InvoiceNode'; id: string } | null;
         user?: {
           __typename: 'UserNode';
@@ -448,6 +505,18 @@ export type InboundByNumberQuery = {
             foreignCurrencyPriceBeforeTax?: number | null;
             itemName: string;
             itemVariantId?: string | null;
+            vvmStatusId?: string | null;
+            donor?: { __typename: 'NameNode'; id: string; name: string } | null;
+            campaign?: {
+              __typename: 'CampaignNode';
+              id: string;
+              name: string;
+            } | null;
+            itemVariant?: {
+              __typename: 'ItemVariantNode';
+              id: string;
+              dosesPerUnit: number;
+            } | null;
             item: {
               __typename: 'ItemNode';
               id: string;
@@ -455,6 +524,8 @@ export type InboundByNumberQuery = {
               code: string;
               unitName?: string | null;
               defaultPackSize: number;
+              isVaccine: boolean;
+              doses: number;
             };
             location?: {
               __typename: 'LocationNode';
@@ -477,6 +548,7 @@ export type InboundByNumberQuery = {
               totalNumberOfPacks: number;
               onHold: boolean;
               note?: string | null;
+              vvmStatusId?: string | null;
             } | null;
           }>;
         };
@@ -965,6 +1037,19 @@ export const InboundLineFragmentDoc = gql`
     foreignCurrencyPriceBeforeTax
     itemName
     itemVariantId
+    vvmStatusId
+    donor(storeId: $storeId) {
+      id
+      name
+    }
+    campaign {
+      id
+      name
+    }
+    itemVariant {
+      id
+      dosesPerUnit
+    }
     item {
       __typename
       id
@@ -972,6 +1057,8 @@ export const InboundLineFragmentDoc = gql`
       code
       unitName
       defaultPackSize
+      isVaccine
+      doses
     }
     location {
       __typename
@@ -994,6 +1081,7 @@ export const InboundLineFragmentDoc = gql`
       totalNumberOfPacks
       onHold
       note
+      vvmStatusId
     }
   }
 `;
@@ -1005,6 +1093,7 @@ export const InboundFragmentDoc = gql`
     createdDatetime
     allocatedDatetime
     deliveredDatetime
+    receivedDatetime
     pickedDatetime
     shippedDatetime
     verifiedDatetime
@@ -1019,6 +1108,10 @@ export const InboundFragmentDoc = gql`
     type
     taxPercentage
     expectedDeliveryDate
+    defaultDonor(storeId: $storeId) {
+      id
+      name
+    }
     linkedShipment {
       __typename
       id
@@ -1085,6 +1178,7 @@ export const InboundRowFragmentDoc = gql`
     comment
     createdDatetime
     deliveredDatetime
+    receivedDatetime
     id
     invoiceNumber
     otherPartyName
